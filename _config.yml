@@ -1,10 +1,10 @@
 # Jekyll Defaults
-title: blueface
-description: A small and simple site I made to test out Jekyll.
+title: Jocelyn's Blog
+description: Nothing is important.
 baseurl: "" # the subpath of your site, e.g. /blog
 
 url: "https://JocelynWSJ.github.io"
-github: http://github.com/tnguyen/blueface
+github: https://JocelynWSJ.github.io
 highlighter: rouge
 markdown: kramdown
 permalink: /post/:title/

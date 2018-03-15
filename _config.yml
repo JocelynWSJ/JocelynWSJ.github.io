@@ -1,21 +1,89 @@
-# Jekyll Defaults
-title: Jocelyn's Blog
-description: Nothing is important.
-baseurl: "" # the subpath of your site, e.g. /blog
+title:            Jocelyn's Blog
+description:      nothing is important
+disqus_shortname: 
+reading_time:     true
+words_per_minute: 200
+# Your site's domain goes here (eg: https://mmistakes.github.io, http://yourdomain.com, etc)
+# When testing locally leave blank or use http://localhost:4000
+url: https://JocelynWSJ.github.io
 
-url: "https://JocelynWSJ.github.io"
-github: https://JocelynWSJ.github.io
+# Owner/author information
+owner:
+  name:           Jocelyn Wang
+  avatar:         avatar.jpg
+  bio:            "Your bio goes here. It shouldn't be super long but a good sentence or two should suffice."
+  email:          809984476@qq.com
+  # Social networking links used in footer. Update and remove as you like.
+  twitter:        
+  facebook:       
+  github:         
+  stackexchange:  
+  linkedin:       
+  instagram:      
+  flickr:         
+  tumblr:         
+  # google plus id, include the '+', eg +mmistakes
+  google_plus:
+
+# Background image to be tiled on all pages
+background: 
+
+# Analytics and webmaster tools stuff goes here
+google_analytics:   
+google_verify:      
+# https://ssl.bing.com/webmaster/configure/verify/ownership Option 2 content= goes here
+bing_verify:         
+
+# http://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+timezone:    China/Bei_jing
+future:      false  # publish future dated posts --  true, false (default) 
 highlighter: rouge
-markdown: kramdown
-permalink: /post/:title/
-paginate: 4
-gems: [jekyll-paginate]
-paginate_path: "/page:num"
-rss_path: /feed.xml
-navigation:
-- text: About
-  url: /about/
-- text: Archives
-  url: /archives/
-- text: Tags
-  url: /tags/
+markdown:    kramdown
+gems:
+  - jekyll-sitemap
+  - jekyll-paginate
+  - jekyll-gist
+  - jekyll-feed
+sass:
+  sass_dir: _sass
+  style: compressed
+
+# https://github.com/mojombo/jekyll/wiki/Permalinks
+permalink:   /:categories/:title/
+
+# Amount of post to show on home page
+paginate: 5
+
+kramdown:
+  input: GFM
+  auto_ids: true
+  footnote_nr: 1
+  entity_output: as_char
+  toc_levels: 1..6
+  enable_coderay: false
+
+include: 
+  - .htaccess
+exclude: 
+  - "*.less"
+  - "*.sublime-project"
+  - "*.sublime-workspace"
+  - .asset-cache
+  - .bundle
+  - .jekyll-assets-cache
+  - .sass-cache
+  - CHANGELOG
+  - Capfile
+  - Gemfile
+  - Gruntfile.js
+  - LICENSE
+  - README
+  - Rakefile
+  - config
+  - gulpfile.js
+  - lib
+  - log
+  - node_modules
+  - package.json
+  - spec
+  - tmp

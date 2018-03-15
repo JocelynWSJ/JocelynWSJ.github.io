@@ -1,56 +1,28 @@
 ---
-layout: default
-title: Tags
-group: navigation
+layout: post-index
+title: Tag Archive
+description: "An archive of posts sorted by tag."
+comments: false
 ---
-<div class="heading">Tags</div>
-<section id="tags">
-<!--<article>
-    {% for tag in site.tags %}
-        <span class="label label-default"><a href="/tag/{{ tag[0] }}">{{ tag[0] }}</a></span>
-    {% endfor %}
-</article>-->
 
+{% capture site_tags %}{% for tag in site.tags %}{{ tag | first }}{% unless forloop.last %},{% endunless %}{% endfor %}{% endcapture %}
+{% assign tags_list = site_tags | split:',' | sort %}
 
-<ul>
-  {% assign tags_list = site.tags %}
-  {% if tags_list.first[0] == null %}
-    {% for tag in tags_list %}
-      <span class="label label-default"><a href="#{{ tag }}-ref">
-        {{ tag }} <!--<span class='badge'>{{ site.tags[tag].size }}</span>-->
-      </a></span>
-    {% endfor %}
-  {% else %}
-    {% for tag in tags_list %}
-      <span class="label label-default"><a href="#{{ tag[0] }}-ref">
-        {{ tag[0] }} <!--<span class='badge'>{{ tag[1].size }}</span>-->
-      </a></span>
-    {% endfor %}
-  {% endif %}
-
-  {% assign tags_list = nil %}
+<ul class="entry-meta inline-list">
+  {% for item in (0..site.tags.size) %}{% unless forloop.last %}
+    {% capture this_word %}{{ tags_list[item] | strip_newlines }}{% endcapture %}
+  	<li><a href="#{{ this_word }}" class="tag"><span class="term">{{ this_word }}</span> <span class="count">{{ site.tags[this_word].size }}</span></a></li>
+  {% endunless %}{% endfor %}
 </ul>
 
-
-{% for tag in site.tags %}
-  <h2 class='tag-header' id="{{ tag[0] }}-ref">{{ tag[0] }}</h2>
-  <ul>
-    {% assign pages_list = tag[1] %}
-
-    {% for node in pages_list %}
-      {% if node.title != null %}
-        {% if group == null or group == node.group %}
-          {% if page.url == node.url %}
-          <li class="active"><a href="{{ site.baseurl }}{{node.url}}" class="active">{{node.title}}</a></li>
-          {% else %}
-          <li><a href="{{ site.baseurl }}{{node.url}}">{{node.title}}</a></li>
-          {% endif %}
-        {% endif %}
-      {% endif %}
-    {% endfor %}
-
-    {% assign pages_list = nil %}
-    {% assign group = nil %}
-  </ul>
-{% endfor %}
-</section>
+{% for item in (0..site.tags.size) %}{% unless forloop.last %}
+  {% capture this_word %}{{ tags_list[item] | strip_newlines }}{% endcapture %}
+	<article>
+	<h2 id="{{ this_word }}" class="tag-heading">{{ this_word }}</h2>
+		<ul>
+    {% for post in site.tags[this_word] %}{% if post.title != null %}
+      <li class="entry-title"><a href="{{ site.url }}{{ post.url }}" title="{{ post.title }}">{{ post.title }}</a></li>
+    {% endif %}{% endfor %}
+		</ul>
+	</article><!-- /.hentry -->
+{% endunless %}{% endfor %}

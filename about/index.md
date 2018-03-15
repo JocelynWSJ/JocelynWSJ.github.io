@@ -1,18 +1,32 @@
 ---
-layout: default
-title: About blueface
+layout: page
+title: About the Jekyll Theme
+image:
+  feature: abstract-5.jpg
+  credit: dargadgetz
+  creditlink: http://www.dargadgetz.com/ios-7-abstract-wallpaper-pack-for-iphone-5-and-ipod-touch-retina/
+comments: false
+modified: 2016-02-01
 ---
 
-blueface is a minimalist Jekyll theme. It is responsive, generates JSON and RSS feeds on each build, and can be easily extended. It uses your system fonts alongside Open Sans, Droid Sans and Raleway from Google Fonts. Oh, and it has support for tags too.
+They say three times the charm, so here is another free responsive Jekyll blog theme for you. I've learned a ton since open sourcing my first two themes [on Github](http://github.com/mmistakes), and wanted to try a few new things this time around. 
 
-> It supports blockquotes, too.
+If you've used any of [my other themes](http://mademistakes.com/work/jekyll-themes/) most of this should be familiar territory...
 
-## blueface on the Internet
+## HPSTR Features:
 
-* [blueface][github] on GitHub (Source Code)
-* [nolsigan][nolsigan] nolsigan.github.io
-* [rjsteckel][rjsteckel] data, beer, and stats
+* Compatible with Jekyll 3 and GitHub Pages.
+* Responsive templates for post, page, and post index `_layouts`. Looks great on mobile, tablet, and desktop devices.
+* Gracefully degrades in older browsers. Compatible with Internet Explorer 8+ and all modern browsers.  
+* Sweet animated menu.
+* Background image support.
+* Support for large images to call out your favorite posts.
+* Optional [Disqus](http://disqus.com) comments.
+* Simple and clear permalink structure[^1].
+* [Open Graph](https://developers.facebook.com/docs/opengraph/) and [Twitter Cards](https://dev.twitter.com/docs/cards) support for a better social sharing experience.
+* [Custom 404 page]({{ site.url }}/404.html) to get you started.
+* [Syntax highlighting]({{ site.url }}/code-highlighting-post/) stylesheets to make your code examples look snazzy.
 
-[github]: https://github.com/tnguyen/blueface/
-[nolsigan]: http://nolsigan.github.io
-[rjsteckel]: http://rjsteckel.github.io
+<div markdown="0"><a href="{{ site.url }}/theme-setup/" class="btn btn-info">Theme Setup</a> <a href="https://github.com/mmistakes/hpstr-jekyll-theme" class="btn btn-success">Download HPSTR</a></div>
+
+[^1]: Example: *domain.com/category-name/post-title*

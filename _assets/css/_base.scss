@@ -12,13 +12,27 @@ body {
   overflow-wrap: break-word; // force wider-than-viewport words to break
   line-height: 1.5;
 }
-h1 { @include heading(2); text-transform:capitalize; }
+//h1 { @include heading(2); text-transform:capitalize; }
 
-h2 { @include heading(1.6); @include edge($color: #ddd, $distance: 0.5rem); }
+//h2 { @include heading(1.6); @include edge($color: #ddd, $distance: 0.5rem); }
 
-h3 { @include heading(1.4); }
+//h3 { @include heading(1.4); }
 
-h4 { @include heading(1.2); }
+//h4 { @include heading(1.2); }
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: -apple-system, ".SFNSText-Regular", "San Francisco", "Roboto", "Segoe UI", "Helvetica Neue", "Lucida Grande", sans-serif;
+    font-weight: 400;
+    color: #315572;
+}
+#main h4 {
+    line-height: 1.6em;
+}
 
 hr { display: none; }
 

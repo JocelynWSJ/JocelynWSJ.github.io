@@ -23,7 +23,7 @@ nav_menu:
     url: /projects
     icon: /i/icons.svg#portfolio
   - name: GitHub
-    url: http://JocelynWSJ.github.io
+    url: https://github.com/JocelynWSJ
     icon: /i/icons.svg#github
     outbound: true      # this key sets a link to open in a new window.
   - name: Contact

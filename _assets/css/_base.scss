@@ -30,6 +30,23 @@ h6 {
     font-weight: 400;
     color: #315572;
 }
+
+h1 {
+  font-size: 2rem;
+}
+h2 {
+  margin-top: 1rem;
+  font-size: 1.5rem;
+}
+h3 {
+  margin-top: 1.5rem;
+  font-size: 1.25rem;
+}
+h4, h5, h6 {
+  margin-top: 1rem;
+  font-size: 1rem;
+}
+
 #main h4 {
     line-height: 1.6em;
 }
@@ -58,17 +75,32 @@ li {
   line-height: 1.25;
   p, pre, ol, ul, blockquote { margin: 0.75rem 0; }
 }
-
-code {
-  @include fontface(monospace);
-  @include underline($solarized_yellow);
-  background-color: $solarized_base3;
-  padding: 0.0625em 0.25em;
-  font-size: 0.875em;
-  border-radius: 0.25rem;
-
-  @include tablet-portrait-up { white-space: nowrap; } // wrap on small screens
+/* Code */
+code,
+pre {
+  font-family: Menlo, Monaco, "Courier New", monospace;
 }
+code {
+  padding: .25em .5em;
+  font-size: 85%;
+  color: #bf616a;
+  background-color: #f9f9f9;
+  border-radius: 3px;
+}
+pre {
+  display: block;
+  margin-top: 0;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  font-size: .8rem;
+  line-height: 1.4;
+  white-space: pre;
+  white-space: pre-wrap;
+  word-break: break-all;
+  word-wrap: break-word;
+  background-color: #f9f9f9;
+}
+
 
 pre { // code blocks
   @include inset;
@@ -101,4 +133,28 @@ blockquote {
 
   a:visited { @include underline($solarized_base3); }
 
+}
+
+img {
+  display: block;
+  max-width: 100%;
+  margin: 0 0 1rem;
+  border-radius: 5px;
+}
+
+/* Tables */
+table {
+  margin-bottom: 1rem;
+  width: 100%;
+  border: 1px solid #e5e5e5;
+  border-collapse: collapse;
+}
+td,
+th {
+  padding: .25rem .5rem;
+  border: 1px solid #e5e5e5;
+}
+tbody tr:nth-child(odd) td,
+tbody tr:nth-child(odd) th {
+  background-color: #f9f9f9;
 }

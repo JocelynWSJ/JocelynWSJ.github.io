@@ -1,7 +1,7 @@
 ---
 layout: post
-title: 系统分析与设计 HW4
-teaser: homework 4 for UML
+title:  Homework 4 for UML
+teaser: 系统分析与设计
 date: 2018-4-20 12:00:10+00:00
 category: UML
 tags: [UML, HW]

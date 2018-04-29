@@ -66,6 +66,7 @@ dfn { @extend b; font-style: normal; }
 
 mark {
   @include fontweight(bold);
+  @include highlight(#33a84d);
   padding: 0 0.25rem;
 }
 

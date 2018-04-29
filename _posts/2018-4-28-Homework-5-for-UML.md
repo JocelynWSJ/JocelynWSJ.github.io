@@ -45,7 +45,7 @@ tags: [UML, HW]
 
 
 
-![ER](..\i\ER.png)
+![ER](..\i\ER.PNG)
 
 
 

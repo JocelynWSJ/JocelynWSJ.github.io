@@ -55,6 +55,7 @@ tags: [UML, HW]
 
 ```
 
+<<<<<<< HEAD
 drop table credit_card;
 
 drop table customer;
@@ -156,6 +157,8 @@ alter table room
       references hotel (hotel_name)
       on delete restrict on update restrict;
 
+=======
+>>>>>>> 8983e4011b72b99efaab9ce0563a139bfe79f312
 
 
 

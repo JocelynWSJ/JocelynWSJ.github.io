@@ -11,7 +11,7 @@ tags: [UML, HW]
 
 --> From 15331299 WSJ
 
-### 自我总结
+## 自我总结
 
 在这次UML课程中，我们小组开发了Eat点点扫码点餐系统，我负责的是小程序前端的提交订单部分和编写部分文档的工作。
 
@@ -19,7 +19,7 @@ tags: [UML, HW]
 
 这次主要学习了很多小程序编程方面知识以及设计项目方面的内容。项目的顺利进行得益于[@RaymanNg](https://github.com/RaymanNg) 高效率的项目运维能力，还有[@Llunnn](https://github.com/Llunnn) 和[@Bowenwu1](https://github.com/bowenwu1) 对我们的技术支持和帮助，以及小程序前端队友@[wulinman](https://github.com/wulinman)和@[pomeloqy](https://github.com/pomeloqy) 大家的辛勤付出和互帮互助，同时商家端前端队员@[VitaYoung](https://github.com/VitaYoung)、@[Cocaice](https://github.com/Cocaice) 的完美合作。
 
-### PSP 2.1统计表
+## PSP 2.1统计表
 
 | PSP2.1                                | Personal Software Process Stages | Time（%） |
 | ------------------------------------- | -------------------------------- | ------- |
@@ -39,9 +39,9 @@ tags: [UML, HW]
 | Size Measurment                       | 计算工作量                            | 1       |
 | Postmortem & Process Improvement Plan | 事后总结                             | 4       |
 
-### 个人分支的GIT统计
+## 个人分支的GIT统计
 
-#### 文档编写
+### 文档编写
 
 ![doc][1]
 
@@ -55,7 +55,7 @@ tags: [UML, HW]
 
 ![doc5][6]
 
-#### 代码编写
+### 代码编写
 
 ![code][7]
 
@@ -69,7 +69,7 @@ tags: [UML, HW]
 
 
 
-### 最有价值的工作清单
+## 最有价值的工作清单
 
 - 学习小程序编程方法及各页面交互
 - 进行前后端对接
@@ -78,7 +78,7 @@ tags: [UML, HW]
 
 
 
-#### 个人的技术类、项目管理类博客清单
+### 个人的技术类、项目管理类博客清单
 
 [学习报告之微信小程序](https://jocelynwsj.github.io/posts/2018-4-14-%E5%AD%A6%E4%B9%A0%E6%8A%A5%E5%91%8A%E4%B9%8B%E5%BE%AE%E4%BF%A1%E5%B0%8F%E7%A8%8B%E5%BA%8F)
 

@@ -404,6 +404,82 @@
 
 .posts--home__heading { display: none; }
 
+/* Home page grid layout (3 columns, 4:3 image + one-line text) */
+.posts--grid {
+  @extend %block--align-center;
+  max-width: 72rem;
+}
+
+.posts__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  padding-left: 0;
+  margin: 0;
+  margin-top: 2.5rem;
+  list-style: none;
+
+  @include tablet-portrait-up {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+  }
+
+  @include tablet-landscape-up {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.posts__card {
+  display: block;
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 0.25rem;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  @include transition(box-shadow, 0, 200ms);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border-color: #40867e;
+
+    .posts__card-image { opacity: 0.95; }
+  }
+}
+
+.posts__card-image {
+  aspect-ratio: 4 / 3;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-color: #f5f5f5;
+  @include transition(opacity, 1, 200ms);
+}
+
+.posts__card-content {
+  padding: 0.875rem 1rem;
+}
+
+.posts__card-title {
+  @include fontweight(bold);
+  font-size: 1rem;
+  margin-bottom: 0.25rem;
+  color: #315572;
+
+  .posts__card:hover & { color: #40867e; }
+}
+
+.posts__card-teaser {
+  @include fontweight(normal);
+  font-size: 0.8125rem;
+  color: #666;
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .posts__list {
   padding-left: 0;
 

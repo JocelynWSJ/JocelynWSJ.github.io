@@ -26,9 +26,25 @@ layout: default
 
 {% endif %}
 
-<main class="{{ item_type }} {{ item_type }}--{{ page_type }}" role="main">
+<main class="{{ item_type }} {{ item_type }}--{{ page_type }}{% if page_type == 'home' %} {{ item_type }}--grid{% endif %}" role="main">
   <h2 class="{{ item_type }}__heading {{ item_type }}--{{ page_type }}__heading">{{ page.title }}</h2>
 
+  {% if page_type == 'home' %}
+  <div class="posts__grid">
+    {% for item in pool %}
+      {% assign card_image = item.image | default: item.thumbnail | default: site.banner %}
+      <a href="{{ site.baseurl }}{{ item.url }}" class="posts__card">
+        <div class="posts__card-image" style="{% if card_image %}background-image: url('{{ site.baseurl }}{{ card_image }}');{% endif %}"></div>
+        <div class="posts__card-content">
+          <div class="posts__card-title">{{ item.title }}</div>
+          {% if item.teaser %}
+          <div class="posts__card-teaser">{{ item.teaser | truncate: 60 }}</div>
+          {% endif %}
+        </div>
+      </a>
+    {% endfor %}
+  </div>
+  {% else %}
   <ul class="{{ item_type }}__list {{ item_type }}--{{ page_type }}__list">
     {% for item in pool %}
       <li class="{{ item_type }}__entry {{ item_type }}--{{ page_type }}__entry">
@@ -46,6 +62,7 @@ layout: default
       </li>
     {% endfor %}
   </ul>
+  {% endif %}
 </main>
 
 {{ content }}

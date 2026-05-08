@@ -1,76 +1,94 @@
-{% assign title = page.title %}
+---
+---
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>{% if page.title and page.title != 'Posts' %}{{ page.title }} — {% endif %}Jocelyn Wang</title>
+<meta name="author" content="Jocelyn Wang" />
+<meta name="description" content="{{ site.description | strip_html | strip_newlines }}" />
+<link rel="shortcut icon" href="{{ site.baseurl }}/favicon.ico" />
+{% feed_meta %}
+<link rel="stylesheet" href="{{ site.baseurl }}/style.css">
+</head>
+<body>
+  <div class="wrap">
 
-{% if page.teaser %}
-  {% assign teaser = page.teaser %}
-{% else %}
-  {% assign teaser = page.excerpt %}
-{% endif %}
+    <header class="nav">
+      <a class="brand" href="/"><span class="dot"></span>JOCELYN WANG</a>
+      <nav class="nav-links">
+        <a href="/#works">Works</a>
+        <a href="/#contact">Contact</a>
+        <span class="nav-socials">
+          <a href="https://github.com/JocelynWSJ" target="_blank" rel="noopener" aria-label="GitHub">
+            <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+              <path d="M8 .2a8 8 0 0 0-2.53 15.59c.4.07.55-.17.55-.38v-1.34c-2.22.48-2.69-1.07-2.69-1.07-.36-.92-.89-1.17-.89-1.17-.73-.5.06-.49.06-.49.8.06 1.22.83 1.22.83.72 1.23 1.88.88 2.34.67.07-.52.28-.88.5-1.08-1.77-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.13 0 0 .67-.21 2.2.82A7.6 7.6 0 0 1 8 3.92c.68 0 1.36.09 2 .27 1.52-1.03 2.2-.82 2.2-.82.44 1.11.16 1.93.08 2.13.51.56.82 1.28.82 2.15 0 3.07-1.87 3.74-3.65 3.94.29.25.54.74.54 1.49v2.21c0 .21.15.46.55.38A8 8 0 0 0 8 .2Z"/>
+            </svg>
+          </a>
+        </span>
+      </nav>
+    </header>
 
-{% if page.title == 'Posts' %}
-  {% assign page_type = 'home' %}
-  {% assign title = site.title %}
-  {% assign teaser = site.description %}
-{% elsif page.layout == 'listing' %}
-  {% assign page_type = 'listing' %}
-  {% assign title = title | append: ' | ' | append: site.title %}
-{% else %}
-  {% assign page_type = 'destination' %}
-{% endif %}
+    {{ content }}
 
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta charset="utf-8">
-    <title>{{ title }}</title>
-    <meta name="author"       content="{{ site.author }}" />
-    <meta name="description"  content="{{ teaser }}" />
-    <link rel="shortcut icon" href="{{ site.baseurl }}/favicon.ico" />
-    {% feed_meta %}
-    <link rel="stylesheet"    href="{{ site.baseurl }}/style.css">
-    <link rel="stylesheet"    href="https://fonts.googleapis.com/css?family=Roboto+Slab:300,400,700|Roboto:500,500i,300,300i|Roboto+Mono">
-  </head>
-  <body>
-    <div class="backdrop backdrop--{{ page_type }}">
-      <header class="header header--{{ page_type }}">
-        <a class="nameplate nameplate--{{ page_type }}" href="{{ site.baseurl }}/">
-          <div class="nameplate__avatar nameplate--{{ page_type }}__avatar"></div>
-          <h1 class="nameplate__title nameplate--{{ page_type }}__title">{{ site.title }}</h1>
-          <div class="nameplate__subhead nameplate--{{ page_type }}__subhead">{% if site.slogan %} {{ site.slogan }} {% endif %}</div>
-        </a>
+    <footer class="colophon" id="contact">
+      <div>
+        <h3>Contact</h3>
+        <p>Feel free to reach out for collaboration or just to say hello.</p>
+        <a class="email" href="mailto:jocelynwsj@gmail.com">jocelynwsj@gmail.com</a>
+      </div>
+      <div>
+        <h3>Elsewhere</h3>
+        <div class="links">
+          <a href="https://github.com/JocelynWSJ" target="_blank" rel="noopener">GitHub &nbsp;·&nbsp; @JocelynWSJ <span class="arr">↗</span></a>
+          <a href="https://jocelynwsj.github.io/" target="_blank" rel="noopener">jocelynwsj.github.io <span class="arr">↗</span></a>
+        </div>
+      </div>
+      <div>
+        <h3>Colophon</h3>
+        <p style="font-size:14px;line-height:1.55;">Set in system sans &amp; mono. Built on Jekyll, hand-styled. Writing under <em>CC&nbsp;BY-SA&nbsp;4.0</em>; source MIT.</p>
+      </div>
+    </footer>
 
-        <nav class="nav">
-          <button class="nav__toggle"></button>
-          <ul class="nav__list nav--{{ page_type }}__list collapsed">
-            {% for item in site.nav_menu %}
-              {% if item.scheme == 'mailto' %}
-                {% assign plain_link = 'mailto:' | append: item.handle | append: '@' | append: item.domain %}
-                {% assign obfuscated_link = plain_link | url_encode | split: '' | reverse | join: '' %}
-                <a class="nav__item nav__item--{{ item.name | downcase }} email" href="{{ obfuscated_link }}">{{ item.name }}</a>
-              {% else %}
-                {% if item.outbound %}
-                  {% assign url = item.url | append: '" target=_blank' %}
-                {% else %}
-                  {% assign url = item.url | prepend: site.baseurl %}
-                {% endif %}
-                <a class="nav__item nav__item--{{ item.name | downcase }}" href="{{ url }}">{{ item.name }}</a>
-              {% endif %}
-            {% endfor %}
-          </ul>
-        </nav>
-      </header>
-      <hr>
-
-      {{ content }}
-
-      <hr>
-      <footer class="colophon colophon--{{ page_type }}">
-        <span class="colophon__statement">This blog is powered by Jekyll.</span>
-        <span class="colophon__statement"><a href="{{ site.repo }}" target="_blank">Source code</a> available under the MIT License.</span>
-        <span class="colophon__statement">All original writing licensed under <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/" target="_blank">CC BY-SA 4.0</a>.</span>
-      </footer>
+    <div class="signoff">
+      <span>© 2018–2026 &nbsp; JOCELYN WANG &nbsp;·&nbsp; ALL RIGHTS RESERVED</span>
+      <span>BUILT MAY · 2026</span>
     </div>
 
-    <script src="{{ site.baseurl }}/site.js"></script>
-  </body>
+  </div>
+
+  <script>
+    (function(){
+      var grid = document.getElementById('works-grid');
+      if (!grid) return;
+      var pages = grid.querySelectorAll('.work-page');
+      var btns  = document.querySelectorAll('#works-pager [data-page]');
+      var prev  = document.querySelector('#works-pager [data-act="prev"]');
+      var next  = document.querySelector('#works-pager [data-act="next"]');
+      var count = document.getElementById('works-count');
+      var total = pages.length;
+      var current = 1;
+      function show(n){
+        n = Math.max(1, Math.min(total, n));
+        current = n;
+        pages.forEach(function(p){
+          p.classList.toggle('active', String(p.dataset.page) === String(n));
+        });
+        btns.forEach(function(b){
+          b.classList.toggle('active', String(b.dataset.page) === String(n));
+        });
+        if (prev) prev.disabled = n === 1;
+        if (next) next.disabled = n === total;
+        if (count) count.textContent = 'PAGE ' + n + ' / ' + total;
+      }
+      btns.forEach(function(b){
+        b.addEventListener('click', function(){ show(parseInt(b.dataset.page,10)); });
+      });
+      if (prev) prev.addEventListener('click', function(){ show(current - 1); });
+      if (next) next.addEventListener('click', function(){ show(current + 1); });
+      show(1);
+    })();
+  </script>
+</body>
 </html>

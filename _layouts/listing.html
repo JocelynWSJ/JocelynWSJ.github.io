@@ -2,67 +2,95 @@
 layout: default
 ---
 
-{% if page.collection %}
-  {% assign page_type = 'listing' %}
-  {% assign item_type = 'posts' %}
-  {% assign filter = page.collection %}
-  {% if filter == 'tag' %}
-    {% assign filter = filter | append: 's' %}
-  {% endif %}
-  {% assign label = page.path | split: '/' | last | split: '.' | first %}
+{% if page.path == 'index.html' %}
 
-  {% assign pool = site.posts | where: filter, label %}
-
-{% elsif page.path == 'projects.html' %}
-  {% assign page_type = 'listing' %}
-  {% assign item_type = 'projects' %}
-  {% assign pool = site.projects %}
-  {% assign outbound_link_flag = ' target="_blank"' %}
-
+{% assign all_posts = site.posts %}
+{% assign total_posts = all_posts.size %}
+{% assign remainder = total_posts | modulo: 6 %}
+{% if remainder == 0 %}
+  {% assign num_pages = total_posts | divided_by: 6 %}
 {% else %}
-  {% assign page_type = 'home' %}
-  {% assign item_type = 'posts' %}
-  {% assign pool = paginator.posts %}
-
+  {% assign num_pages = total_posts | divided_by: 6 | plus: 1 %}
 {% endif %}
+{% if num_pages == 0 %}{% assign num_pages = 1 %}{% endif %}
 
-<main class="{{ item_type }} {{ item_type }}--{{ page_type }}{% if page_type == 'home' %} {{ item_type }}--grid{% endif %}" role="main">
-  <h2 class="{{ item_type }}__heading {{ item_type }}--{{ page_type }}__heading">{{ page.title }}</h2>
+<section class="hero" id="top">
+  <h1 class="name">Jocelyn Wang</h1>
+  <p class="lede">Hello, I'm Jocelyn.</p>
+  <div class="meta-row">
+    <span><b>{{ total_posts }}</b> posts</span>
+    <span class="pip">·</span>
+    <span>Shanghai · UTC+8</span>
+  </div>
+</section>
 
-  {% if page_type == 'home' %}
-  <div class="posts__grid">
-    {% for item in pool %}
-      {% assign card_image = item.image | default: item.thumbnail | default: site.banner %}
-      <a href="{{ site.baseurl }}{{ item.url }}" class="posts__card">
-        <div class="posts__card-image" style="{% if card_image %}background-image: url('{{ site.baseurl }}{{ card_image }}');{% endif %}"></div>
-        <div class="posts__card-content">
-          <div class="posts__card-title">{{ item.title }}</div>
-          {% if item.teaser %}
-          <div class="posts__card-teaser">{{ item.teaser | truncate: 60 }}</div>
-          {% endif %}
-        </div>
-      </a>
+<section class="section" id="works">
+  <div class="section-head">
+    <span class="kicker"><span class="num">§ 01</span> &nbsp; Index</span>
+    <h2 class="section-title">Selected Works</h2>
+    <span class="count" id="works-count">PAGE 1 / {{ num_pages }}</span>
+  </div>
+
+  <div class="works" id="works-grid">
+    {% assign swatches = 'clay,sage,mauve' | split: ',' %}
+    {% for page_i in (1..num_pages) %}
+      {% assign offset = page_i | minus: 1 | times: 6 %}
+      {% assign page_posts = all_posts | offset: offset | limit: 6 %}
+      <div class="work-page{% if page_i == 1 %} active{% endif %}" data-page="{{ page_i }}">
+        {% for post in page_posts %}
+          {% assign swatch_idx = forloop.index0 | modulo: 3 %}
+          {% assign swatch = swatches[swatch_idx] %}
+          <a class="work" href="{{ site.baseurl }}{{ post.url }}" style="--swatch: var(--{{ swatch }});">
+            <div class="thumb" data-label="POST · {{ post.date | date: '%Y' }}"></div>
+            <div class="work-meta">
+              <span class="ttl">{{ post.title }}</span>
+              <span class="arrow">↗</span>
+            </div>
+            <div class="submeta">
+              <span>{{ post.category | default: 'Blog' }}</span>
+              <span class="sep">/</span>
+              <span>{{ post.date | date: '%Y' }}</span>
+            </div>
+          </a>
+        {% endfor %}
+      </div>
     {% endfor %}
   </div>
-  {% else %}
-  <ul class="{{ item_type }}__list {{ item_type }}--{{ page_type }}__list">
-    {% for item in pool %}
-      <li class="{{ item_type }}__entry {{ item_type }}--{{ page_type }}__entry">
-        {% if item_type == 'posts' %}
-          <time class="posts__entry-date posts__entry-date--{{ page_type }}" datetime="{{ item.date | date_to_xmlschema }}">
-            {{ item.date | date: "%b %-d" }}
-          </time>
-        {% elsif item_type == 'projects' %}
-          <span class="projects__entry-role">{{ item.role }}</span>
-        {% endif %}
-        <div class="{{ item_type }}__entry-title {{ item_type }}__entry-title--{{ page_type }}"><a href="{{ site.baseurl }}{{ item.url }}"{{ outbound_link_flag }}>{{ item.title }}</a>
-        {% if item.teaser %} <div class="{{ item_type }}__entry-teaser {{ item_type }}__entry-teaser--{{ page_type }}">{{ item.teaser }}</div> {% endif %}
-        </div>
-        {% if item.category %} <div class="{{ item_type }}__entry-category {{ item_type }}__entry-category--{{ page_type }}">{{ item.category }}</div> {% endif %}
-      </li>
+
+  {% if num_pages > 1 %}
+  <div class="pager" id="works-pager" aria-label="Works pagination">
+    <button class="nav-btn" data-act="prev" aria-label="Previous page">← Prev</button>
+    {% for page_i in (1..num_pages) %}
+      <button data-page="{{ page_i }}"{% if page_i == 1 %} class="active"{% endif %}>{{ page_i }}</button>
+    {% endfor %}
+    <button class="nav-btn" data-act="next" aria-label="Next page">Next →</button>
+  </div>
+  {% endif %}
+</section>
+
+{% else %}
+
+{% assign label = page.path | split: '/' | last | split: '.' | first %}
+{% assign filter = page.collection %}
+{% if filter == 'tag' %}{% assign filter = filter | append: 's' %}{% endif %}
+{% assign pool = site.posts | where: filter, label %}
+
+<div class="listing-page">
+  <div class="section-head" style="margin-top:56px;">
+    <span class="kicker">{{ page.collection | upcase }}</span>
+    <h1 class="section-title">{{ label }}</h1>
+    <span class="count">{{ pool.size }} POSTS</span>
+  </div>
+  <ul style="list-style:none;padding:0;margin:0;">
+    {% for post in pool %}
+    <li><a class="article" href="{{ site.baseurl }}{{ post.url }}">
+      <span class="date">{{ post.date | date: '%Y · %m' }}</span>
+      <span class="ttl">{{ post.title }}</span>
+      <span class="read">{{ post.category | default: 'Blog' }}</span>
+      <span class="arrow">↗</span>
+    </a></li>
     {% endfor %}
   </ul>
-  {% endif %}
-</main>
+</div>
 
-{{ content }}
+{% endif %}

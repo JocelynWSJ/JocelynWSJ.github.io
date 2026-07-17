@@ -5,6 +5,7 @@ date: 2025-07-17 00:00:00 +0800
 category: Unreal Engine
 tags: [UE5, Rendering, C++, Graphics]
 permalink: /ue/
+thumbnail: "/i/ue5-cover.jpg"
 ---
 
 A hands-on reading series through the C++ source of Unreal Engine 5.6's rendering subsystem. Each article dissects a specific area of the pipeline with actual source code references and bilingual (English/Chinese) explanations.

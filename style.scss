@@ -241,6 +241,11 @@ a { color: inherit; text-decoration: none; }
 .work:hover .thumb { border-color: var(--ink); transform: translateY(-2px); }
 .work:hover .ttl { color: var(--clay); }
 .work:hover .arrow { color: var(--clay); transform: translate(2px, -2px); }
+.thumb--has-img {
+  background-size: cover;
+  background-position: center center;
+}
+.thumb--has-img::before { display: none; }
 .work-meta {
   display: flex;
   align-items: baseline;

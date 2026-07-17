@@ -41,7 +41,11 @@ layout: default
           {% assign swatch_idx = forloop.index0 | modulo: 3 %}
           {% assign swatch = swatches[swatch_idx] %}
           <a class="work" href="{{ site.baseurl }}{{ post.url }}" style="--swatch: var(--{{ swatch }});">
-            <div class="thumb" data-label="POST · {{ post.date | date: '%Y' }}"></div>
+            {% if post.thumbnail %}
+              <div class="thumb thumb--has-img" data-label="POST · {{ post.date | date: '%Y' }}" style="background-image: url('{{ post.thumbnail }}');"></div>
+            {% else %}
+              <div class="thumb" data-label="POST · {{ post.date | date: '%Y' }}"></div>
+            {% endif %}
             <div class="work-meta">
               <span class="ttl">{{ post.title }}</span>
               <span class="arrow">↗</span>

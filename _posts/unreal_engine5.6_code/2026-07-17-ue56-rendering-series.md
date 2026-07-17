@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "UE 5.6 Rendering Pipeline — Source Deep Dive"
-date: 2025-07-17 00:00:00 +0800
+date: 2026-07-17 00:00:00 +0800
 category: Unreal Engine
 tags: [UE5, Rendering, C++, Graphics]
 permalink: /ue/

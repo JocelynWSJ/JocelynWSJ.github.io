@@ -1,10 +1,10 @@
 ---
 layout: post
 title: "NeoX Engine Rendering — Shader Deep Dive"
-date: 2025-07-17 12:00:00 +0800
+date: 2026-07-17 12:00:00 +0800
 category: NeoX Engine
 tags: [NeoX, Rendering, Shader, Graphics, HLSL]
-permalink: /neox/
+permalink: /neox-series/
 thumbnail: "/i/neox-cover.jpg"
 ---
 

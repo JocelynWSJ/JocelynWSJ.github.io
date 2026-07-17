@@ -171,9 +171,9 @@
 
   <span class="cm">// 2. Material setup (calls into material_*.hlsl)</span>
   <span class="type">RawData</span> raw_data = <span class="fn">GetRawData</span>(input);   <span class="cm">// texture sampling</span>
-  <span class="fn">SetupMaterial</span>(input, raw_data, mtl);    <span class="cm">// decode → Material struct</span>
+  <span class="fn">SetupMaterial</span>(input, raw_data, mtl);    <span class="cm">// decode --&gt; Material struct</span>
 
-  <span class="cm">// 3. Lighting (calls into lighting.hlsl → shading model)</span>
+  <span class="cm">// 3. Lighting (calls into lighting.hlsl --&gt; shading model)</span>
   <span class="type">LightingResult</span> result = <span class="fn">Lighting</span>(input, mtl, v);
 
   <span class="cm">// 4. Compose final color</span>

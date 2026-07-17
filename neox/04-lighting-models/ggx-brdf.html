@@ -90,16 +90,16 @@
 
   <div class="arch-diagram">
                     D(h) * F(v,h) * G(l,v,h)
-  f_specular = ─────────────────────────────────
-                    4 * (N·L) * (N·V)
+  f_specular = -----------------------------------
+                    4 * (N.L) * (N.V)
 
   Where:
-    D(h) = Normal Distribution Function   → how many microfacets align with H
-    F    = Fresnel reflectance             → angle-dependent reflectivity
-    G    = Geometry / Visibility term      → self-shadowing between microfacets
+    D(h) = Normal Distribution Function   // how many microfacets align with H
+    F    = Fresnel reflectance             // angle-dependent reflectivity
+    G    = Geometry / Visibility term      // self-shadowing between microfacets
     H    = half-vector = normalize(L + V)
-    N·L  = clamped dot(normal, light_dir)
-    N·V  = clamped dot(normal, view_dir)</div>
+    N.L  = clamped dot(normal, light_dir)
+    N.V  = clamped dot(normal, view_dir)</div>
 
   <!-- s2 -->
   <h2 id="s2"><span lang="en">D: GGX Normal Distribution Function</span><span lang="zh">D: GGX 法线分布函数</span></h2>
@@ -205,21 +205,21 @@
   <p lang="en">In the <code>isotropy.hlsl</code> shading model, the final specular term is assembled from D, G, and the Fresnel applied outside:</p>
   <p lang="zh">在 <code>isotropy.hlsl</code> 着色模型中，最终高光项由 D、G 和外部应用的菲涅尔组装：</p>
 
-  <pre><span class="cm">// From isotropy.hlsl → LightingSpecular()</span>
+  <pre><span class="cm">// From isotropy.hlsl -- LightingSpecular()</span>
 <span class="kw">float3</span> <span class="fn">LightingSpecular</span>(...) {
   <span class="kw">return</span> <span class="fn">max</span>(<span class="num">0.0</span>,
     <span class="fn">SmithJointGGXVisibilityTerm</span>(n_dot_l, n_dot_v_abs, roughness_pow2)  <span class="cm">// G term</span>
     * <span class="fn">GGXTerm_ApproxWithPrecomputedVar</span>(n_dot_h, roughness_pow2)        <span class="cm">// D term</span>
-    * n_dot_l                                                          <span class="cm">// N·L</span>
+    * n_dot_l                                                          <span class="cm">// N.L</span>
   );
 }
 
 <span class="cm">// Called from DirectLighting():</span>
 light_specular = <span class="fn">LightingSpecular</span>(...) * data_rw.fresnel * data_rw.atten;
-<span class="cm">//                                       ↑ F_Schlick      ↑ shadow*light</span></pre>
+<span class="cm">//                                       ^ F_Schlick      ^ shadow*light</span></pre>
 
   <div class="arch-diagram">
-Final Specular Per Light = D * G * N·L * F * attenuation * light_color
+Final Specular Per Light = D * G * N.L * F * attenuation * light_color
 
   D = GGXTerm_ApproxWithPrecomputedVar(NdotH, roughness²)
   G = SmithJointGGXVisibilityTerm(NdotL, NdotV, roughness²)

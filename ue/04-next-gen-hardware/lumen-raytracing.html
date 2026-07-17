@@ -10,7 +10,7 @@
     #lang-btn{position:fixed;top:16px;right:20px;z-index:999;background:#37425d;color:#fff;border:none;border-radius:4px;padding:5px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:Gudea,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.2);transition:background .15s;} #lang-btn:hover{background:#4a5a7a;}
     *{box-sizing:border-box;margin:0;padding:0;} body{font-family:Gudea,sans-serif;font-size:16px;line-height:1.8;color:#111;background:#eee;}
     #wrapper{max-width:1100px;margin:0 auto;display:flex;align-items:flex-start;padding:40px 24px;gap:36px;}
-    #sidebar{width:240px;flex-shrink:0;position:sticky;top:24px;max-height:calc(100vh - 48px);overflow-y:auto;font-size:13px;}
+    #sidebar{width:240px;flex-shrink:0;font-size:13px;}
     #sidebar h2{font-size:12px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;border:none;padding:0;}
     #sidebar ol{list-style:none;padding:0;counter-reset:toc;} #sidebar ol li{counter-increment:toc;margin-bottom:4px;}
     #sidebar ol li a{color:#555;text-decoration:none;display:block;padding:2px 0;transition:color .12s;} #sidebar ol li a:hover{color:#58A;}
@@ -36,12 +36,74 @@
     .file-list{list-style:none;padding:0;margin:12px 0;} .file-list li{padding:6px 0;border-bottom:1px solid #ccc;display:flex;align-items:baseline;gap:10px;font-size:14px;} .file-list li:last-child{border-bottom:none;} .file-list .fp{font-family:'Courier New',monospace;font-size:13px;color:#58A;min-width:260px;} .file-list .fd{color:#555;}
     footer{margin-top:48px;padding-top:16px;border-top:1px solid #ccc;font-size:12px;color:#aaa;text-align:center;}
     @media(max-width:800px){#wrapper{flex-direction:column;padding:20px 16px;}#sidebar{width:100%;position:static;max-height:none;margin-bottom:24px;}}
+  
+    /* ── Series Navigation ──────────────────────────────── */
+    #series-nav { margin-bottom: 22px; border-bottom: 1px solid #ccc; padding-bottom: 16px; }
+    #series-nav .snav-label { font-size: 11px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: .08em; display: block; margin-bottom: 10px; }
+    #series-nav ol { list-style: none; padding: 0; margin: 0; }
+    .snav-ch { margin-bottom: 6px; }
+    .snav-ch > span { font-size: 11px; font-weight: 700; color: #555; display: block; padding: 2px 0; letter-spacing: .03em; }
+    .snav-ch > ol { padding-left: 10px; margin-top: 2px; }
+    .snav-item { margin-bottom: 2px; }
+    .snav-item a { font-size: 13px; color: #777; text-decoration: none; display: block; padding: 2px 0; transition: color .12s; }
+    .snav-item a:hover { color: #58A; }
+    .snav-item.active a { color: #37425d; font-weight: 700; }
+    /* ── Prev / Next Navigation ─────────────────────────── */
+    .page-nav { display: flex; justify-content: space-between; align-items: center; margin: 36px 0 0; padding-top: 16px; border-top: 1px solid #ddd; font-size: 14px; }
+    .page-nav a { color: #58A; text-decoration: none; display: flex; align-items: center; gap: 6px; max-width: 42%; }
+    .page-nav a:hover { text-decoration: underline; }
+    .page-nav .pn-label { font-size: 11px; color: #aaa; text-transform: uppercase; display: block; }
+    .page-nav .pn-title { display: block; }
+    .page-nav .prev { text-align: left; }
+    .page-nav .next { text-align: right; }
+    .page-nav .spacer { flex: 1; }
   </style>
 </head>
 <body>
 <button id="lang-btn" onclick="toggleLang()"><span lang="en">中文</span><span lang="zh">English</span></button>
 <div id="wrapper">
 <nav id="sidebar">
+    <div id="series-nav">
+      <span class="snav-label"><span lang="en">Series</span><span lang="zh">系列</span></span>
+      <ol>
+        <li class="snav-ch"><span lang="en">01 Pipeline Paradigms</span><span lang="zh">01 管线范式</span>
+          <ol>
+            <li class="snav-item"><a href="../01-pipeline-paradigms/deferred-shading.html"><span lang="en">Deferred Rendering</span><span lang="zh">延迟渲染</span></a></li>
+            <li class="snav-item"><a href="../01-pipeline-paradigms/forward-shading.html"><span lang="en">Forward Shading</span><span lang="zh">前向渲染</span></a></li>
+          </ol>
+        </li>
+        <li class="snav-ch"><span lang="en">02 Infrastructure & Graph</span><span lang="zh">02 基础设施与图</span>
+          <ol>
+            <li class="snav-item"><a href="../02-infrastructure-graph/rdg-compiler.html"><span lang="en">RDG — Render Dependency Graph</span><span lang="zh">RDG 渲染依赖图</span></a></li>
+            <li class="snav-item"><a href="../02-infrastructure-graph/thread-concurrency.html"><span lang="en">Thread Concurrency</span><span lang="zh">线程并发</span></a></li>
+          </ol>
+        </li>
+        <li class="snav-ch"><span lang="en">03 Shader Architecture</span><span lang="zh">03 Shader 架构</span>
+          <ol>
+            <li class="snav-item"><a href="../03-shader-architecture/material-translation.html"><span lang="en">Shader Architecture</span><span lang="zh">Shader 架构</span></a></li>
+          </ol>
+        </li>
+        <li class="snav-ch"><span lang="en">04 Next-Gen Hardware</span><span lang="zh">04 次世代硬件</span>
+          <ol>
+            <li class="snav-item"><a href="../04-next-gen-hardware/nanite-rasterizer.html"><span lang="en">Nanite</span><span lang="zh">Nanite 虚拟几何</span></a></li>
+            <li class="snav-item active"><a href="../04-next-gen-hardware/lumen-raytracing.html"><span lang="en">Lumen</span><span lang="zh">Lumen GI</span></a></li>
+            <li class="snav-item"><a href="../04-next-gen-hardware/virtual-resources.html"><span lang="en">Virtual Shadow Maps</span><span lang="zh">虚拟阴影贴图</span></a></li>
+          </ol>
+        </li>
+        <li class="snav-ch"><span lang="en">05 Engine Modding</span><span lang="zh">05 引擎魔改</span>
+          <ol>
+            <li class="snav-item"><a href="../05-engine-modding/shading-model-hack.html"><span lang="en">Custom Shading Model</span><span lang="zh">自定义着色模型</span></a></li>
+            <li class="snav-item"><a href="../05-engine-modding/niagara-gpu-compute.html"><span lang="en">Niagara GPU Compute</span><span lang="zh">Niagara GPU 计算</span></a></li>
+          </ol>
+        </li>
+        <li class="snav-ch"><span lang="en">06 Profiling</span><span lang="zh">06 性能分析</span>
+          <ol>
+            <li class="snav-item"><a href="../06-profiling-deep-dives/hardware-profiling.html"><span lang="en">Profiling</span><span lang="zh">性能分析</span></a></li>
+          </ol>
+        </li>
+      </ol>
+    </div>
+
   <h2><span lang="en">Contents</span><span lang="zh">目录</span></h2>
   <ol>
     <li><a href="#s1"><span lang="en">Architecture Overview</span><span lang="zh">架构概览</span></a></li>
@@ -200,6 +262,11 @@ Is HWRT available AND r.Lumen.HardwareRayTracing=1?
     <li><span class="fp">Lumen/LumenRadiosity.cpp</span><span class="fd"><span lang="en">Multi-bounce radiosity within the Surface Cache</span><span lang="zh">表面缓存内的多次弹跳辐射度</span></span></li>
   </ul>
   <footer>Unreal Engine 5.6 &middot; Engine/Source/Runtime/Renderer/Private/Lumen/<br>Source analysis &middot; For learning purposes</footer>
+
+  <div class="page-nav">
+      <a href="../04-next-gen-hardware/nanite-rasterizer.html" class="prev"><span class="pn-label">&larr; Prev</span><span class="pn-title"><span lang="en">Nanite</span><span lang="zh">Nanite 虚拟几何</span></span></a>
+      <a href="../04-next-gen-hardware/virtual-resources.html" class="next"><span class="pn-label">Next &rarr;</span><span class="pn-title"><span lang="en">Virtual Shadow Maps</span><span lang="zh">虚拟阴影贴图</span></span></a>
+  </div>
 </main>
 </div>
 <script>

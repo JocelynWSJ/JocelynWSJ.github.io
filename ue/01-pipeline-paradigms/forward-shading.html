@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Forward Shading Pipeline</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Gudea">
+  <script>
+    (function () {
+      if (localStorage.getItem('ue-doc-lang') === 'zh') {
+        document.documentElement.classList.add('lang-zh');
+        document.documentElement.lang = 'zh-CN';
+      }
+    })();
+  </script>
+  <style>
+    html:not(.lang-zh) [lang="zh"] { display: none; }
+    html.lang-zh       [lang="en"] { display: none; }
+
+    #lang-btn {
+      position: fixed; top: 16px; right: 20px; z-index: 999;
+      background: #37425d; color: #fff; border: none; border-radius: 4px;
+      padding: 5px 14px; font-size: 13px; font-weight: 700; cursor: pointer;
+      font-family: Gudea, sans-serif; box-shadow: 0 2px 6px rgba(0,0,0,.2);
+      transition: background .15s;
+    }
+    #lang-btn:hover { background: #4a5a7a; }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Gudea, sans-serif;
+      font-size: 16px; line-height: 1.8; color: #111;
+      background: #eee;
+    }
+
+    #wrapper {
+      max-width: 1100px; margin: 0 auto;
+      display: flex; align-items: flex-start;
+      padding: 40px 24px; gap: 36px;
+    }
+
+    #sidebar {
+      width: 240px; flex-shrink: 0;
+      position: sticky; top: 24px;
+      max-height: calc(100vh - 48px);
+      overflow-y: auto; font-size: 13px;
+    }
+    #sidebar h2 {
+      font-size: 12px; font-weight: 700; color: #888;
+      text-transform: uppercase; letter-spacing: .08em;
+      margin-bottom: 12px; border: none; padding: 0;
+    }
+    #sidebar ol { list-style: none; padding: 0; counter-reset: toc; }
+    #sidebar ol li { counter-increment: toc; margin-bottom: 4px; }
+    #sidebar ol li a {
+      color: #555; text-decoration: none; display: block;
+      padding: 2px 0; transition: color .12s;
+    }
+    #sidebar ol li a:hover { color: #58A; }
+    #sidebar ol li a::before {
+      content: counter(toc, decimal-leading-zero) '. ';
+      color: #bbb; font-size: 11px;
+      font-family: 'Courier New', monospace;
+    }
+
+    #content { flex: 1; min-width: 0; }
+
+    .page-header {
+      margin-bottom: 32px; padding-bottom: 20px;
+      border-bottom: 1px solid #ddd;
+    }
+    .page-header .crumb {
+      font-size: 11px; color: #999; text-transform: uppercase;
+      letter-spacing: .06em; margin-bottom: 8px;
+    }
+    .page-header h1 {
+      font-size: 1.8rem; font-weight: 900; color: #303236;
+      margin-bottom: 8px; line-height: 1.25;
+    }
+    .page-header .subtitle {
+      font-family: 'Courier New', monospace; font-size: 13px; color: #777;
+    }
+
+    h2 { color: #37425d; font-size: 22px; margin: 36px 0 10px; }
+    h3 { color: #633739; font-size: 17px; margin: 24px 0 8px; }
+
+    p { margin-bottom: 14px; }
+    a { color: #58A; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    strong { color: #222; }
+
+    .fun { font-family: 'Courier New', monospace; color: #2a6496; }
+    .var { font-family: 'Courier New', monospace; color: #227; }
+    .def { color: green; font-weight: 600; }
+
+    code {
+      font-family: 'Courier New', monospace; font-size: 14px;
+      background: #ddd; border-radius: 3px; padding: 1px 5px;
+    }
+
+    pre {
+      background: #282c34; color: #abb2bf; border-radius: 5px;
+      padding: 16px 18px; overflow-x: auto; margin: 14px 0 18px;
+      font-family: 'Courier New', monospace; font-size: 14px; line-height: 1.6;
+    }
+    pre code { background: none; padding: 0; color: inherit; }
+    .kw { color: #c678dd; } .fn { color: #61afef; }
+    .cm { color: #5c6370; font-style: italic; } .str { color: #98c379; }
+    .num { color: #d19a66; } .type { color: #e5c07b; }
+
+    .note {
+      display: block; margin: 18px 0; padding: 15px;
+      background: #D8F5D8; color: #444; border-radius: 5px;
+      border: 2px solid #AFDFAF; font-size: 15px; line-height: 1.7;
+    }
+    .warning {
+      display: block; margin: 18px 0; padding: 15px;
+      background: #FFD2D2; color: #444; border-radius: 5px;
+      border: 2px solid #E0B3B3; font-size: 15px; line-height: 1.7;
+    }
+
+    ul, ol { padding-left: 22px; margin-bottom: 14px; }
+    li { margin-bottom: 5px; }
+
+    .step {
+      display: inline-block; font-size: 11px; font-weight: 700;
+      font-family: 'Courier New', monospace;
+      color: #fff; background: #37425d; padding: 2px 7px;
+      border-radius: 3px; margin-right: 8px; vertical-align: middle;
+    }
+
+    .phase-meta {
+      font-size: 13px; color: #888; margin: -2px 0 10px;
+      font-family: 'Courier New', monospace;
+    }
+    .phase-meta .tag {
+      display: inline-block; font-size: 11px; font-weight: 700;
+      border-radius: 3px; padding: 1px 6px; margin-left: 6px;
+    }
+    .tag-cpu   { background: #fff0d8; color: #8a4a00; border: 1px solid #e8cc88; }
+    .tag-gpu   { background: #d8f0e8; color: #1a6040; border: 1px solid #8ad4b0; }
+    .tag-key   { background: #e8f0ff; color: #1a3a8a; border: 1px solid #aac0f0; }
+    .tag-diff  { background: #f8e8ff; color: #5a1a8a; border: 1px solid #c8a0e8; }
+
+    .table-wrap { overflow-x: auto; margin: 14px 0; }
+    table { border-collapse: collapse; font-size: 14px; width: 100%; }
+    th, td { padding: 8px 12px; border-bottom: 1px solid #aaa; text-align: left; }
+    th { border-bottom: 2px solid #888; font-weight: 700; background: #ddd; }
+    tr:nth-child(even) td { background: #e8e8e8; }
+    td:first-child { font-family: 'Courier New', monospace; font-size: 13px; color: #2a6496; white-space: nowrap; }
+
+    .compare-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0;
+    }
+    .compare-box {
+      border: 1px solid #ccc; border-radius: 5px; padding: 14px 16px;
+      background: #f9f9f9;
+    }
+    .compare-box h4 {
+      font-size: 13px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .06em; margin-bottom: 10px; color: #555;
+    }
+    .compare-box ul { padding-left: 18px; margin: 0; }
+    .compare-box li { font-size: 14px; margin-bottom: 4px; }
+    .compare-box.highlight { border-color: #58A; background: #f0f5ff; }
+    .compare-box.highlight h4 { color: #37425d; }
+
+    .file-list { list-style: none; padding: 0; margin: 12px 0; }
+    .file-list li {
+      padding: 6px 0; border-bottom: 1px solid #ccc;
+      display: flex; align-items: baseline; gap: 10px; font-size: 14px;
+    }
+    .file-list li:last-child { border-bottom: none; }
+    .file-list .fp { font-family: 'Courier New', monospace; font-size: 13px; color: #58A; min-width: 260px; }
+    .file-list .fd { color: #555; }
+
+    footer {
+      margin-top: 48px; padding-top: 16px; border-top: 1px solid #ccc;
+      font-size: 12px; color: #aaa; text-align: center;
+    }
+
+    @media (max-width: 800px) {
+      #wrapper { flex-direction: column; padding: 20px 16px; }
+      #sidebar { width: 100%; position: static; max-height: none; margin-bottom: 24px; }
+      .compare-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<button id="lang-btn" onclick="toggleLang()">
+  <span lang="en">中文</span><span lang="zh">English</span>
+</button>
+
+<div id="wrapper">
+
+<!-- ════ SIDEBAR ════ -->
+<nav id="sidebar">
+  <h2><span lang="en">Contents</span><span lang="zh">目录</span></h2>
+  <ol>
+    <li><a href="#s1"><span lang="en">The Two Tracks</span><span lang="zh">双轨制概览</span></a></li>
+    <li><a href="#s2"><span lang="en">Desktop Forward in Deferred Renderer</span><span lang="zh">延迟渲染器中的桌面前向分支</span></a></li>
+    <li><a href="#s3"><span lang="en">FMobileSceneRenderer — Constructor</span><span lang="zh">FMobileSceneRenderer 构造函数</span></a></li>
+    <li><a href="#s4"><span lang="en">Mobile Render() Loop</span><span lang="zh">移动端 Render() 主循环</span></a></li>
+    <li><a href="#p0"><span lang="en">Stage 00 — Visibility &amp; Setup</span><span lang="zh">阶段 00 — 可见性与初始化</span></a></li>
+    <li><a href="#p1"><span lang="en">Stage 01 — Lights &amp; Shadows (Early)</span><span lang="zh">阶段 01 — 灯光与阴影（前置）</span></a></li>
+    <li><a href="#p2"><span lang="en">Stage 02 — Depth Prepass</span><span lang="zh">阶段 02 — 深度预通道</span></a></li>
+    <li><a href="#p3"><span lang="en">Stage 03 — RenderForward: Single Pass</span><span lang="zh">阶段 03 — 单 Pass 前向渲染</span></a></li>
+    <li><a href="#p4"><span lang="en">Stage 04 — Post Processing</span><span lang="zh">阶段 04 — 后处理</span></a></li>
+    <li><a href="#s5"><span lang="en">Light Data Architecture</span><span lang="zh">光照数据架构</span></a></li>
+    <li><a href="#s6"><span lang="en">MobileBasePassPixelShader</span><span lang="zh">移动端像素着色器深析</span></a></li>
+    <li><a href="#s7"><span lang="en">ForwardLightingCommon.ush</span><span lang="zh">桌面前向光照公共着色器</span></a></li>
+    <li><a href="#s8"><span lang="en">TBDR Hardware Analysis</span><span lang="zh">TBDR 硬件博弈分析</span></a></li>
+    <li><a href="#s9"><span lang="en">Key CVars</span><span lang="zh">关键控制台变量</span></a></li>
+    <li><a href="#s10"><span lang="en">Source Navigation</span><span lang="zh">源码导航</span></a></li>
+  </ol>
+</nav>
+
+<!-- ════ MAIN CONTENT ════ -->
+<main id="content">
+
+  <div class="page-header">
+    <div class="crumb">Unreal Engine 5.6 &middot; Source Analysis &middot; Part 01</div>
+    <h1>Forward Shading Pipeline</h1>
+    <div class="subtitle">
+      MobileShadingRenderer.cpp &middot; MobileBasePassRendering.cpp &middot;
+      ForwardLightingCommon.ush &middot; MobileBasePassPixelShader.usf
+    </div>
+  </div>
+
+  <!-- ══ Section 1: Two Tracks ══ -->
+  <h2 id="s1"><span lang="en">The Two Tracks: Desktop Forward &amp; Mobile Forward</span><span lang="zh">双轨制：桌面前向与移动前向</span></h2>
+
+  <p lang="en">
+    Contrary to a common assumption, Unreal Engine 5.6 does not have a dedicated <code>ForwardShadingRenderer.cpp</code>.
+    Forward shading exists on two separate tracks, each serving very different hardware targets:
+  </p>
+  <p lang="zh">
+    与常见认知不同，UE 5.6 并没有独立的 <code>ForwardShadingRenderer.cpp</code>。
+    前向渲染以两条独立轨道运行，分别服务于截然不同的硬件目标：
+  </p>
+
+  <div class="compare-grid">
+    <div class="compare-box">
+      <h4><span lang="en">Desktop Forward</span><span lang="zh">桌面前向</span></h4>
+      <ul>
+        <li lang="en">Controlled by <code>IsForwardShadingEnabled(ShaderPlatform)</code></li>
+        <li lang="zh">由 <code>IsForwardShadingEnabled(ShaderPlatform)</code> 控制</li>
+        <li lang="en">Lives inside <span class="fun">FDeferredShadingSceneRenderer</span></li>
+        <li lang="zh">存在于 <span class="fun">FDeferredShadingSceneRenderer</span> 内部</li>
+        <li lang="en">Skips GBuffer writes; lighting computed in base pass shader using Clustered Light Grid</li>
+        <li lang="zh">跳过 GBuffer 写入；在 Base Pass 着色器中使用 Clustered Light Grid 计算光照</li>
+        <li lang="en">Targets PC/Console VR where deferred shading is problematic with MSAA</li>
+        <li lang="zh">针对 PC/主机 VR 场景，延迟着色在此场景下与 MSAA 不兼容</li>
+      </ul>
+    </div>
+    <div class="compare-box highlight">
+      <h4><span lang="en">Mobile Forward (Primary focus)</span><span lang="zh">移动端前向（重点）</span></h4>
+      <ul>
+        <li lang="en">Owned by <span class="fun">FMobileSceneRenderer</span></li>
+        <li lang="zh">由 <span class="fun">FMobileSceneRenderer</span> 管理</li>
+        <li lang="en">Fully separate renderer class — not a branch of <span class="fun">FDeferredShadingSceneRenderer</span></li>
+        <li lang="zh">完全独立的渲染器类，不是 <span class="fun">FDeferredShadingSceneRenderer</span> 的分支</li>
+        <li lang="en">Designed to exploit <span class="def">TBDR</span> (Tile-Based Deferred Rendering) hardware on iOS/Android</li>
+        <li lang="zh">专为利用 iOS/Android 上的 <span class="def">TBDR</span>（基于瓦片的延迟渲染）硬件而设计</li>
+        <li lang="en">Can optionally switch to Mobile Deferred via <code>IsMobileDeferredShadingEnabled()</code></li>
+        <li lang="zh">可通过 <code>IsMobileDeferredShadingEnabled()</code> 可选地切换到移动端延迟着色</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ══ Section 2: Desktop Forward ══ -->
+  <h2 id="s2"><span lang="en">Desktop Forward: A Branch Inside the Deferred Renderer</span><span lang="zh">桌面前向：延迟渲染器内的分支</span></h2>
+
+  <p lang="en">
+    When <code>r.ForwardShading=1</code> is set on PC, <span class="fun">FDeferredShadingSceneRenderer</span> skips the
+    GBuffer entirely and computes lighting per-pixel inside the base pass using
+    <span class="fun">GetForwardDirectLightingSplit()</span> from <code>ForwardLightingCommon.ush</code>.
+    The key conditional that drives most of the pipeline differences is:
+  </p>
+  <p lang="zh">
+    在 PC 上设置 <code>r.ForwardShading=1</code> 时，<span class="fun">FDeferredShadingSceneRenderer</span> 完全跳过 GBuffer，
+    在 Base Pass 内使用 <code>ForwardLightingCommon.ush</code> 中的 <span class="fun">GetForwardDirectLightingSplit()</span>
+    逐像素计算光照。驱动大多数管线差异的关键条件判断是：
+  </p>
+
+  <pre><span class="cm">// DeferredShadingRenderer.cpp — multiple call sites</span>
+<span class="kw">if</span> (<span class="fn">IsForwardShadingEnabled</span>(ShaderPlatform))
+{
+    <span class="cm">// Forward-specific early paths:</span>
+    <span class="fn">RenderShadowDepthMaps</span>(...);          <span class="cm">// Shadows BEFORE base pass</span>
+    <span class="fn">RenderForwardShadowProjections</span>(...); <span class="cm">// Pre-render shadow mask texture</span>
+    <span class="fn">ComputeVolumetricFog</span>(...);           <span class="cm">// Fog also before base pass</span>
+}
+<span class="kw">else</span>
+{
+    <span class="cm">// Deferred path: shadows run AFTER base pass</span>
+}</pre>
+
+  <p lang="en">
+    The most important structural difference: in desktop forward, shadow maps are rendered <strong>before</strong>
+    the base pass, and their results are written into a screen-space <code>ForwardScreenSpaceShadowMask</code> texture.
+    The base pass pixel shader then samples this texture at <code>GetForwardDynamicShadowFactors(ScreenUV)</code>
+    to apply pre-computed shadowing. This avoids the need for per-light shadow projection passes after lighting.
+  </p>
+  <p lang="zh">
+    最重要的结构性差异：桌面前向中阴影贴图在 Base Pass <strong>之前</strong>渲染，结果写入屏幕空间的
+    <code>ForwardScreenSpaceShadowMask</code> 纹理。Base Pass 像素着色器通过
+    <code>GetForwardDynamicShadowFactors(ScreenUV)</code> 采样此纹理以应用预计算阴影，
+    避免了光照后逐光源投影 Pass 的需要。
+  </p>
+
+  <!-- ══ Section 3: Constructor ══ -->
+  <h2 id="s3"><span lang="en">FMobileSceneRenderer — Constructor &amp; Key Flags</span><span lang="zh">FMobileSceneRenderer — 构造函数与关键标志</span></h2>
+
+  <p lang="en">
+    All mobile pipeline decisions are made in the constructor (<code>MobileShadingRenderer.cpp:303</code>),
+    evaluated once per frame before any rendering work starts. Understanding these flags is the key to
+    understanding every branch in the mobile renderer.
+  </p>
+  <p lang="zh">
+    所有移动端管线决策都在构造函数（<code>MobileShadingRenderer.cpp:303</code>）中完成，
+    在任何渲染工作开始前每帧计算一次。理解这些标志是理解移动端渲染器每个分支的关键。
+  </p>
+
+  <pre><span class="fn">FMobileSceneRenderer</span>::<span class="fn">FMobileSceneRenderer</span>(...)
+    : <span class="fn">FSceneRenderer</span>(InViewFamily, HitProxyConsumer)
+    , bGammaSpace(!<span class="fn">IsMobileHDR</span>())                               <span class="cm">// LDR = no tonemap pass needed</span>
+    , bDeferredShading(<span class="fn">IsMobileDeferredShadingEnabled</span>(ShaderPlatform))  <span class="cm">// Mobile Deferred toggle</span>
+    , bRequiresDBufferDecals(<span class="fn">IsUsingDBuffers</span>(ShaderPlatform))
+    , bEnableClusteredLocalLights(<span class="fn">MobileForwardEnableLocalLights</span>(ShaderPlatform))
+    , bEnableClusteredReflections(<span class="fn">MobileForwardEnableClusteredReflections</span>(ShaderPlatform))
+{
+    bIsFullDepthPrepassEnabled = (Scene->EarlyZPassMode == DDM_AllOpaque
+                                || Scene->EarlyZPassMode == DDM_AllOpaqueNoVelocity);
+    bTonemapSubpass   = <span class="fn">IsMobileTonemapSubpassEnabled</span>(...);   <span class="cm">// Inline tonemap in base pass (Vulkan)</span>
+    bTonemapSubpassInline = ...;
+    bRequiresSceneDepthAux = <span class="fn">MobileRequiresSceneDepthAux</span>(...); <span class="cm">// iOS needs SceneDepthAux RT</span>
+}</pre>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th><span lang="en">Flag</span><span lang="zh">标志</span></th>
+        <th><span lang="en">Condition</span><span lang="zh">条件</span></th>
+        <th><span lang="en">Effect</span><span lang="zh">效果</span></th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td>bDeferredShading</td>
+          <td><code>IsMobileDeferredShadingEnabled()</code></td>
+          <td><span lang="en">Routes to <code>RenderDeferredSinglePass/MultiPass</code> instead of <code>RenderForward</code></span><span lang="zh">路由到 <code>RenderDeferredSinglePass/MultiPass</code> 而非 <code>RenderForward</code></span></td>
+        </tr>
+        <tr>
+          <td>bIsFullDepthPrepassEnabled</td>
+          <td><code>DDM_AllOpaque / DDM_AllOpaqueNoVelocity</code></td>
+          <td><span lang="en">Enables full Z-prepass; depth is loaded (not cleared) in main pass — critical for TBDR depth fetch</span><span lang="zh">启用完整深度预通道；主 Pass 加载而非清除深度——对 TBDR 深度读取至关重要</span></td>
+        </tr>
+        <tr>
+          <td>bEnableClusteredLocalLights</td>
+          <td><code>MobileForwardEnableLocalLights()</code></td>
+          <td><span lang="en">Builds a clustered light grid; enables per-pixel local light loops in the pixel shader</span><span lang="zh">构建聚簇光源网格；在像素着色器中启用逐像素局部光源循环</span></td>
+        </tr>
+        <tr>
+          <td>bTonemapSubpass</td>
+          <td>Vulkan + <code>r.Mobile.TonemapSubpass</code></td>
+          <td><span lang="en">Tonemapping runs as a subpass inside the same render pass — eliminates one full frame buffer write</span><span lang="zh">色调映射作为同一渲染通道内的子通道运行——消除一次完整帧缓冲写入</span></td>
+        </tr>
+        <tr>
+          <td>bRequiresMultiPass</td>
+          <td><span lang="en">Set in <code>InitViews()</code></span><span lang="zh">在 <code>InitViews()</code> 中设置</span></td>
+          <td><span lang="en">Translucency or scene depth access forces a second render pass</span><span lang="zh">半透明或场景深度访问强制第二个渲染通道</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ══ Section 4: Render Loop ══ -->
+  <h2 id="s4"><span lang="en">Mobile Render() Main Loop</span><span lang="zh">移动端 Render() 主循环</span></h2>
+
+  <p lang="en">
+    Unlike the deferred renderer, the mobile <span class="fun">Render()</span> loop is significantly more compact
+    (under 600 lines of active logic vs. 2300+). The most critical structural difference from deferred rendering
+    is that <strong>shadows are rendered before the base pass</strong>, not after.
+    This is essential because forward shading needs shadow data available during material evaluation.
+  </p>
+  <p lang="zh">
+    与延迟渲染器不同，移动端 <span class="fun">Render()</span> 循环更为紧凑（活跃逻辑不足 600 行，而延迟端超过 2300 行）。
+    与延迟渲染最关键的结构性差异是：<strong>阴影在 Base Pass 之前渲染</strong>，而非之后。
+    这是必须的，因为前向着色需要在材质评估期间就能获取阴影数据。
+  </p>
+
+  <h3 id="p0"><span class="step">00</span><span lang="en">Visibility &amp; Setup</span><span lang="zh">可见性与初始化</span></h3>
+  <p class="phase-meta"><span class="tag tag-cpu">CPU</span> <span class="tag tag-key"><span lang="en">Same as Deferred</span><span lang="zh">与延迟一致</span></span></p>
+  <ul>
+    <li lang="en"><code>InitViews()</code> — visibility, MeshDrawCommands, sets <code>bRequiresMultiPass</code></li>
+    <li lang="zh"><code>InitViews()</code> — 可见性、MeshDrawCommands 生成，设置 <code>bRequiresMultiPass</code></li>
+    <li lang="en"><code>GPUScene.UploadDynamicPrimitiveShaderDataForView()</code> — GPU primitive data</li>
+    <li lang="zh"><code>GPUScene.UploadDynamicPrimitiveShaderDataForView()</code> — GPU 图元数据上传</li>
+    <li lang="en"><code>GatherAndSortLights()</code> + <code>PrepareForwardLightData()</code> — <strong>synchronous</strong> (no async task unlike deferred)</li>
+    <li lang="zh"><code>GatherAndSortLights()</code> + <code>PrepareForwardLightData()</code> — <strong>同步执行</strong>（不像延迟端有异步任务）</li>
+    <li lang="en">Sky atmosphere LUT generation if needed</li>
+    <li lang="zh">按需生成天空大气 LUT</li>
+  </ul>
+
+  <h3 id="p1"><span class="step">01</span><span lang="en">Lights &amp; Shadows — Before Base Pass</span><span lang="zh">灯光与阴影 — Base Pass 之前</span></h3>
+  <p class="phase-meta"><span class="tag tag-gpu">GPU</span> <span class="tag tag-diff"><span lang="en">Key Difference vs Deferred</span><span lang="zh">与延迟的关键区别</span></span></p>
+  <ul>
+    <li lang="en"><code>RenderShadowDepthMaps()</code> — all shadow maps rendered <em>before</em> the base pass</li>
+    <li lang="zh"><code>RenderShadowDepthMaps()</code> — 所有阴影贴图在 Base Pass <em>之前</em>渲染</li>
+    <li lang="en"><code>ComputeVolumetricFog()</code> — volumetric fog also pre-computed for forward</li>
+    <li lang="zh"><code>ComputeVolumetricFog()</code> — 体积雾同样在前向路径中预计算</li>
+    <li lang="en"><code>RenderMobileLocalLightsBuffer()</code> — <span class="def">Local Light Prepass</span>: a Compute shader tiles the screen and writes merged local light data into two textures (<code>LocalLightTextureA</code>: RGB light color, <code>LocalLightTextureB</code>: packed direction + specular scale). This is only possible with <code>bIsFullDepthPrepassEnabled</code> since it needs depth.</li>
+    <li lang="zh"><code>RenderMobileLocalLightsBuffer()</code> — <span class="def">局部光源预通道</span>：Compute Shader 对屏幕进行分块，将合并后的局部光源数据写入两张纹理（<code>LocalLightTextureA</code>：RGB 光色，<code>LocalLightTextureB</code>：打包方向 + 高光缩放）。此通道仅在 <code>bIsFullDepthPrepassEnabled</code> 时可用，因为它需要深度缓冲。</li>
+  </ul>
+
+  <div class="note">
+    <span lang="en"><strong>Why shadows before base pass?</strong> In forward shading, every pixel's material shader must evaluate lighting <em>including shadows</em> in a single pass. There is no separate lighting stage that can reference shadow data after geometry is drawn. Shadow maps therefore must be ready before any triangle reaches the pixel stage.</span>
+    <span lang="zh"><strong>为什么阴影在 Base Pass 之前？</strong> 前向着色中，每个像素的材质着色器必须在单个 Pass 中同时评估光照<em>和阴影</em>。没有单独的光照阶段可以在几何体绘制后引用阴影数据，因此阴影贴图必须在任何三角形到达像素阶段之前就已就绪。</span>
+  </div>
+
+  <h3 id="p2"><span class="step">02</span><span lang="en">Full Depth Prepass (Conditional)</span><span lang="zh">完整深度预通道（条件执行）</span></h3>
+  <p class="phase-meta"><span class="tag tag-gpu">GPU</span> <span class="tag tag-key"><span lang="en">TBDR Critical</span><span lang="zh">TBDR 关键</span></span></p>
+
+  <p lang="en">
+    When <code>bIsFullDepthPrepassEnabled</code> is true, <code>RenderFullDepthPrepass()</code> writes all opaque depth.
+    This enables two important optimizations downstream:
+  </p>
+  <p lang="zh">
+    当 <code>bIsFullDepthPrepassEnabled</code> 为 true 时，<code>RenderFullDepthPrepass()</code> 写入所有不透明深度。
+    这为后续开启两个重要优化：
+  </p>
+  <ul>
+    <li lang="en">The main base pass loads depth as read-only, which on TBDR means the depth attachment stays in on-chip memory between the prepass and main pass — zero DRAM bandwidth for depth.</li>
+    <li lang="zh">主 Base Pass 以只读方式加载深度，这意味着在 TBDR 上深度附件在预通道和主通道之间保持在片上内存中——深度带宽为零。</li>
+    <li lang="en">The <code>RenderMobileLocalLightsBuffer()</code> prepass can sample depth to compute per-tile light lists.</li>
+    <li lang="zh"><code>RenderMobileLocalLightsBuffer()</code> 预通道可以采样深度以计算每瓦片光源列表。</li>
+    <li lang="en">After the prepass, HZB is built (<code>RenderHZB()</code>) for occlusion culling.</li>
+    <li lang="zh">预通道结束后，构建 HZB（<code>RenderHZB()</code>）用于遮挡剔除。</li>
+  </ul>
+
+  <h3 id="p3"><span class="step">03</span><span lang="en">RenderForward — The Single-Pass Design</span><span lang="zh">RenderForward — 单 Pass 设计</span></h3>
+  <p class="phase-meta"><span class="tag tag-gpu">GPU</span> <span class="tag tag-diff"><span lang="en">Core of Mobile Forward</span><span lang="zh">移动前向核心</span></span></p>
+
+  <p lang="en">
+    <span class="fun">RenderForward()</span> dispatches to either <span class="fun">RenderForwardSinglePass()</span>
+    or <span class="fun">RenderForwardMultiPass()</span> depending on <code>bRequiresMultiPass</code>.
+    The single-pass variant is the default and the architecturally important one:
+  </p>
+  <p lang="zh">
+    <span class="fun">RenderForward()</span> 根据 <code>bRequiresMultiPass</code> 分发到
+    <span class="fun">RenderForwardSinglePass()</span> 或 <span class="fun">RenderForwardMultiPass()</span>。
+    单 Pass 变体是默认路径，也是架构上最重要的：
+  </p>
+
+  <pre><span class="cm">// MobileShadingRenderer.cpp:1782 — the entire opaque+translucency pipeline is ONE RDG pass</span>
+GraphBuilder.<span class="fn">AddPass</span>(
+    RDG_EVENT_NAME(<span class="str">"SceneColorRendering"</span>),
+    PassParameters,
+    ERDGPassFlags::Raster | ERDGPassFlags::NeverMerge, <span class="cm">// NeverMerge: per-view passes must stay separate</span>
+    [<span class="kw">this</span>, ...](FRHICommandList& RHICmdList)
+{
+    <span class="fn">RenderMaskedPrePass</span>(RHICmdList, View, ...);  <span class="cm">// Depth write for masked materials</span>
+    <span class="fn">RenderMobileBasePass</span>(RHICmdList, View, ...); <span class="cm">// Opaque + sky: material eval + lighting + fog</span>
+
+    RHICmdList.<span class="fn">NextSubpass</span>();                    <span class="cm">// TBDR: depth now readable as framebuffer fetch</span>
+
+    <span class="fn">RenderDecals</span>(RHICmdList, View, ...);
+    <span class="fn">RenderModulatedShadowProjections</span>(...);
+    <span class="fn">RenderFog</span>(RHICmdList, View);                 <span class="cm">// Pixel fog — uses subpass depth fetch</span>
+    <span class="fn">RenderTranslucency</span>(RHICmdList, View, ...);   <span class="cm">// Translucency also in same render pass</span>
+
+    <span class="fn">PreTonemapMSAA</span>(RHICmdList, SceneTextures);
+    <span class="cm">// Optional: inline tonemap subpass (Vulkan)</span>
+});</pre>
+
+  <p lang="en">
+    The <code>RHICmdList.NextSubpass()</code> call is the hardware key. On TBDR GPUs this signals the driver
+    that subsequent draw calls may read the depth buffer from the same render pass as a <span class="def">framebuffer fetch</span>
+    &mdash; without any round-trip to DRAM. This is how the fog pass reads per-pixel depth without
+    sampling a depth texture.
+  </p>
+  <p lang="zh">
+    <code>RHICmdList.NextSubpass()</code> 调用是硬件关键点。在 TBDR GPU 上，这向驱动程序发出信号：
+    后续绘制调用可以通过<span class="def">帧缓冲读取</span>从同一渲染通道读取深度缓冲区，
+    无需任何 DRAM 往返。这就是雾效 Pass 在不采样深度纹理的情况下读取逐像素深度的方式。
+  </p>
+
+  <h3 id="p4"><span class="step">04</span><span lang="en">Post Processing</span><span lang="zh">后处理</span></h3>
+  <p class="phase-meta"><span class="tag tag-gpu">GPU</span></p>
+  <ul>
+    <li lang="en"><code>AddMobilePostProcessingPasses()</code> — mobile-specific post chain: TAA, Bloom, DoF, Tonemap</li>
+    <li lang="zh"><code>AddMobilePostProcessingPasses()</code> — 移动端专属后处理链：TAA、Bloom、DoF、色调映射</li>
+    <li lang="en">In LDR mode (<code>bGammaSpace</code>), tonemap runs inline as a subpass — eliminating a full framebuffer resolve</li>
+    <li lang="zh">LDR 模式（<code>bGammaSpace</code>）下，色调映射以子通道内联运行——消除完整帧缓冲解析</li>
+    <li lang="en">Eye adaptation via <code>IsMobileEyeAdaptationEnabled()</code> — separate histogram pass if enabled</li>
+    <li lang="zh">通过 <code>IsMobileEyeAdaptationEnabled()</code> 控制曝光自适应——启用时有独立直方图 Pass</li>
+  </ul>
+
+  <!-- ══ Section 5: Light Architecture ══ -->
+  <h2 id="s5"><span lang="en">Light Data Architecture</span><span lang="zh">光照数据架构</span></h2>
+
+  <p lang="en">
+    Mobile forward uses three distinct mechanisms to deliver light data to shaders,
+    reflecting the tension between shader simplicity and supporting more lights:
+  </p>
+  <p lang="zh">
+    移动端前向使用三种不同机制向着色器传递光照数据，反映了着色器简洁性与支持更多光源之间的权衡：
+  </p>
+
+  <h3><span lang="en">1. Directional Light — Uniform Buffer</span><span lang="zh">1. 方向光 — Uniform Buffer</span></h3>
+  <p lang="en">
+    The primary directional light is always passed via <code>MobileDirectionalLight</code> uniform buffer
+    (<span class="fun">FMobileDirectionalLightShaderParameters</span>). The pixel shader evaluates it first
+    with a direct <code>MobileDirectionalLight.DirectionalLightDirectionAndShadowTransition</code> access
+    at line 1044 of <code>MobileBasePassPixelShader.usf</code>. No light loop required —
+    it's hardcoded as the primary light source.
+  </p>
+  <p lang="zh">
+    主方向光始终通过 <code>MobileDirectionalLight</code> uniform buffer（<span class="fun">FMobileDirectionalLightShaderParameters</span>）传递。
+    像素着色器首先在 <code>MobileBasePassPixelShader.usf</code> 第 1044 行通过直接访问
+    <code>MobileDirectionalLight.DirectionalLightDirectionAndShadowTransition</code> 对其进行评估。
+    不需要光源循环——它被硬编码为主光源。
+  </p>
+
+  <h3><span lang="en">2. Local Lights — Three Modes</span><span lang="zh">2. 局部光源 — 三种模式</span></h3>
+
+  <p lang="en">
+    Local (point/spot) lights are handled by one of three exclusive modes, selected at shader compile time
+    via <code>MERGED_LOCAL_LIGHTS_MOBILE</code> and <code>ENABLE_CLUSTERED_LIGHTS</code> defines:
+  </p>
+  <p lang="zh">
+    局部（点光源/聚光灯）光源通过三种互斥模式之一处理，在着色器编译时通过
+    <code>MERGED_LOCAL_LIGHTS_MOBILE</code> 和 <code>ENABLE_CLUSTERED_LIGHTS</code> 定义来选择：
+  </p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>Mode</th>
+        <th><span lang="en">Define</span><span lang="zh">宏定义</span></th>
+        <th><span lang="en">Mechanism</span><span lang="zh">机制</span></th>
+        <th><span lang="en">Trade-off</span><span lang="zh">权衡</span></th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td><span lang="en">Prepass Buffer</span><span lang="zh">预通道缓冲</span></td>
+          <td><code>MERGED_LOCAL_LIGHTS_MOBILE == 1</code></td>
+          <td><span lang="en">Reads from <code>LocalLightTextureA/B</code> written by <code>RenderMobileLocalLightsBuffer()</code>. All local lights merged into single direction + color per pixel.</span><span lang="zh">从 <code>RenderMobileLocalLightsBuffer()</code> 写入的 <code>LocalLightTextureA/B</code> 中读取。所有局部光源每像素合并为单一方向和颜色。</span></td>
+          <td><span lang="en">Lowest ALU cost in base pass; requires full depth prepass</span><span lang="zh">Base Pass ALU 开销最低；需要完整深度预通道</span></td>
+        </tr>
+        <tr>
+          <td><span lang="en">Clustered Merge</span><span lang="zh">聚簇合并</span></td>
+          <td><code>MERGED_LOCAL_LIGHTS_MOBILE == 2</code></td>
+          <td><span lang="en">Iterates clustered light grid per pixel, merges contributions via <code>MergeLocalLights()</code> into one synthetic light direction</span><span lang="zh">每像素遍历聚簇光源网格，通过 <code>MergeLocalLights()</code> 将贡献合并为一个合成光照方向</span></td>
+          <td><span lang="en">Better quality than mode 1; heavier per-pixel ALU</span><span lang="zh">质量优于模式 1；每像素 ALU 开销更重</span></td>
+        </tr>
+        <tr>
+          <td><span lang="en">Full Clustered</span><span lang="zh">完整聚簇</span></td>
+          <td><code>ENABLE_CLUSTERED_LIGHTS</code></td>
+          <td><span lang="en">Full per-pixel light loop via <code>AccumulateLightGridLocalLighting()</code> — similar to desktop deferred clustered, but runs inside the forward base pass</span><span lang="zh">通过 <code>AccumulateLightGridLocalLighting()</code> 进行完整的逐像素光源循环——类似桌面延迟聚簇，但在前向 Base Pass 内运行</span></td>
+          <td><span lang="en">Highest quality; most expensive per-pixel; benefits from clustered culling</span><span lang="zh">最高质量；每像素开销最大；受益于聚簇剔除</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ══ Section 6: Pixel Shader ══ -->
+  <h2 id="s6"><span lang="en">MobileBasePassPixelShader.usf — The All-in-One Shader</span><span lang="zh">MobileBasePassPixelShader.usf — 全合一着色器</span></h2>
+
+  <p lang="en">
+    This is arguably the most important file in the mobile renderer. In forward mode, a single invocation of
+    <span class="fun">Main()</span> (line 302) performs what the deferred renderer spreads across three stages:
+    material evaluation, direct lighting, and reflection/indirect lighting.
+  </p>
+  <p lang="zh">
+    这可以说是移动端渲染器中最重要的文件。在前向模式下，<span class="fun">Main()</span>（第 302 行）的单次调用
+    完成了延迟渲染器分布在三个阶段的工作：材质评估、直接光照以及反射/间接光照。
+  </p>
+
+  <pre><span class="cm">// MobileBasePassPixelShader.usf:302 — the combined forward shader</span>
+<span class="kw">void</span> <span class="fn">Main</span>(FVertexFactoryInterpolantsVSToPS Interpolants, ...,
+    <span class="kw">out</span> HALF4_TYPE OutColor : SV_Target0)   <span class="cm">// Forward: direct color output</span>
+<span class="cm">// If MOBILE_USE_GBUFFER: also outputs OutGBufferA/B/C/D (Mobile Deferred path)</span>
+{
+    <span class="cm">// 1. Evaluate material expressions → GBuffer struct (even in forward mode)</span>
+    FMaterialPixelParameters MaterialParameters = <span class="fn">GetMaterialPixelParameters</span>(...);
+    FGBufferData GBuffer = <span class="fn">GetGBufferData</span>(...);
+
+    <span class="cm">// 2. Sample pre-computed indirect lighting (lightmaps / SH cache)</span>
+    <span class="fn">GetPrecomputedIndirectLightingAndSkyLight</span>(..., DiffuseIndirectLighting, IndirectIrradiance);
+
+    <span class="cm">// 3. Direct lighting — directional light (hardcoded)</span>
+    <span class="fn">AccumulateDirectionalLighting</span>(GBuffer, ..., DirectLighting);
+
+    <span class="cm">// 4. Local lights — one of three modes (compile-time select)</span>
+    <span class="cm">// MERGED_LOCAL_LIGHTS_MOBILE==1: read LocalLightTexture</span>
+    <span class="cm">// MERGED_LOCAL_LIGHTS_MOBILE==2: MergeLocalLights() from grid</span>
+    <span class="cm">// ENABLE_CLUSTERED_LIGHTS: AccumulateLightGridLocalLighting()</span>
+
+    <span class="cm">// 5. Reflection IBL</span>
+    <span class="fn">AccumulateReflection</span>(GBuffer, ..., GridIndex, DirectLighting);
+
+    <span class="cm">// 6. Emissive + fog (vertex fog via interpolant — NOT a separate pass!)</span>
+    Color += <span class="fn">GetMaterialEmissive</span>(PixelMaterialInputs);
+    <span class="kw">half4</span> VertexFog = BasePassInterpolants.VertexFog; <span class="cm">// Fog packed as VS→PS interpolant</span>
+    Color = Color * VertexFog.a + VertexFog.rgb;     <span class="cm">// Apply fog in-shader</span>
+}</pre>
+
+  <div class="note">
+    <span lang="en"><strong>Fog is free in forward.</strong> Notice that fog is applied as a vertex-interpolated value at the end of the pixel shader — no separate fog pass, no extra render target, no extra bandwidth. The vertex shader pre-computes fog density and passes it to the pixel stage as <code>BasePassInterpolants.VertexFog</code>. This is one of the bandwidth advantages of forward shading that is impossible in deferred (where geometry data is unavailable at the lighting stage).</span>
+    <span lang="zh"><strong>前向渲染中雾效是免费的。</strong>注意雾效是作为顶点插值值在像素着色器末尾应用的——没有单独的雾效 Pass，没有额外的渲染目标，没有额外的带宽开销。顶点着色器预先计算雾密度，通过 <code>BasePassInterpolants.VertexFog</code> 传递到像素阶段。这是前向着色带宽优势之一，在延迟渲染中（光照阶段无法获取几何数据）是不可能实现的。</span>
+  </div>
+
+  <!-- ══ Section 7: Desktop Forward USH ══ -->
+  <h2 id="s7"><span lang="en">ForwardLightingCommon.ush — Desktop Forward Light Loop</span><span lang="zh">ForwardLightingCommon.ush — 桌面前向光照循环</span></h2>
+
+  <p lang="en">
+    This header is used by the PC forward shading path (and by translucency in the deferred renderer).
+    It implements the full per-pixel light loop that the deferred GBuffer path avoids by separating geometry
+    from lighting. The key function is <span class="fun">GetForwardDirectLightingSplit()</span>:
+  </p>
+  <p lang="zh">
+    此头文件用于 PC 前向着色路径（以及延迟渲染器中的半透明）。
+    它实现了完整的逐像素光照循环——延迟 GBuffer 路径通过将几何与光照分离而避免了这一点。
+    关键函数是 <span class="fun">GetForwardDirectLightingSplit()</span>：
+  </p>
+
+  <pre><span class="cm">// ForwardLightingCommon.ush:137 — called from base pass pixel shader on desktop forward</span>
+FDeferredLightingSplit <span class="fn">GetForwardDirectLightingSplit</span>(
+    uint2 PixelPos, uint GridIndex, float3 WorldPosition, ...)
+{
+    <span class="cm">// 1. Directional light — with pre-sampled shadow mask</span>
+    float4 DynamicShadowFactors = <span class="fn">GetForwardDynamicShadowFactors</span>(ScreenUV);
+    <span class="cm">// ForwardScreenSpaceShadowMaskTexture was written before the base pass</span>
+
+    <span class="cm">// 2. Optional VSM shadows for directional light</span>
+    <span class="kw">#if</span> VIRTUAL_SHADOW_MAP
+    VirtualShadowMapSample = <span class="fn">TraceDirectional</span>(ForwardLightStruct.DirectionalLightVSM, ...);
+    DynamicShadowFactor *= VirtualShadowMapSample.ShadowFactor;
+    <span class="kw">#endif</span>
+
+    <span class="cm">// 3. Local lights loop — reads from clustered light grid</span>
+    FCulledLightsGridHeader Header = <span class="fn">GetCulledLightsGridHeader</span>(GridIndex);
+    uint NumLights = min(Header.NumLights, <span class="fn">GetMaxLightsPerCell</span>()); <span class="cm">// MaxCulledLightsPerCell</span>
+
+    <span class="kw">LOOP</span> <span class="kw">for</span> (uint i = <span class="num">0</span>; i < NumLights; i++)
+    {
+        FLocalLightData LocalLight = <span class="fn">GetLocalLightDataFromGrid</span>(Header.DataStartIndex + i, EyeIndex);
+        <span class="cm">// Optional per-light VSM shadow</span>
+        <span class="kw">if</span> (LocalLight.Internal.VirtualShadowMapId != INDEX_NONE)
+            DynamicShadowFactor *= <span class="fn">SampleVirtualShadowMapLocal</span>(...);
+
+        DirectLighting += <span class="fn">GetDynamicLightingSplit</span>(..., LightData, LightAttenuation, ...);
+    }
+    <span class="kw">return</span> DirectLighting;
+}</pre>
+
+  <p lang="en">
+    The critical insight here: <code>GetMaxLightsPerCell()</code> returns
+    <code>ForwardLightStruct.MaxCulledLightsPerCell</code>, which is set at CPU-side light grid construction.
+    This is <strong>not a hard limit of 4</strong> &mdash; the number of local lights per froxel cell is
+    dynamically determined by the light grid. VR/forward mode typically caps this lower for performance,
+    but the architecture itself supports arbitrary counts up to the grid budget.
+  </p>
+  <p lang="zh">
+    关键洞察：<code>GetMaxLightsPerCell()</code> 返回 <code>ForwardLightStruct.MaxCulledLightsPerCell</code>，
+    该值在 CPU 端光源网格构建时设置。这<strong>并非固定的 4 个光源限制</strong>——每个 Froxel 单元的局部光源数量由光源网格动态决定。
+    VR/前向模式出于性能通常将其限制得更低，但架构本身支持不超过网格预算的任意数量。
+  </p>
+
+  <!-- ══ Section 8: TBDR ══ -->
+  <h2 id="s8"><span lang="en">TBDR Hardware Analysis — Why Forward Wins on Mobile</span><span lang="zh">TBDR 硬件博弈分析 — 前向渲染为何赢在移动端</span></h2>
+
+  <p lang="en">
+    Mobile GPUs (Apple A-series, Qualcomm Adreno, ARM Mali) use
+    <span class="def">Tile-Based Deferred Rendering</span> (TBDR) architecture,
+    fundamentally different from desktop's Immediate Mode Rendering (IMR).
+    Understanding this hardware difference is the entire reason UE's mobile renderer
+    exists as a separate class.
+  </p>
+  <p lang="zh">
+    移动 GPU（苹果 A 系列、高通 Adreno、ARM Mali）使用<span class="def">基于瓦片的延迟渲染</span>（TBDR）架构，
+    与桌面端的即时模式渲染（IMR）有根本性差异。理解这种硬件差异，正是 UE 移动端渲染器作为独立类存在的全部原因。
+  </p>
+
+  <div class="compare-grid">
+    <div class="compare-box">
+      <h4><span lang="en">IMR (Desktop GPU)</span><span lang="zh">IMR（桌面 GPU）</span></h4>
+      <ul>
+        <li lang="en">Processes triangles immediately as they arrive</li>
+        <li lang="zh">三角形到来后立即处理</li>
+        <li lang="en">Framebuffer lives in VRAM (~500 GB/s bandwidth)</li>
+        <li lang="zh">帧缓冲存储在 VRAM（~500 GB/s 带宽）</li>
+        <li lang="en">GBuffer bandwidth: ~300 MB/frame at 1080p (4 targets × 8 bytes × 1920×1080)</li>
+        <li lang="zh">GBuffer 带宽：1080p 下约 300 MB/帧（4 目标 × 8 字节 × 1920×1080）</li>
+        <li lang="en">Cheap; VRAM bandwidth is massive</li>
+        <li lang="zh">开销低；VRAM 带宽极大</li>
+      </ul>
+    </div>
+    <div class="compare-box highlight">
+      <h4><span lang="en">TBDR (Mobile GPU)</span><span lang="zh">TBDR（移动 GPU）</span></h4>
+      <ul>
+        <li lang="en">Divides screen into tiles (~16×16 or 32×32 pixels)</li>
+        <li lang="zh">将屏幕分割为瓦片（约 16×16 或 32×32 像素）</li>
+        <li lang="en">All geometry for a tile is buffered, then the entire tile is shaded in <span class="def">on-chip SRAM</span> (~100–400 GB/s)</li>
+        <li lang="zh">一个瓦片的所有几何体被缓冲，然后整个瓦片在<span class="def">片上 SRAM</span>（~100–400 GB/s）中着色</li>
+        <li lang="en">Tile result is written to DRAM only once at end — massive bandwidth saving</li>
+        <li lang="zh">瓦片结果仅在末尾写入 DRAM 一次——节省大量带宽</li>
+        <li lang="en">Reading <em>back</em> from framebuffer (GBuffer pass → lighting pass) forces a tile flush to DRAM — <strong>fatal for performance</strong></li>
+        <li lang="zh">从帧缓冲<em>读回</em>（GBuffer 通道 → 光照通道）迫使瓦片刷新到 DRAM——<strong>对性能致命</strong></li>
+      </ul>
+    </div>
+  </div>
+
+  <p lang="en">
+    A deferred G-Buffer pass at 1080p on mobile writes approximately:
+  </p>
+  <p lang="zh">
+    移动端 1080p 下延迟 GBuffer 通道大约写入：
+  </p>
+
+  <pre><span class="cm">// Approximate G-Buffer bandwidth at 1080p</span>
+GBufferA (Normal + ShadingModelID)  = <span class="num">1920</span> × <span class="num">1080</span> × <span class="num">4</span> bytes = ~<span class="num">8 MB</span>  (R8G8B8A8)
+GBufferB (Metallic/Spec/Rough)      = <span class="num">1920</span> × <span class="num">1080</span> × <span class="num">4</span> bytes = ~<span class="num">8 MB</span>  (R8G8B8A8)
+GBufferC (BaseColor + AO)           = <span class="num">1920</span> × <span class="num">1080</span> × <span class="num">4</span> bytes = ~<span class="num">8 MB</span>  (R8G8B8A8)
+SceneDepth (read in lighting pass)  = <span class="num">1920</span> × <span class="num">1080</span> × <span class="num">4</span> bytes = ~<span class="num">8 MB</span>  (R32)
+<span class="cm">// Write + read back = ~64 MB per frame through off-chip DRAM</span>
+<span class="cm">// At 60 FPS: ~3.8 GB/s of GBuffer traffic alone</span>
+<span class="cm">// Mobile LPDDR5 typical bandwidth: ~50 GB/s total — GBuffer consumes ~8% just for base data</span></pre>
+
+  <div class="warning">
+    <span lang="en"><strong>The real cost is the round-trip.</strong> It's not just writing the GBuffer — it's that the lighting pass must <em>read it back</em> from DRAM tile-by-tile. Each tile-flush-and-refill through DRAM costs power and time. On mobile where thermal and battery budgets are tight, this is a dealbreaker. UE's mobile forward renderer avoids this entirely by keeping all per-pixel data — normal, depth, material properties, light accumulation — in on-chip registers within a single render pass.</span>
+    <span lang="zh"><strong>真正的开销在于往返。</strong>问题不只是写入 GBuffer——而是光照通道必须逐瓦片<em>从 DRAM 读回</em>。每次瓦片刷新和重新填充 DRAM 都消耗功耗和时间。在热量和电池预算紧张的移动端，这是致命的。UE 移动端前向渲染器通过在单个渲染通道内将所有逐像素数据——法线、深度、材质属性、光照累积——保持在片上寄存器中，完全避免了这一问题。</span>
+  </div>
+
+  <p lang="en">
+    The <code>ESubpassHint::DepthReadSubpass</code> set on <code>BasePassRenderTargets</code>
+    and <code>RHICmdList.NextSubpass()</code> are the API-level signals that enable the driver to
+    keep framebuffer data on-chip across the depth-write subpass and the depth-read subpass,
+    without ever touching DRAM in between.
+  </p>
+  <p lang="zh">
+    在 <code>BasePassRenderTargets</code> 上设置的 <code>ESubpassHint::DepthReadSubpass</code>
+    以及 <code>RHICmdList.NextSubpass()</code> 是让驱动程序能够在深度写子通道和深度读子通道之间
+    将帧缓冲数据保持在片上的 API 级信号，期间完全不接触 DRAM。
+  </p>
+
+  <!-- ══ Section 9: CVars ══ -->
+  <h2 id="s9"><span lang="en">Key Console Variables</span><span lang="zh">关键控制台变量</span></h2>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>CVar</th>
+        <th><span lang="en">Default</span><span lang="zh">默认值</span></th>
+        <th><span lang="en">Effect</span><span lang="zh">效果</span></th>
+      </tr></thead>
+      <tbody>
+        <tr><td>r.ForwardShading</td><td>0</td><td><span lang="en">Enables desktop forward shading path in <span class="fun">FDeferredShadingSceneRenderer</span></span><span lang="zh">启用 <span class="fun">FDeferredShadingSceneRenderer</span> 中的桌面前向路径</span></td></tr>
+        <tr><td>r.Mobile.ForceDepthResolve</td><td>0</td><td><span lang="en">Forces a depth resolve by drawing with the depth texture — workaround for some devices</span><span lang="zh">强制通过绘制深度纹理来解析深度——某些设备的变通方案</span></td></tr>
+        <tr><td>r.Mobile.AdrenoOcclusionMode</td><td>0</td><td><span lang="en">Mode 1: defer occlusion queries to after translucency + flush — helps Adreno in GL mode</span><span lang="zh">模式 1：将遮挡查询延迟到半透明和刷新之后——有助于 Adreno GL 模式</span></td></tr>
+        <tr><td>r.Mobile.CustomDepthForTranslucency</td><td>1</td><td><span lang="en">Whether to render CustomDepth/Stencil if any translucency uses it</span><span lang="zh">如果半透明材质使用 CustomDepth/Stencil，是否渲染它</span></td></tr>
+        <tr><td>r.SceneDepthHZBAsyncCompute</td><td>0</td><td><span lang="en">0=sync, 1=async as soon as possible, 2=async after light grid compact pass</span><span lang="zh">0=同步，1=尽早异步，2=在光源网格紧凑 Pass 后异步</span></td></tr>
+        <tr><td>r.AdrenoOcclusionUseFDM</td><td>0</td><td><span lang="en">Use FDM (Fragment Density Map) with Adreno occlusion mode — reduces overdraw on VR</span><span lang="zh">在 Adreno 遮挡模式下使用 FDM（片段密度贴图）——减少 VR 中的过度绘制</span></td></tr>
+        <tr><td>r.shadow.ShadowMapsRenderEarly</td><td>0</td><td><span lang="en">Force early shadow rendering even on desktop deferred path (not compatible with VSM)</span><span lang="zh">在桌面延迟路径上强制早期阴影渲染（不兼容 VSM）</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ══ Section 10: Source Navigation ══ -->
+  <h2 id="s10"><span lang="en">Source Navigation</span><span lang="zh">源码导航</span></h2>
+
+  <p lang="en">All paths relative to <code>Engine/Source/Runtime/Renderer/Private/</code> or <code>Engine/Shaders/Private/</code>.</p>
+  <p lang="zh">所有路径相对于 <code>Engine/Source/Runtime/Renderer/Private/</code> 或 <code>Engine/Shaders/Private/</code>。</p>
+
+  <ul class="file-list">
+    <li><span class="fp">MobileShadingRenderer.cpp:303</span><span class="fd"><span lang="en"><span class="fun">FMobileSceneRenderer</span> constructor — all pipeline flags</span><span lang="zh"><span class="fun">FMobileSceneRenderer</span> 构造函数 — 所有管线标志</span></span></li>
+    <li><span class="fp">MobileShadingRenderer.cpp:1025</span><span class="fd"><span lang="en"><span class="fun">FMobileSceneRenderer::Render()</span> — top-level mobile render loop</span><span lang="zh"><span class="fun">FMobileSceneRenderer::Render()</span> — 移动端顶层渲染循环</span></span></li>
+    <li><span class="fp">MobileShadingRenderer.cpp:1667</span><span class="fd"><span lang="en"><span class="fun">RenderForward()</span> — dispatches to Single or Multi pass</span><span lang="zh"><span class="fun">RenderForward()</span> — 分发到单 Pass 或多 Pass</span></span></li>
+    <li><span class="fp">MobileShadingRenderer.cpp:1742</span><span class="fd"><span lang="en"><span class="fun">RenderForwardSinglePass()</span> — the single RDG pass that contains everything</span><span lang="zh"><span class="fun">RenderForwardSinglePass()</span> — 包含所有内容的单个 RDG Pass</span></span></li>
+    <li><span class="fp">MobileShadingRenderer.cpp:1611</span><span class="fd"><span lang="en"><span class="fun">InitRenderTargetBindings_Forward()</span> — MSAA/subpass RT setup</span><span lang="zh"><span class="fun">InitRenderTargetBindings_Forward()</span> — MSAA/子通道 RT 设置</span></span></li>
+    <li><span class="fp">MobileLocalLightsBuffer.cpp</span><span class="fd"><span lang="en">Local Light Prepass — <span class="fun">FLocalLightBufferCS/VS/PS</span>, merges local lights into textures</span><span lang="zh">局部光源预通道 — 将局部光源合并到纹理</span></span></li>
+    <li><span class="fp">MobileBasePassRendering.cpp</span><span class="fd"><span lang="en">Base pass draw calls, shader permutation setup (<code>MERGED_LOCAL_LIGHTS_MOBILE</code>)</span><span lang="zh">Base Pass 绘制调用，着色器排列组合设置</span></span></li>
+    <li><span class="fp">MobileBasePassPixelShader.usf:302</span><span class="fd"><span lang="en"><span class="fun">Main()</span> — material + direct lighting + reflection + fog in one shader</span><span lang="zh"><span class="fun">Main()</span> — 材质、直接光照、反射、雾效合一着色器</span></span></li>
+    <li><span class="fp">ForwardLightingCommon.ush:137</span><span class="fd"><span lang="en"><span class="fun">GetForwardDirectLightingSplit()</span> — desktop forward full light loop</span><span lang="zh"><span class="fun">GetForwardDirectLightingSplit()</span> — 桌面前向完整光照循环</span></span></li>
+    <li><span class="fp">LightGridCommon.ush:76</span><span class="fd"><span lang="en"><span class="fun">GetMaxLightsPerCell()</span> — dynamic per-cell light cap from ForwardLightStruct</span><span lang="zh"><span class="fun">GetMaxLightsPerCell()</span> — 来自 ForwardLightStruct 的动态每单元光源上限</span></span></li>
+    <li><span class="fp">DeferredShadingRenderer.cpp</span><span class="fd"><span lang="en"><code>IsForwardShadingEnabled()</code> branches — desktop forward within deferred renderer</span><span lang="zh"><code>IsForwardShadingEnabled()</code> 分支 — 延迟渲染器内的桌面前向</span></span></li>
+  </ul>
+
+  <footer>
+    Unreal Engine 5.6 &middot; Engine/Source/Runtime/Renderer/Private/<br>
+    Source analysis &middot; For learning purposes
+  </footer>
+
+</main>
+</div>
+
+<script>
+function toggleLang() {
+  var html = document.documentElement;
+  if (html.classList.contains('lang-zh')) {
+    html.classList.remove('lang-zh');
+    html.lang = 'en';
+    document.title = 'Forward Shading Pipeline';
+    localStorage.setItem('ue-doc-lang', 'en');
+  } else {
+    html.classList.add('lang-zh');
+    html.lang = 'zh-CN';
+    document.title = '前向渲染管线';
+    localStorage.setItem('ue-doc-lang', 'zh');
+  }
+}
+if (document.documentElement.classList.contains('lang-zh')) {
+  document.title = '前向渲染管线';
+}
+</script>
+</body>
+</html>

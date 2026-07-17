@@ -16,6 +16,7 @@ A hands-on reading series through the C++ source of Unreal Engine 5.6's renderin
 | Article | Topic |
 |---|---|
 | [Deferred Rendering Pipeline](/ue/01-pipeline-paradigms/deferred-shading.html) | `FDeferredShadingSceneRenderer` — the full deferred pipeline, GBuffer layout, all 12 render stages |
+| [Forward Shading Pipeline](/ue/01-pipeline-paradigms/forward-shading.html) | `FMobileSceneRenderer` / Desktop Forward — dual-track analysis, TBDR hardware, single-pass design |
 
 ---
 

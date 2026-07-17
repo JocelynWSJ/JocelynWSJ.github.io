@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Niagara — GPU Compute &amp; Simulation Stages</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Gudea">
+  <script>(function(){if(localStorage.getItem('ue-doc-lang')==='zh'){document.documentElement.classList.add('lang-zh');document.documentElement.lang='zh-CN';}})();</script>
+  <style>
+    html:not(.lang-zh) [lang="zh"]{display:none;} html.lang-zh [lang="en"]{display:none;}
+    #lang-btn{position:fixed;top:16px;right:20px;z-index:999;background:#37425d;color:#fff;border:none;border-radius:4px;padding:5px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:Gudea,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.2);transition:background .15s;} #lang-btn:hover{background:#4a5a7a;}
+    *{box-sizing:border-box;margin:0;padding:0;} body{font-family:Gudea,sans-serif;font-size:16px;line-height:1.8;color:#111;background:#eee;}
+    #wrapper{max-width:1100px;margin:0 auto;display:flex;align-items:flex-start;padding:40px 24px;gap:36px;}
+    #sidebar{width:240px;flex-shrink:0;position:sticky;top:24px;max-height:calc(100vh - 48px);overflow-y:auto;font-size:13px;}
+    #sidebar h2{font-size:12px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;border:none;padding:0;}
+    #sidebar ol{list-style:none;padding:0;counter-reset:toc;} #sidebar ol li{counter-increment:toc;margin-bottom:4px;}
+    #sidebar ol li a{color:#555;text-decoration:none;display:block;padding:2px 0;transition:color .12s;} #sidebar ol li a:hover{color:#58A;}
+    #sidebar ol li a::before{content:counter(toc,decimal-leading-zero) '. ';color:#bbb;font-size:11px;font-family:'Courier New',monospace;}
+    #content{flex:1;min-width:0;}
+    .page-header{margin-bottom:32px;padding-bottom:20px;border-bottom:1px solid #ddd;}
+    .page-header .crumb{font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
+    .page-header h1{font-size:1.8rem;font-weight:900;color:#303236;margin-bottom:8px;line-height:1.25;}
+    .page-header .subtitle{font-family:'Courier New',monospace;font-size:13px;color:#777;}
+    h2{color:#37425d;font-size:22px;margin:36px 0 10px;} h3{color:#633739;font-size:17px;margin:24px 0 8px;}
+    p{margin-bottom:14px;} a{color:#58A;text-decoration:none;} a:hover{text-decoration:underline;} strong{color:#222;}
+    .fun{font-family:'Courier New',monospace;color:#2a6496;} .def{color:green;font-weight:600;}
+    code{font-family:'Courier New',monospace;font-size:14px;background:#ddd;border-radius:3px;padding:1px 5px;}
+    pre{background:#282c34;color:#abb2bf;border-radius:5px;padding:16px 18px;overflow-x:auto;margin:14px 0 18px;font-family:'Courier New',monospace;font-size:13.5px;line-height:1.6;}
+    pre code{background:none;padding:0;color:inherit;} .kw{color:#c678dd;} .fn{color:#61afef;} .cm{color:#5c6370;font-style:italic;} .str{color:#98c379;} .num{color:#d19a66;} .type{color:#e5c07b;}
+    .note{display:block;margin:18px 0;padding:15px;background:#D8F5D8;color:#444;border-radius:5px;border:2px solid #AFDFAF;font-size:15px;line-height:1.7;}
+    .warning{display:block;margin:18px 0;padding:15px;background:#FFD2D2;color:#444;border-radius:5px;border:2px solid #E0B3B3;font-size:15px;line-height:1.7;}
+    ul,ol{padding-left:22px;margin-bottom:14px;} li{margin-bottom:5px;}
+    .table-wrap{overflow-x:auto;margin:14px 0;} table{border-collapse:collapse;font-size:14px;width:100%;}
+    th,td{padding:8px 12px;border-bottom:1px solid #aaa;text-align:left;} th{border-bottom:2px solid #888;font-weight:700;background:#ddd;} tr:nth-child(even) td{background:#e8e8e8;}
+    td:first-child{font-family:'Courier New',monospace;font-size:13px;color:#2a6496;white-space:nowrap;}
+    .diagram{background:#fff;border:1px solid #ccc;border-radius:5px;padding:20px;margin:16px 0;font-family:'Courier New',monospace;font-size:13px;line-height:1.8;overflow-x:auto;}
+    .file-list{list-style:none;padding:0;margin:12px 0;} .file-list li{padding:6px 0;border-bottom:1px solid #ccc;display:flex;align-items:baseline;gap:10px;font-size:14px;} .file-list li:last-child{border-bottom:none;} .file-list .fp{font-family:'Courier New',monospace;font-size:13px;color:#58A;min-width:260px;} .file-list .fd{color:#555;}
+    footer{margin-top:48px;padding-top:16px;border-top:1px solid #ccc;font-size:12px;color:#aaa;text-align:center;}
+    @media(max-width:800px){#wrapper{flex-direction:column;padding:20px 16px;}#sidebar{width:100%;position:static;max-height:none;margin-bottom:24px;}}
+  </style>
+</head>
+<body>
+<button id="lang-btn" onclick="toggleLang()"><span lang="en">中文</span><span lang="zh">English</span></button>
+<div id="wrapper">
+<nav id="sidebar">
+  <h2><span lang="en">Contents</span><span lang="zh">目录</span></h2>
+  <ol>
+    <li><a href="#s1"><span lang="en">Niagara as a GPU Compute Platform</span><span lang="zh">Niagara 作为 GPU 计算平台</span></a></li>
+    <li><a href="#s2"><span lang="en">System Architecture</span><span lang="zh">系统架构</span></a></li>
+    <li><a href="#s3"><span lang="en">Simulation Stages</span><span lang="zh">仿真阶段</span></a></li>
+    <li><a href="#s4"><span lang="en">Data Interfaces</span><span lang="zh">数据接口</span></a></li>
+    <li><a href="#s5"><span lang="en">Grid2D/3D for Custom Simulation</span><span lang="zh">Grid2D/3D 自定义仿真</span></a></li>
+    <li><a href="#s6"><span lang="en">GPU Particle Readback</span><span lang="zh">GPU 粒子回读</span></a></li>
+    <li><a href="#s7"><span lang="en">Custom Data Interface — C++ Side</span><span lang="zh">自定义数据接口 — C++ 侧</span></a></li>
+    <li><a href="#s8"><span lang="en">Use Cases: Fluids, Crowds, Physics</span><span lang="zh">使用场景：流体、群体、物理</span></a></li>
+    <li><a href="#s9"><span lang="en">Source Navigation</span><span lang="zh">源码导航</span></a></li>
+  </ol>
+</nav>
+<main id="content">
+  <div class="page-header">
+    <div class="crumb">Unreal Engine 5.6 &middot; Engine Modding &middot; Part 05-C</div>
+    <h1>Niagara — GPU Compute &amp; Simulation Stages</h1>
+    <div class="subtitle">Engine/Plugins/FX/Niagara/Source/Niagara/</div>
+  </div>
+
+  <h2 id="s1"><span lang="en">Niagara as a GPU Compute Platform</span><span lang="zh">Niagara 作为 GPU 计算平台</span></h2>
+  <p lang="en">While Niagara is primarily known as a visual effects system, its true power for engineers is that it exposes a <span class="def">node-graph programmable GPU Compute pipeline</span> without requiring raw HLSL shader code. Think of Niagara as a high-level interface to GPU Compute shaders — you define the GPU work via visual scripting graphs and Data Interfaces, and Niagara compiles them to efficient Compute dispatches.</p>
+  <p lang="zh">虽然 Niagara 主要以视觉效果系统著称，但对工程师来说，其真正的强大之处在于它无需原始 HLSL 着色器代码就能暴露<span class="def">节点图可编程 GPU 计算管线</span>。将 Niagara 视为 GPU Compute 着色器的高级接口——通过可视化脚本图和数据接口定义 GPU 工作，Niagara 将其编译为高效的 Compute 分发。</p>
+
+  <h2 id="s2"><span lang="en">System Architecture</span><span lang="zh">系统架构</span></h2>
+  <div class="diagram">
+UNiagaraSystem               ← Asset: contains emitters + system parameters
+  └── UNiagaraEmitter         ← Template for particles; has scripts + renderers
+       ├── UNiagaraScript      ← Compiled GPU/CPU script (= compiled Compute shader)
+       │    ├── Spawn          ← Runs once per particle birth
+       │    ├── Update         ← Runs every frame for all particles
+       │    └── Simulation Stage (optional) ← Custom iteration order
+       └── NiagaraRenderer     ← Meshes, ribbons, sprites drawn from particle data
+
+FNiagaraSystemInstance        ← Runtime: one instance per NiagaraComponent
+  └── FNiagaraEmitterInstance  ← Per-emitter runtime state
+       ├── FNiagaraDataBuffer  ← GPU buffer holding particle attribute data
+       └── GPUSimulation tick  → dispatched as RDG Compute pass</div>
+
+  <h2 id="s3"><span lang="en">Simulation Stages — Custom GPU Iteration</span><span lang="zh">仿真阶段 — 自定义 GPU 迭代</span></h2>
+  <p lang="en">Simulation Stages (introduced in UE 4.26) are the key feature that makes Niagara useful for non-particle GPU work. They allow you to define additional Compute passes that run as part of the particle system tick, but instead of iterating over particles, they can iterate over:</p>
+  <p lang="zh">仿真阶段（UE 4.26 引入）是使 Niagara 用于非粒子 GPU 工作的关键特性。它们允许定义额外的计算通道，作为粒子系统 Tick 的一部分运行，但不是遍历粒子，而是可以遍历：</p>
+
+  <ul>
+    <li lang="en"><strong>Particles:</strong> Standard particle iteration (Spawn/Update equivalent)</li>
+    <li lang="zh"><strong>粒子：</strong>标准粒子迭代（等同于 Spawn/Update）</li>
+    <li lang="en"><strong>Grid 2D Collection:</strong> Iterate over all cells in a 2D grid texture (e.g., fluid simulation, density field)</li>
+    <li lang="zh"><strong>Grid 2D Collection：</strong>遍历 2D 网格纹理中的所有单元格（例如流体仿真、密度场）</li>
+    <li lang="en"><strong>Grid 3D Collection:</strong> Iterate over all cells in a 3D volume (e.g., 3D fluid, volumetric physics)</li>
+    <li lang="zh"><strong>Grid 3D Collection：</strong>遍历 3D 体积中的所有单元格（例如 3D 流体、体积物理）</li>
+    <li lang="en"><strong>Neighbor Grid 3D:</strong> A sparse spatial hash grid for O(1) neighbor lookups in crowd or SPH simulations</li>
+    <li lang="zh"><strong>Neighbor Grid 3D：</strong>稀疏空间哈希网格，用于群体或 SPH 仿真中的 O(1) 邻域查找</li>
+  </ul>
+
+  <pre><span class="cm">// UNiagaraSimulationStageBase (NiagaraSimulationStageBase.h)</span>
+<span class="cm">// Key properties:</span>
+UPROPERTY()
+FNiagaraVariableBase IterationSource;  <span class="cm">// What to iterate over (particles/grid/etc.)</span>
+
+UPROPERTY()
+int32 NumIterations = <span class="num">1</span>;             <span class="cm">// How many times to run this stage per tick</span>
+
+UPROPERTY()
+bool bSpawnOnly = false;               <span class="cm">// Only runs on particle spawn frames</span>
+
+<span class="cm">// At runtime: each enabled simulation stage compiles to one Compute dispatch</span>
+<span class="cm">// Stages execute in order: Spawn → [CustomStage0] → Update → [CustomStage1] → ...</span></pre>
+
+  <h2 id="s4"><span lang="en">Data Interfaces — Bridging C++ and GPU Scripts</span><span lang="zh">数据接口 — 桥接 C++ 和 GPU 脚本</span></h2>
+  <p lang="en">Data Interfaces (DI) are the mechanism Niagara uses to give GPU scripts access to external data: scene textures, physics, skeletal meshes, custom C++ data. Each DI provides:</p>
+  <p lang="zh">数据接口（DI）是 Niagara 用来让 GPU 脚本访问外部数据的机制：场景纹理、物理、骨骼网格、自定义 C++ 数据。每个 DI 提供：</p>
+
+  <ul>
+    <li lang="en"><strong>GPU functions:</strong> HLSL functions exposed as graph nodes that the Niagara compiler embeds into the generated Compute shader</li>
+    <li lang="zh"><strong>GPU 函数：</strong>Niagara 编译器将其嵌入生成的 Compute 着色器的 HLSL 函数（以图节点形式暴露）</li>
+    <li lang="en"><strong>CPU bindings:</strong> C++ code that uploads DI parameters to GPU buffers before the Compute dispatch</li>
+    <li lang="zh"><strong>CPU 绑定：</strong>在 Compute 分发前将 DI 参数上传到 GPU 缓冲区的 C++ 代码</li>
+    <li lang="en"><strong>Shader include files:</strong> HLSL files in <code>Plugins/FX/Niagara/Shaders/Private/</code> that implement the DI's GPU-side functions</li>
+    <li lang="zh"><strong>着色器包含文件：</strong>实现 DI GPU 侧函数的 HLSL 文件（位于 <code>Plugins/FX/Niagara/Shaders/Private/</code>）</li>
+  </ul>
+
+  <h2 id="s5"><span lang="en">Grid2D/3D — GPU Simulation Without Particles</span><span lang="zh">Grid2D/3D — 无粒子的 GPU 仿真</span></h2>
+  <p lang="en">The Grid2D and Grid3D Data Interfaces are the most powerful for custom simulation. They expose persistent GPU textures (float, float4, float vectors) that retain their values between frames — enabling iterative simulations like Navier-Stokes fluid, SPH, heat diffusion, etc.</p>
+  <p lang="zh">Grid2D 和 Grid3D 数据接口是自定义仿真中最强大的。它们暴露持久 GPU 纹理（float、float4、float 向量），在帧之间保留其值——实现像 Navier-Stokes 流体、SPH、热扩散等迭代仿真。</p>
+
+  <pre><span class="cm">// Example: 2D fluid simulation setup in Niagara</span>
+<span class="cm">//</span>
+<span class="cm">// System has NO particles. Instead it uses Simulation Stages over Grid2D:</span>
+<span class="cm">//</span>
+<span class="cm">// Stage 0: "Advect" — for each (x,y) in 128×128 grid</span>
+<span class="cm">//   → Read velocity from Grid2D_Velocity</span>
+<span class="cm">//   → Sample density at advected position</span>
+<span class="cm">//   → Write new density to Grid2D_Density</span>
+<span class="cm">//</span>
+<span class="cm">// Stage 1: "Divergence" — Compute divergence for pressure solve</span>
+<span class="cm">//   → Read velocity field</span>
+<span class="cm">//   → Write divergence to Grid2D_Divergence</span>
+<span class="cm">//</span>
+<span class="cm">// Stage 2: "Pressure Jacobi" (repeated N times) — pressure solve</span>
+<span class="cm">//   → Iterative Jacobi relaxation over Grid2D_Pressure</span>
+<span class="cm">//</span>
+<span class="cm">// Stage 3: "Projection" — subtract pressure gradient from velocity</span>
+<span class="cm">//   → Makes velocity field divergence-free</span>
+<span class="cm">//</span>
+<span class="cm">// Result: a real-time 2D fluid simulation entirely on GPU,</span>
+<span class="cm">// visualized by sampling Grid2D_Density in a material</span></pre>
+
+  <h2 id="s6"><span lang="en">GPU Particle Readback</span><span lang="zh">GPU 粒子回读</span></h2>
+  <p lang="en">Reading particle data back from GPU to CPU is expensive (stalls the pipeline). Niagara provides two mechanisms:</p>
+  <p lang="zh">从 GPU 读回粒子数据到 CPU 很昂贵（会停滞管线）。Niagara 提供两种机制：</p>
+
+  <ul>
+    <li lang="en"><strong>Async readback (recommended):</strong> <code>FNiagaraDataSet::CopyFromGPU</code> + async fence — data available 1–2 frames later</li>
+    <li lang="zh"><strong>异步回读（推荐）：</strong><code>FNiagaraDataSet::CopyFromGPU</code> + 异步 fence——数据在 1–2 帧后可用</li>
+    <li lang="en"><strong>GPU Messaging:</strong> Niagara's built-in GPUMessaging system allows GPU→CPU communication via small typed messages, useful for events (particle collisions, zone triggers) without full buffer readback</li>
+    <li lang="zh"><strong>GPU 消息传递：</strong>Niagara 内置的 GPUMessaging 系统允许通过小型类型化消息进行 GPU→CPU 通信，适用于事件（粒子碰撞、区域触发），无需完整缓冲区回读</li>
+  </ul>
+
+  <h2 id="s7"><span lang="en">Custom Data Interface — C++ Side</span><span lang="zh">自定义数据接口 — C++ 侧</span></h2>
+  <pre><span class="cm">// Creating a custom Data Interface that exposes your compute data to Niagara:</span>
+UCLASS()
+<span class="kw">class</span> <span class="type">UMyCustomNiagaraDI</span> : <span class="kw">public</span> UNiagaraDataInterface
+{
+    GENERATED_BODY()
+<span class="kw">public</span>:
+    <span class="cm">// 1. Declare the HLSL functions this DI provides to scripts</span>
+    <span class="kw">virtual void</span> <span class="fn">GetFunctions</span>(TArray&lt;FNiagaraFunctionSignature&gt;& OutFunctions) <span class="kw">override</span>;
+
+    <span class="cm">// 2. Generate HLSL code that implements those functions</span>
+    <span class="kw">virtual bool</span> <span class="fn">GetFunctionHLSL</span>(<span class="kw">const</span> FNiagaraDataInterfaceGPUParamInfo& ParamInfo,
+                               <span class="kw">const</span> FNiagaraDataInterfaceGeneratedFunction& FunctionInfo,
+                               int FunctionInstanceIndex, FString& OutHLSL) <span class="kw">override</span>;
+
+    <span class="cm">// 3. Bind GPU parameters (buffers, textures) before each Compute dispatch</span>
+    <span class="kw">virtual bool</span> <span class="fn">CopyToInternal</span>(UNiagaraDataInterface* Destination) <span class="kw">const override</span>;
+
+    <span class="cm">// C++ data:</span>
+    UPROPERTY(EditAnywhere)
+    <span class="kw">float</span> MyParameter = <span class="num">1.0f</span>;
+};</pre>
+
+  <h2 id="s8"><span lang="en">Use Cases: Fluids, Crowds, Physics</span><span lang="zh">使用场景：流体、群体、物理</span></h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th><span lang="en">Use Case</span><span lang="zh">使用场景</span></th><th><span lang="en">Niagara Feature</span><span lang="zh">Niagara 特性</span></th><th><span lang="en">Notes</span><span lang="zh">说明</span></th></tr></thead>
+    <tbody>
+      <tr><td><span lang="en">2D/3D fluid</span><span lang="zh">2D/3D 流体</span></td><td>Simulation Stage + Grid2D/3D</td><td><span lang="en">Navier-Stokes, smoke, fire — fully GPU-resident</span><span lang="zh">Navier-Stokes、烟雾、火焰——完全 GPU 驻留</span></td></tr>
+      <tr><td><span lang="en">Crowd simulation</span><span lang="zh">群体仿真</span></td><td>Neighbor Grid 3D + particle update</td><td><span lang="en">SPH-based steering, separation forces, 100K+ agents</span><span lang="zh">基于 SPH 的转向、分离力，10 万以上角色</span></td></tr>
+      <tr><td><span lang="en">GPU physics debris</span><span lang="zh">GPU 物理碎片</span></td><td>Particle Simulation Stage</td><td><span lang="en">Verlet integration, collision response with GBuffer depth</span><span lang="zh">Verlet 积分，与 GBuffer 深度的碰撞响应</span></td></tr>
+      <tr><td><span lang="en">Procedural animation</span><span lang="zh">程序化动画</span></td><td>Grid3D + skeletal mesh DI</td><td><span lang="en">GPU-driven clothing, tentacles, vines</span><span lang="zh">GPU 驱动的布料、触手、藤蔓</span></td></tr>
+      <tr><td><span lang="en">Custom VFX data</span><span lang="zh">自定义特效数据</span></td><td>Custom Data Interface</td><td><span lang="en">Expose game state to Niagara scripts (HP bars, team data)</span><span lang="zh">向 Niagara 脚本暴露游戏状态（血条、队伍数据）</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <h2 id="s9"><span lang="en">Source Navigation</span><span lang="zh">源码导航</span></h2>
+  <ul class="file-list">
+    <li><span class="fp">Niagara/Private/NiagaraSimulationStageBase.cpp</span><span class="fd"><span lang="en">Simulation Stage runtime, iteration source handling</span><span lang="zh">仿真阶段运行时，迭代源处理</span></span></li>
+    <li><span class="fp">Niagara/Public/NiagaraDataInterface.h</span><span class="fd"><span lang="en">DI base class — GPU function declaration, HLSL generation interface</span><span lang="zh">DI 基类 — GPU 函数声明、HLSL 生成接口</span></span></li>
+    <li><span class="fp">Niagara/Private/NiagaraSystemSimulation.cpp</span><span class="fd"><span lang="en">GPU particle simulation tick, RDG Compute dispatch</span><span lang="zh">GPU 粒子仿真 Tick，RDG Compute 分发</span></span></li>
+    <li><span class="fp">Niagara/Shaders/Private/NiagaraGPUInstanceCountManager.usf</span><span class="fd"><span lang="en">GPU particle count management compute shader</span><span lang="zh">GPU 粒子数量管理计算着色器</span></span></li>
+    <li><span class="fp">Niagara/Shaders/Private/NiagaraDataInterfaceGrid2D.ush</span><span class="fd"><span lang="en">Grid2D HLSL implementation</span><span lang="zh">Grid2D HLSL 实现</span></span></li>
+    <li><span class="fp">Niagara/Shaders/Private/NiagaraDataInterfaceGrid3D.ush</span><span class="fd"><span lang="en">Grid3D HLSL implementation</span><span lang="zh">Grid3D HLSL 实现</span></span></li>
+  </ul>
+  <footer>Unreal Engine 5.6 &middot; Engine/Plugins/FX/Niagara/<br>Source analysis &middot; For learning purposes</footer>
+</main>
+</div>
+<script>
+function toggleLang(){var h=document.documentElement;if(h.classList.contains('lang-zh')){h.classList.remove('lang-zh');h.lang='en';document.title='Niagara GPU Compute';localStorage.setItem('ue-doc-lang','en');}else{h.classList.add('lang-zh');h.lang='zh-CN';document.title='Niagara GPU 计算';localStorage.setItem('ue-doc-lang','zh');}}
+if(document.documentElement.classList.contains('lang-zh'))document.title='Niagara GPU 计算';
+</script>
+</body>
+</html>

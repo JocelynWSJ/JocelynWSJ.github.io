@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RDG — Render Dependency Graph</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Gudea">
+  <script>
+    (function () {
+      if (localStorage.getItem('ue-doc-lang') === 'zh') {
+        document.documentElement.classList.add('lang-zh');
+        document.documentElement.lang = 'zh-CN';
+      }
+    })();
+  </script>
+  <style>
+    html:not(.lang-zh) [lang="zh"] { display: none; }
+    html.lang-zh       [lang="en"] { display: none; }
+    #lang-btn {
+      position: fixed; top: 16px; right: 20px; z-index: 999;
+      background: #37425d; color: #fff; border: none; border-radius: 4px;
+      padding: 5px 14px; font-size: 13px; font-weight: 700; cursor: pointer;
+      font-family: Gudea, sans-serif; box-shadow: 0 2px 6px rgba(0,0,0,.2);
+      transition: background .15s;
+    }
+    #lang-btn:hover { background: #4a5a7a; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Gudea, sans-serif; font-size: 16px; line-height: 1.8; color: #111; background: #eee; }
+    #wrapper { max-width: 1100px; margin: 0 auto; display: flex; align-items: flex-start; padding: 40px 24px; gap: 36px; }
+    #sidebar { width: 240px; flex-shrink: 0; position: sticky; top: 24px; max-height: calc(100vh - 48px); overflow-y: auto; font-size: 13px; }
+    #sidebar h2 { font-size: 12px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 12px; border: none; padding: 0; }
+    #sidebar ol { list-style: none; padding: 0; counter-reset: toc; }
+    #sidebar ol li { counter-increment: toc; margin-bottom: 4px; }
+    #sidebar ol li a { color: #555; text-decoration: none; display: block; padding: 2px 0; transition: color .12s; }
+    #sidebar ol li a:hover { color: #58A; }
+    #sidebar ol li a::before { content: counter(toc, decimal-leading-zero) '. '; color: #bbb; font-size: 11px; font-family: 'Courier New', monospace; }
+    #content { flex: 1; min-width: 0; }
+    .page-header { margin-bottom: 32px; padding-bottom: 20px; border-bottom: 1px solid #ddd; }
+    .page-header .crumb { font-size: 11px; color: #999; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; }
+    .page-header h1 { font-size: 1.8rem; font-weight: 900; color: #303236; margin-bottom: 8px; line-height: 1.25; }
+    .page-header .subtitle { font-family: 'Courier New', monospace; font-size: 13px; color: #777; }
+    h2 { color: #37425d; font-size: 22px; margin: 36px 0 10px; }
+    h3 { color: #633739; font-size: 17px; margin: 24px 0 8px; }
+    p { margin-bottom: 14px; }
+    a { color: #58A; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    strong { color: #222; }
+    .fun { font-family: 'Courier New', monospace; color: #2a6496; }
+    .var { font-family: 'Courier New', monospace; color: #227; }
+    .def { color: green; font-weight: 600; }
+    code { font-family: 'Courier New', monospace; font-size: 14px; background: #ddd; border-radius: 3px; padding: 1px 5px; }
+    pre { background: #282c34; color: #abb2bf; border-radius: 5px; padding: 16px 18px; overflow-x: auto; margin: 14px 0 18px; font-family: 'Courier New', monospace; font-size: 13.5px; line-height: 1.6; }
+    pre code { background: none; padding: 0; color: inherit; }
+    .kw { color: #c678dd; } .fn { color: #61afef; } .cm { color: #5c6370; font-style: italic; }
+    .str { color: #98c379; } .num { color: #d19a66; } .type { color: #e5c07b; }
+    .note { display: block; margin: 18px 0; padding: 15px; background: #D8F5D8; color: #444; border-radius: 5px; border: 2px solid #AFDFAF; font-size: 15px; line-height: 1.7; }
+    .warning { display: block; margin: 18px 0; padding: 15px; background: #FFD2D2; color: #444; border-radius: 5px; border: 2px solid #E0B3B3; font-size: 15px; line-height: 1.7; }
+    ul, ol { padding-left: 22px; margin-bottom: 14px; }
+    li { margin-bottom: 5px; }
+    .step { display: inline-block; font-size: 11px; font-weight: 700; font-family: 'Courier New', monospace; color: #fff; background: #37425d; padding: 2px 7px; border-radius: 3px; margin-right: 8px; vertical-align: middle; }
+    .phase-meta { font-size: 13px; color: #888; margin: -2px 0 10px; font-family: 'Courier New', monospace; }
+    .tag { display: inline-block; font-size: 11px; font-weight: 700; border-radius: 3px; padding: 1px 6px; margin-left: 6px; }
+    .tag-cpu   { background: #fff0d8; color: #8a4a00; border: 1px solid #e8cc88; }
+    .tag-gpu   { background: #d8f0e8; color: #1a6040; border: 1px solid #8ad4b0; }
+    .table-wrap { overflow-x: auto; margin: 14px 0; }
+    table { border-collapse: collapse; font-size: 14px; width: 100%; }
+    th, td { padding: 8px 12px; border-bottom: 1px solid #aaa; text-align: left; }
+    th { border-bottom: 2px solid #888; font-weight: 700; background: #ddd; }
+    tr:nth-child(even) td { background: #e8e8e8; }
+    td:first-child { font-family: 'Courier New', monospace; font-size: 13px; color: #2a6496; white-space: nowrap; }
+    .file-list { list-style: none; padding: 0; margin: 12px 0; }
+    .file-list li { padding: 6px 0; border-bottom: 1px solid #ccc; display: flex; align-items: baseline; gap: 10px; font-size: 14px; }
+    .file-list li:last-child { border-bottom: none; }
+    .file-list .fp { font-family: 'Courier New', monospace; font-size: 13px; color: #58A; min-width: 260px; }
+    .file-list .fd { color: #555; }
+    footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid #ccc; font-size: 12px; color: #aaa; text-align: center; }
+    @media (max-width: 800px) { #wrapper { flex-direction: column; padding: 20px 16px; } #sidebar { width: 100%; position: static; max-height: none; margin-bottom: 24px; } }
+  </style>
+</head>
+<body>
+<button id="lang-btn" onclick="toggleLang()"><span lang="en">中文</span><span lang="zh">English</span></button>
+<div id="wrapper">
+
+<nav id="sidebar">
+  <h2><span lang="en">Contents</span><span lang="zh">目录</span></h2>
+  <ol>
+    <li><a href="#s1"><span lang="en">What is RDG?</span><span lang="zh">什么是 RDG？</span></a></li>
+    <li><a href="#s2"><span lang="en">Resource Types</span><span lang="zh">资源类型</span></a></li>
+    <li><a href="#s3"><span lang="en">Pass Parameter Structs</span><span lang="zh">Pass 参数结构体</span></a></li>
+    <li><a href="#s4"><span lang="en">AddPass — Registering Work</span><span lang="zh">AddPass — 注册工作</span></a></li>
+    <li><a href="#s5"><span lang="en">Compile() — Culling &amp; Merging</span><span lang="zh">Compile() — 剔除与合并</span></a></li>
+    <li><a href="#s6"><span lang="en">Execute() — Allocation &amp; Barriers</span><span lang="zh">Execute() — 分配与屏障</span></a></li>
+    <li><a href="#s7"><span lang="en">Async Compute</span><span lang="zh">异步计算</span></a></li>
+    <li><a href="#s8"><span lang="en">Resource Lifetime &amp; Extraction</span><span lang="zh">资源生命周期与提取</span></a></li>
+    <li><a href="#s9"><span lang="en">Writing a Custom RDG Pass</span><span lang="zh">编写自定义 RDG Pass</span></a></li>
+    <li><a href="#s10"><span lang="en">Debugging RDG</span><span lang="zh">调试 RDG</span></a></li>
+    <li><a href="#s11"><span lang="en">Source Navigation</span><span lang="zh">源码导航</span></a></li>
+  </ol>
+</nav>
+
+<main id="content">
+  <div class="page-header">
+    <div class="crumb">Unreal Engine 5.6 &middot; Infrastructure &amp; Graph &middot; Part 02-A</div>
+    <h1>RDG &mdash; Render Dependency Graph</h1>
+    <div class="subtitle">Engine/Source/Runtime/RenderCore/Public/RenderGraphBuilder.h &middot; RenderGraphBuilder.cpp</div>
+  </div>
+
+  <!-- ══ s1 ══ -->
+  <h2 id="s1"><span lang="en">What is RDG and Why Does It Exist?</span><span lang="zh">什么是 RDG？它为何存在？</span></h2>
+
+  <p lang="en">
+    The <span class="def">Render Dependency Graph</span> (RDG) is UE's frame-level task graph for GPU work.
+    Before RDG, every render pass had to manually issue RHI resource barriers, manage resource lifetimes,
+    and schedule async compute — error-prone, hard to maintain, and impossible to globally optimize.
+    RDG replaces this with a declarative model: you describe <em>what</em> each pass reads and writes,
+    and RDG figures out <em>when</em> to transition resources, <em>whether</em> to merge render passes,
+    and <em>how</em> to overlap async compute — automatically.
+  </p>
+  <p lang="zh">
+    <span class="def">Render Dependency Graph</span>（RDG）是 UE 的帧级 GPU 工作任务图。
+    RDG 出现之前，每个渲染通道都必须手动发出 RHI 资源屏障、管理资源生命周期、调度异步计算——
+    这极易出错、难以维护，且无法进行全局优化。
+    RDG 用声明式模型替代了这一切：你描述每个通道<em>读取和写入什么</em>，
+    RDG 自动确定<em>何时</em>转换资源、<em>是否</em>合并渲染通道、以及<em>如何</em>重叠异步计算。
+  </p>
+
+  <div class="table-wrap"><table>
+    <thead><tr>
+      <th><span lang="en">Concern</span><span lang="zh">关注点</span></th>
+      <th><span lang="en">Without RDG</span><span lang="zh">无 RDG</span></th>
+      <th><span lang="en">With RDG</span><span lang="zh">有 RDG</span></th>
+    </tr></thead>
+    <tbody>
+      <tr><td><span lang="en">Resource barriers</span><span lang="zh">资源屏障</span></td><td><span lang="en">Manually called at each pass boundary</span><span lang="zh">每个通道边界手动调用</span></td><td><span lang="en">Automatically computed from declared read/write access</span><span lang="zh">从声明的读写访问自动计算</span></td></tr>
+      <tr><td><span lang="en">Resource lifetime</span><span lang="zh">资源生命周期</span></td><td><span lang="en">Manually allocated before use, freed after</span><span lang="zh">使用前手动分配，结束后释放</span></td><td><span lang="en">Auto-allocated between first and last use, then pooled</span><span lang="zh">在首次到最后一次使用之间自动分配，之后归还池</span></td></tr>
+      <tr><td><span lang="en">Pass culling</span><span lang="zh">通道剔除</span></td><td><span lang="en">All passes always run</span><span lang="zh">所有通道始终执行</span></td><td><span lang="en">Unused passes automatically skipped (DFS from outputs)</span><span lang="zh">未使用通道自动跳过（从输出 DFS 遍历）</span></td></tr>
+      <tr><td><span lang="en">Render pass merging</span><span lang="zh">渲染通道合并</span></td><td><span lang="en">Not possible</span><span lang="zh">不可能</span></td><td><span lang="en">Consecutive passes with identical RTs merged into one RHI render pass</span><span lang="zh">相同 RT 的连续通道合并为一个 RHI 渲染通道</span></td></tr>
+      <tr><td><span lang="en">Async compute</span><span lang="zh">异步计算</span></td><td><span lang="en">Manual fence insertion</span><span lang="zh">手动插入 fence</span></td><td><span lang="en"><code>ERDGPassFlags::AsyncCompute</code> — RDG handles all fencing</span><span lang="zh"><code>ERDGPassFlags::AsyncCompute</code>——RDG 处理所有 fence</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <p lang="en">
+    The key insight is that RDG operates in two phases: a <strong>registration phase</strong>
+    (called from the render thread, where you call <span class="fun">AddPass()</span>)
+    and an <strong>execution phase</strong> (where <span class="fun">Execute()</span> compiles
+    and runs the graph). All lambdas passed to <code>AddPass()</code> are deferred — they run
+    during <code>Execute()</code>, not when <code>AddPass()</code> is called.
+  </p>
+  <p lang="zh">
+    关键洞察是 RDG 在两个阶段运行：<strong>注册阶段</strong>（从渲染线程调用，在此调用 <span class="fun">AddPass()</span>）
+    和<strong>执行阶段</strong>（<span class="fun">Execute()</span> 编译并运行图）。
+    所有传递给 <code>AddPass()</code> 的 lambda 均为延迟执行——它们在 <code>Execute()</code> 期间运行，
+    而非在 <code>AddPass()</code> 被调用时。
+  </p>
+
+  <!-- ══ s2 ══ -->
+  <h2 id="s2"><span lang="en">Resource Types</span><span lang="zh">资源类型</span></h2>
+
+  <p lang="en">
+    RDG wraps all GPU resources in graph-tracked types. The naming convention:
+    <code>FRDGTexture</code> / <code>FRDGBuffer</code> are the resource objects (allocated from the RDG frame allocator),
+    while <code>FRDGTextureRef</code> / <code>FRDGBufferRef</code> are raw pointers to them.
+    <strong>Never store these pointers across frames</strong> — they are freed when the graph is destroyed.
+  </p>
+  <p lang="zh">
+    RDG 将所有 GPU 资源包装为图跟踪类型。命名规范：
+    <code>FRDGTexture</code> / <code>FRDGBuffer</code> 是资源对象（从 RDG 帧分配器分配），
+    而 <code>FRDGTextureRef</code> / <code>FRDGBufferRef</code> 是指向它们的裸指针。
+    <strong>绝不要跨帧存储这些指针</strong>——图销毁时它们会被释放。
+  </p>
+
+  <pre><span class="cm">// Create a new transient texture (GPU memory allocated only during needed passes)</span>
+FRDGTextureDesc Desc = FRDGTextureDesc::<span class="fn">Create2D</span>(
+    FIntPoint(<span class="num">1920</span>, <span class="num">1080</span>),
+    PF_FloatRGBA,
+    FClearValueBinding::Black,
+    TexCreate_RenderTargetable | TexCreate_ShaderResource);
+
+FRDGTextureRef MyTexture = GraphBuilder.<span class="fn">CreateTexture</span>(Desc, TEXT(<span class="str">"MyPostProcessResult"</span>));
+
+<span class="cm">// Register an existing pooled render target (kept alive outside the graph)</span>
+FRDGTextureRef ExternalTexture = GraphBuilder.<span class="fn">RegisterExternalTexture</span>(MyPooledRenderTarget);
+
+<span class="cm">// Create an SRV / UAV view of the texture</span>
+FRDGTextureSRVRef SRV = GraphBuilder.<span class="fn">CreateSRV</span>(FRDGTextureSRVDesc(MyTexture));
+FRDGTextureUAVRef UAV = GraphBuilder.<span class="fn">CreateUAV</span>(MyTexture);
+
+<span class="cm">// Create a structured buffer</span>
+FRDGBufferDesc BufDesc = FRDGBufferDesc::<span class="fn">CreateStructuredDesc</span>(<span class="kw">sizeof</span>(FMyStruct), <span class="num">1024</span>);
+FRDGBufferRef MyBuffer = GraphBuilder.<span class="fn">CreateBuffer</span>(BufDesc, TEXT(<span class="str">"MyBuffer"</span>));</pre>
+
+  <div class="table-wrap"><table>
+    <thead><tr>
+      <th><span lang="en">Type</span><span lang="zh">类型</span></th>
+      <th><span lang="en">Macro</span><span lang="zh">宏</span></th>
+      <th><span lang="en">Meaning in parameter struct</span><span lang="zh">在参数结构体中的含义</span></th>
+    </tr></thead>
+    <tbody>
+      <tr><td>FRDGTextureRef</td><td><code>SHADER_PARAMETER_RDG_TEXTURE</code></td><td><span lang="en">SRV access (read-only) to a texture</span><span lang="zh">对纹理的 SRV 访问（只读）</span></td></tr>
+      <tr><td>FRDGTextureUAVRef</td><td><code>SHADER_PARAMETER_RDG_TEXTURE_UAV</code></td><td><span lang="en">UAV read/write access to a texture</span><span lang="zh">对纹理的 UAV 读写访问</span></td></tr>
+      <tr><td>FRDGTextureSRVRef</td><td><code>SHADER_PARAMETER_RDG_TEXTURE_SRV</code></td><td><span lang="en">SRV with explicit mip/array range</span><span lang="zh">具有明确 mip/数组范围的 SRV</span></td></tr>
+      <tr><td>FRDGBufferRef</td><td><code>SHADER_PARAMETER_RDG_BUFFER</code></td><td><span lang="en">Direct buffer reference (implies read)</span><span lang="zh">直接缓冲区引用（隐含读取）</span></td></tr>
+      <tr><td>FRDGBufferSRVRef</td><td><code>SHADER_PARAMETER_RDG_BUFFER_SRV</code></td><td><span lang="en">Typed / structured buffer SRV</span><span lang="zh">类型化/结构化缓冲区 SRV</span></td></tr>
+      <tr><td>FRDGBufferUAVRef</td><td><code>SHADER_PARAMETER_RDG_BUFFER_UAV</code></td><td><span lang="en">Typed / structured buffer UAV</span><span lang="zh">类型化/结构化缓冲区 UAV</span></td></tr>
+      <tr><td><em>n/a</em></td><td><code>RENDER_TARGET_BINDING_SLOTS()</code></td><td><span lang="en">Render target + depth stencil bindings (Raster passes only)</span><span lang="zh">渲染目标 + 深度模板绑定（仅光栅通道）</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <!-- ══ s3 ══ -->
+  <h2 id="s3"><span lang="en">Pass Parameter Structs — The Contract</span><span lang="zh">Pass 参数结构体 — 合约</span></h2>
+
+  <p lang="en">
+    The parameter struct passed to <code>AddPass()</code> is the <strong>contract</strong> between the pass
+    and the graph. RDG reflects over the struct at compile time to extract every declared RDG resource,
+    then uses this information to track read/write access, insert barriers, and manage lifetimes.
+    Only macros prefixed with <code>SHADER_PARAMETER_RDG_</code> or <code>RDG_</code> are tracked —
+    plain <code>SHADER_PARAMETER</code> entries are invisible to the graph.
+  </p>
+  <p lang="zh">
+    传递给 <code>AddPass()</code> 的参数结构体是通道与图之间的<strong>合约</strong>。
+    RDG 在编译时反射结构体，提取所有声明的 RDG 资源，然后利用这些信息追踪读写访问、插入屏障并管理生命周期。
+    只有以 <code>SHADER_PARAMETER_RDG_</code> 或 <code>RDG_</code> 为前缀的宏才会被追踪——
+    普通的 <code>SHADER_PARAMETER</code> 条目对图不可见。
+  </p>
+
+  <pre><span class="cm">// Declare a pass parameter struct</span>
+BEGIN_SHADER_PARAMETER_STRUCT(FMyPassParameters, )
+    <span class="cm">// These are tracked by RDG (access is declared implicitly by the macro):</span>
+    SHADER_PARAMETER_RDG_TEXTURE(Texture2D, InputTexture)         <span class="cm">// read</span>
+    SHADER_PARAMETER_RDG_TEXTURE_UAV(RWTexture2D&lt;float4&gt;, Output) <span class="cm">// write</span>
+    SHADER_PARAMETER_RDG_BUFFER_SRV(Buffer&lt;float4&gt;, LightData)    <span class="cm">// read</span>
+
+    <span class="cm">// This is NOT tracked by RDG (no resource barrier management):</span>
+    SHADER_PARAMETER(FVector4f, InvSize)
+
+    <span class="cm">// For raster passes: render target slots</span>
+    RENDER_TARGET_BINDING_SLOTS()
+END_SHADER_PARAMETER_STRUCT()
+
+<span class="cm">// Allocate from the graph allocator (tied to graph lifetime, NOT frame)</span>
+FMyPassParameters* PassParams = GraphBuilder.<span class="fn">AllocParameters</span>&lt;FMyPassParameters&gt;();
+PassParams->InputTexture = SourceTexture;
+PassParams->Output       = GraphBuilder.<span class="fn">CreateUAV</span>(OutputTexture);
+PassParams->InvSize      = FVector4f(<span class="num">1.0f</span>/Width, <span class="num">1.0f</span>/Height, <span class="num">0</span>, <span class="num">0</span>);</pre>
+
+  <!-- ══ s4 ══ -->
+  <h2 id="s4"><span lang="en">AddPass() — Registering Work</span><span lang="zh">AddPass() — 注册工作</span></h2>
+
+  <p lang="en">
+    <span class="fun">AddPass()</span> is the core API. It takes a name, a parameter struct, flags describing
+    the GPU workload type, and a lambda that will be called later during <code>Execute()</code>.
+    The lambda captures by value anything it needs — all closures are deferred.
+  </p>
+  <p lang="zh">
+    <span class="fun">AddPass()</span> 是核心 API。它接收名称、参数结构体、描述 GPU 工作类型的标志，
+    以及一个将在 <code>Execute()</code> 期间调用的 lambda。
+    lambda 按值捕获所需的任何内容——所有闭包都被延迟执行。
+  </p>
+
+  <pre><span class="cm">// Compute pass (Graphics queue)</span>
+GraphBuilder.<span class="fn">AddPass</span>(
+    RDG_EVENT_NAME(<span class="str">"MyBlurPass"</span>),
+    PassParams,
+    ERDGPassFlags::Compute,
+    [PassParams, BlurRadius](FRHIComputeCommandList& RHICmdList)
+    {
+        <span class="cm">// Lambda runs during Execute() — RHI resources are valid here</span>
+        TShaderMapRef&lt;FMyBlurCS&gt; ComputeShader(GetGlobalShaderMap(GMaxRHIFeatureLevel));
+        FComputeShaderUtils::<span class="fn">Dispatch</span>(RHICmdList, ComputeShader, *PassParams, FIntVector(DispatchX, DispatchY, <span class="num">1</span>));
+    });
+
+<span class="cm">// Raster pass — render target bound via RENDER_TARGET_BINDING_SLOTS</span>
+PassParams->RenderTargets[<span class="num">0</span>] = FRenderTargetBinding(OutputTexture, ERenderTargetLoadAction::EClear);
+PassParams->RenderTargets.DepthStencil = FDepthStencilBinding(DepthTexture,
+    ERenderTargetLoadAction::ELoad, FExclusiveDepthStencil::DepthRead_StencilWrite);
+
+GraphBuilder.<span class="fn">AddPass</span>(
+    RDG_EVENT_NAME(<span class="str">"MyDrawPass"</span>),
+    PassParams,
+    ERDGPassFlags::Raster,
+    [](FRHICommandList& RHICmdList)
+    {
+        <span class="cm">// RHI render pass is already begun by RDG</span>
+        DrawPrimitives(RHICmdList);
+    });
+
+<span class="cm">// NeverCull: outputs go outside graph (e.g., writing to a screen output)</span>
+GraphBuilder.<span class="fn">AddPass</span>(RDG_EVENT_NAME(<span class="str">"Present"</span>), PassParams,
+    ERDGPassFlags::Raster | ERDGPassFlags::NeverCull, [...]{...});</pre>
+
+  <div class="table-wrap"><table>
+    <thead><tr><th>ERDGPassFlags</th><th><span lang="en">Meaning</span><span lang="zh">含义</span></th></tr></thead>
+    <tbody>
+      <tr><td>Raster</td><td><span lang="en">Graphics pipe + render pass management by RDG</span><span lang="zh">图形管线 + RDG 管理渲染通道</span></td></tr>
+      <tr><td>Compute</td><td><span lang="en">Compute on Graphics pipe (no render pass)</span><span lang="zh">图形管线上的计算（无渲染通道）</span></td></tr>
+      <tr><td>AsyncCompute</td><td><span lang="en">Compute on the separate Async Compute queue</span><span lang="zh">独立异步计算队列上的计算</span></td></tr>
+      <tr><td>NeverCull</td><td><span lang="en">Pass (and its producers) will never be culled by the graph — use when outputs leave the graph</span><span lang="zh">通道（及其生产者）永不被图剔除——输出离开图时使用</span></td></tr>
+      <tr><td>SkipRenderPass</td><td><span lang="en">RDG will not call BeginRenderPass/EndRenderPass — you control it manually</span><span lang="zh">RDG 不调用 BeginRenderPass/EndRenderPass——手动控制</span></td></tr>
+      <tr><td>NeverMerge</td><td><span lang="en">Prevents this pass from being merged with adjacent raster passes</span><span lang="zh">防止此通道与相邻光栅通道合并</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <!-- ══ s5 ══ -->
+  <h2 id="s5"><span lang="en">Compile() — Pass Culling &amp; Render Pass Merging</span><span lang="zh">Compile() — 通道剔除与渲染通道合并</span></h2>
+
+  <p lang="en">
+    <span class="fun">Compile()</span> is invoked at the start of <span class="fun">Execute()</span>.
+    It performs two critical optimizations that dramatically reduce GPU overhead:
+  </p>
+  <p lang="zh">
+    <span class="fun">Compile()</span> 在 <span class="fun">Execute()</span> 开始时调用，
+    执行两项显著减少 GPU 开销的关键优化：
+  </p>
+
+  <h3><span lang="en">1. Pass Culling (DFS from outputs)</span><span lang="zh">1. 通道剔除（从输出 DFS 遍历）</span></h3>
+  <p lang="en">
+    Controlled by <code>r.RDG.CullPasses=1</code> (default). All passes start marked as culled.
+    A depth-first search starts from "root" passes — those with <code>NeverCull</code> flag or passes
+    that write to extracted resources. The DFS walks backwards through producer/consumer edges,
+    marking every transitively needed pass as alive. Any pass not reached is skipped entirely —
+    no lambda execution, no resource allocation, no barriers.
+  </p>
+  <p lang="zh">
+    由 <code>r.RDG.CullPasses=1</code>（默认）控制。所有通道初始标记为已剔除。
+    从"根"通道开始深度优先搜索——即具有 <code>NeverCull</code> 标志或写入被提取资源的通道。
+    DFS 沿生产者/消费者边反向遍历，将每个传递需要的通道标记为存活。
+    未触达的通道完全跳过——无 lambda 执行，无资源分配，无屏障。
+  </p>
+
+  <h3><span lang="en">2. Render Pass Merging</span><span lang="zh">2. 渲染通道合并</span></h3>
+  <p lang="en">
+    Consecutive raster passes that share identical render target bindings are merged into a single
+    RHI render pass. The compiler (lines 1415–1486 in <code>RenderGraphBuilder.cpp</code>) scans
+    forward through all raster passes, accumulating candidates. When a non-mergeable pass is encountered
+    (different RTs, <code>NeverMerge</code> flag, writes outside the render pass), it commits the
+    current merge set: the first pass in the set is assigned <code>bSkipRenderPassEnd</code>,
+    the last is assigned <code>bSkipRenderPassBegin</code>, and intermediate passes get both.
+    This allows multiple passes to "share" one <code>BeginRenderPass</code> / <code>EndRenderPass</code> call.
+  </p>
+  <p lang="zh">
+    共享相同渲染目标绑定的连续光栅通道被合并为单个 RHI 渲染通道。
+    编译器（<code>RenderGraphBuilder.cpp</code> 第 1415–1486 行）向前扫描所有光栅通道，累积候选通道。
+    遇到不可合并的通道（不同 RT、<code>NeverMerge</code> 标志、在渲染通道外写入）时，提交当前合并集：
+    集合中第一个通道被分配 <code>bSkipRenderPassEnd</code>，
+    最后一个被分配 <code>bSkipRenderPassBegin</code>，中间通道同时获得两者。
+    这使多个通道能"共享"一次 <code>BeginRenderPass</code> / <code>EndRenderPass</code> 调用。
+  </p>
+
+  <pre><span class="cm">// Example: three passes drawing into the same GBuffer RT set</span>
+<span class="cm">// → RDG merges them into one RHI render pass</span>
+<span class="cm">//</span>
+<span class="cm">// Pass A: writes GBufferA,B,C,Depth  → BeginRenderPass(GBuffer RTs)</span>
+<span class="cm">// Pass B: writes GBufferA,B,C,Depth  → (no BeginRenderPass/EndRenderPass)</span>
+<span class="cm">// Pass C: writes GBufferA,B,C,Depth  → EndRenderPass()</span>
+<span class="cm">//</span>
+<span class="cm">// Result: GPU sees ONE render pass (better for TBDR, fewer flushes on tiling GPUs)</span>
+
+<span class="cm">// Force a pass to NOT merge (e.g., it writes to a UAV inside the render pass):</span>
+GraphBuilder.<span class="fn">AddPass</span>(Name, Params, ERDGPassFlags::Raster | ERDGPassFlags::NeverMerge, [...]{});</pre>
+
+  <!-- ══ s6 ══ -->
+  <h2 id="s6"><span lang="en">Execute() — Resource Allocation &amp; Barrier Generation</span><span lang="zh">Execute() — 资源分配与屏障生成</span></h2>
+
+  <p lang="en">
+    <span class="fun">Execute()</span> is where the magic happens. After compilation,
+    it allocates GPU resources and sets up barriers. Key aspects:
+  </p>
+  <p lang="zh">
+    <span class="fun">Execute()</span> 是奇迹发生之处。编译后，它分配 GPU 资源并设置屏障。关键方面：
+  </p>
+
+  <ul>
+    <li lang="en"><strong>Transient resources:</strong> When the hardware supports it (<code>bSupportsTransientTextures</code>), RDG uses a transient heap allocator. Resources are allocated at their first use and freed at their last — memory is <em>reused</em> between non-overlapping resources within the same frame, drastically reducing VRAM usage.</li>
+    <li lang="zh"><strong>瞬态资源：</strong>当硬件支持时（<code>bSupportsTransientTextures</code>），RDG 使用瞬态堆分配器。资源在首次使用时分配，在最后一次使用时释放——同一帧内不重叠的资源<em>复用</em>内存，大幅减少 VRAM 使用。</li>
+    <li lang="en"><strong>Split barriers:</strong> RDG splits barriers into <code>BeginTransition</code> + <code>EndTransition</code> pairs. The <code>Begin</code> is issued at the end of the producer pass, and the <code>End</code> is issued at the start of the consumer pass. This allows the driver to pipeline barrier work with actual GPU commands.</li>
+    <li lang="zh"><strong>拆分屏障：</strong>RDG 将屏障拆分为 <code>BeginTransition</code> + <code>EndTransition</code> 对。<code>Begin</code> 在生产者通道末尾发出，<code>End</code> 在消费者通道开始时发出。这允许驱动程序将屏障工作与实际 GPU 命令流水线化。</li>
+    <li lang="en"><strong>Pass parallelism:</strong> When <code>r.RDG.ParallelExecute=1</code>, pass lambdas are dispatched as parallel render thread tasks, each recording into their own secondary command buffer.</li>
+    <li lang="zh"><strong>通道并行：</strong>当 <code>r.RDG.ParallelExecute=1</code> 时，通道 lambda 作为并行渲染线程任务分发，每个任务记录到自己的辅助命令缓冲区。</li>
+  </ul>
+
+  <!-- ══ s7 ══ -->
+  <h2 id="s7"><span lang="en">Async Compute — Overlap on the GPU</span><span lang="zh">异步计算 — GPU 上的重叠</span></h2>
+
+  <p lang="en">
+    Adding a pass with <code>ERDGPassFlags::AsyncCompute</code> tells RDG to schedule it
+    on the hardware's separate Async Compute queue. RDG automatically inserts the necessary
+    Graphics→AsyncCompute and AsyncCompute→Graphics fences. The practical effect is that
+    the Async Compute pass runs in parallel with Graphics passes on the GPU, filling otherwise
+    idle execution units.
+  </p>
+  <p lang="zh">
+    使用 <code>ERDGPassFlags::AsyncCompute</code> 添加通道告诉 RDG 将其调度到硬件独立的异步计算队列。
+    RDG 自动插入所需的 Graphics→AsyncCompute 和 AsyncCompute→Graphics fence。
+    实际效果是异步计算通道在 GPU 上与图形通道并行运行，填充原本闲置的执行单元。
+  </p>
+
+  <pre><span class="cm">// Async compute pass — runs in parallel with Graphics on the GPU</span>
+GraphBuilder.<span class="fn">AddPass</span>(
+    RDG_EVENT_NAME(<span class="str">"LumenScreenProbeGather"</span>),
+    PassParams,
+    ERDGPassFlags::AsyncCompute,  <span class="cm">// ← Async compute queue</span>
+    [PassParams](FRHIComputeCommandList& RHICmdList)
+    {
+        <span class="cm">// Runs on async compute, overlaps with shadow map rendering on Graphics</span>
+    });
+
+<span class="cm">// Check at runtime if async compute is available:</span>
+<span class="kw">if</span> (GraphBuilder.<span class="fn">IsAsyncComputeEnabled</span>())
+{
+    <span class="cm">// Use ERDGPassFlags::AsyncCompute</span>
+}
+<span class="kw">else</span>
+{
+    <span class="cm">// Fall back to ERDGPassFlags::Compute (same queue as Graphics)</span>
+}</pre>
+
+  <div class="note">
+    <span lang="en"><strong>Async Compute dependency rule:</strong> If an async compute pass reads a resource written by a graphics pass (or vice versa), RDG automatically inserts a cross-queue fence. You <em>do not</em> need to manage this manually — that's the whole point of declaring resources in the parameter struct.</span>
+    <span lang="zh"><strong>异步计算依赖规则：</strong>如果异步计算通道读取图形通道写入的资源（反之亦然），RDG 自动插入跨队列 fence。你<em>不需要</em>手动管理这个——这正是在参数结构体中声明资源的全部意义。</span>
+  </div>
+
+  <!-- ══ s8 ══ -->
+  <h2 id="s8"><span lang="en">Resource Lifetime &amp; Extraction</span><span lang="zh">资源生命周期与提取</span></h2>
+
+  <p lang="en">
+    By default, graph-created resources exist only within the graph's execution. To <em>keep</em>
+    a resource alive beyond the current frame (e.g., for temporal effects), use
+    <span class="fun">QueueTextureExtraction()</span>. This promotes the internal resource to an
+    external pooled render target, which persists in the pool until no longer needed.
+  </p>
+  <p lang="zh">
+    默认情况下，图创建的资源仅在图的执行期间存在。要在当前帧之后<em>保持</em>资源存活
+    （例如，用于时间效果），使用 <span class="fun">QueueTextureExtraction()</span>。
+    这将内部资源提升为外部池化渲染目标，在池中持久存在，直到不再需要。
+  </p>
+
+  <pre><span class="cm">// Keep a texture alive beyond this frame (for TAA history, etc.)</span>
+TRefCountPtr&lt;IPooledRenderTarget&gt; PersistentHistory;
+
+GraphBuilder.<span class="fn">QueueTextureExtraction</span>(
+    HistoryTexture,
+    &PersistentHistory,        <span class="cm">// Filled after Execute()</span>
+    ERHIAccess::SRVGraphics);  <span class="cm">// Final state for next frame access</span>
+
+<span class="cm">// Next frame: register the extracted texture back into the new graph</span>
+FRDGTextureRef HistoryRef = GraphBuilder.<span class="fn">RegisterExternalTexture</span>(PersistentHistory);</pre>
+
+  <!-- ══ s9 ══ -->
+  <h2 id="s9"><span lang="en">Writing a Custom RDG Pass — Full Example</span><span lang="zh">编写自定义 RDG Pass — 完整示例</span></h2>
+
+  <p lang="en">
+    Here is a complete working example of a custom full-screen post-process compute pass.
+    This pattern can be used to inject custom effects into the UE rendering pipeline.
+  </p>
+  <p lang="zh">
+    下面是一个完整可用的自定义全屏后处理计算通道示例。
+    此模式可用于向 UE 渲染管线注入自定义效果。
+  </p>
+
+  <pre><span class="cm">// === 1. Shader declaration (in MyEffect.h / .cpp) ===</span>
+<span class="kw">class</span> <span class="type">FMyEffectCS</span> : <span class="kw">public</span> FGlobalShader
+{
+    DECLARE_GLOBAL_SHADER(FMyEffectCS);
+    SHADER_USE_PARAMETER_STRUCT(FMyEffectCS, FGlobalShader);
+
+    BEGIN_SHADER_PARAMETER_STRUCT(FParameters, )
+        SHADER_PARAMETER_RDG_TEXTURE(Texture2D, SceneColor)
+        SHADER_PARAMETER_RDG_TEXTURE_UAV(RWTexture2D&lt;float4&gt;, Output)
+        SHADER_PARAMETER(FVector4f, Params)
+    END_SHADER_PARAMETER_STRUCT()
+
+    <span class="kw">static bool</span> <span class="fn">ShouldCompilePermutation</span>(<span class="kw">const</span> FGlobalShaderPermutationParameters& Parameters)
+    {
+        <span class="kw">return</span> IsFeatureLevelSupported(Parameters.Platform, ERHIFeatureLevel::SM5);
+    }
+};
+IMPLEMENT_GLOBAL_SHADER(FMyEffectCS, <span class="str">"/Engine/Private/MyEffect.usf"</span>, <span class="str">"MainCS"</span>, SF_Compute);
+
+<span class="cm">// === 2. Pass registration (called from e.g., PostProcessing.cpp or SceneExtension) ===</span>
+<span class="kw">void</span> <span class="fn">AddMyEffectPass</span>(FRDGBuilder& GraphBuilder, FRDGTextureRef SceneColor, FRDGTextureRef Output,
+                      FIntPoint Resolution)
+{
+    TShaderMapRef&lt;FMyEffectCS&gt; Shader(GetGlobalShaderMap(GMaxRHIFeatureLevel));
+
+    FMyEffectCS::FParameters* PassParams = GraphBuilder.<span class="fn">AllocParameters</span>&lt;FMyEffectCS::FParameters&gt;();
+    PassParams->SceneColor = SceneColor;
+    PassParams->Output     = GraphBuilder.<span class="fn">CreateUAV</span>(Output);
+    PassParams->Params     = FVector4f(<span class="num">1.0f</span>/Resolution.X, <span class="num">1.0f</span>/Resolution.Y, <span class="num">0</span>, <span class="num">0</span>);
+
+    FComputeShaderUtils::<span class="fn">AddFullscreenPass</span>(
+        GraphBuilder,
+        GetGlobalShaderMap(GMaxRHIFeatureLevel),
+        RDG_EVENT_NAME(<span class="str">"MyEffect"</span>),
+        Shader,
+        PassParams,
+        FIntVector(FMath::<span class="fn">DivideAndRoundUp</span>(Resolution.X, <span class="num">8</span>),
+                   FMath::<span class="fn">DivideAndRoundUp</span>(Resolution.Y, <span class="num">8</span>), <span class="num">1</span>));
+}
+
+<span class="cm">// === 3. HLSL shader (Engine/Shaders/Private/MyEffect.usf) ===</span>
+<span class="cm">// Texture2D SceneColor;</span>
+<span class="cm">// RWTexture2D&lt;float4&gt; Output;</span>
+<span class="cm">// [numthreads(8, 8, 1)]</span>
+<span class="cm">// void MainCS(uint3 DispatchThreadId : SV_DispatchThreadID) { ... }</span></pre>
+
+  <!-- ══ s10 ══ -->
+  <h2 id="s10"><span lang="en">Debugging RDG</span><span lang="zh">调试 RDG</span></h2>
+
+  <p lang="en">
+    RDG has extensive built-in debugging tools. The most useful console variables:
+  </p>
+  <p lang="zh">
+    RDG 内置了丰富的调试工具。最有用的控制台变量：
+  </p>
+
+  <div class="table-wrap"><table>
+    <thead><tr><th>CVar</th><th><span lang="en">Effect</span><span lang="zh">效果</span></th></tr></thead>
+    <tbody>
+      <tr><td>r.RDG.ImmediateMode=1</td><td><span lang="en">Execute each pass immediately as <code>AddPass()</code> is called — disables all optimization but makes stack traces readable</span><span lang="zh">在 <code>AddPass()</code> 被调用时立即执行每个通道——禁用所有优化但使堆栈跟踪可读</span></td></tr>
+      <tr><td>r.RDG.CullPasses=0</td><td><span lang="en">Disable pass culling — every registered pass will execute</span><span lang="zh">禁用通道剔除——每个注册的通道都将执行</span></td></tr>
+      <tr><td>r.RDG.Debug=1</td><td><span lang="en">Enable verbose RDG logging and validation</span><span lang="zh">启用详细 RDG 日志记录和验证</span></td></tr>
+      <tr><td>r.RDG.Breakpoint=PassName</td><td><span lang="en">Break into the debugger when executing the named pass</span><span lang="zh">执行指定名称通道时进入调试器</span></td></tr>
+      <tr><td>r.RDG.ParallelExecute=0</td><td><span lang="en">Disable parallel pass execution (useful to isolate crashes)</span><span lang="zh">禁用并行通道执行（用于隔离崩溃）</span></td></tr>
+      <tr><td>vis ResourceName</td><td><span lang="en">Console command: visualize an RDG texture on screen</span><span lang="zh">控制台命令：在屏幕上可视化 RDG 纹理</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="note">
+    <span lang="en"><strong>RenderDoc + RDG:</strong> With <code>r.RDG.Debug=1</code>, RDG event names set via <code>RDG_EVENT_NAME()</code> appear as nested GPU debug groups in RenderDoc's event list. This makes it trivial to find exactly which pass produced a given draw call. Always name your passes descriptively.</span>
+    <span lang="zh"><strong>RenderDoc + RDG：</strong>使用 <code>r.RDG.Debug=1</code> 时，通过 <code>RDG_EVENT_NAME()</code> 设置的 RDG 事件名称会以嵌套 GPU 调试组的形式出现在 RenderDoc 的事件列表中。这使得精确定位哪个通道产生了特定绘制调用变得简单。始终为通道起描述性名称。</span>
+  </div>
+
+  <!-- ══ s11 ══ -->
+  <h2 id="s11"><span lang="en">Source Navigation</span><span lang="zh">源码导航</span></h2>
+  <p lang="en">All paths relative to <code>Engine/Source/Runtime/RenderCore/</code></p>
+  <p lang="zh">所有路径相对于 <code>Engine/Source/Runtime/RenderCore/</code></p>
+
+  <ul class="file-list">
+    <li><span class="fp">Public/RenderGraphBuilder.h</span><span class="fd"><span lang="en"><span class="fun">FRDGBuilder</span> — complete API: CreateTexture/Buffer, AddPass, QueueExtraction</span><span lang="zh"><span class="fun">FRDGBuilder</span> — 完整 API：CreateTexture/Buffer、AddPass、QueueExtraction</span></span></li>
+    <li><span class="fp">Private/RenderGraphBuilder.cpp:1315</span><span class="fd"><span lang="en"><span class="fun">Compile()</span> — pass dependency, culling, render pass merging</span><span lang="zh"><span class="fun">Compile()</span> — 通道依赖、剔除、渲染通道合并</span></span></li>
+    <li><span class="fp">Private/RenderGraphBuilder.cpp:1752</span><span class="fd"><span lang="en"><span class="fun">Execute()</span> — resource allocation, barrier generation, lambda dispatch</span><span lang="zh"><span class="fun">Execute()</span> — 资源分配、屏障生成、lambda 分发</span></span></li>
+    <li><span class="fp">Public/RenderGraphResources.h</span><span class="fd"><span lang="en"><span class="fun">FRDGResource</span>, <span class="fun">FRDGTexture</span>, <span class="fun">FRDGBuffer</span>, subresource state tracking</span><span lang="zh">资源类型及子资源状态追踪</span></span></li>
+    <li><span class="fp">Public/RenderGraphPass.h</span><span class="fd"><span lang="en"><span class="fun">FRDGPass</span>, barrier batch types, transition info packing</span><span lang="zh">通道对象、屏障批次类型、转换信息打包</span></span></li>
+    <li><span class="fp">Public/RenderGraphDefinitions.h:127</span><span class="fd"><span lang="en"><code>ERDGPassFlags</code>, <code>ERDGTextureFlags</code>, <code>ERDGBufferFlags</code> enums</span><span lang="zh">通道/资源标志枚举定义</span></span></li>
+    <li><span class="fp">Public/RenderGraphUtils.h</span><span class="fd"><span lang="en">Helper utilities: <span class="fun">AddClearRenderTargetPass</span>, <span class="fun">AddCopyTexturePass</span>, <span class="fun">FComputeShaderUtils</span></span><span lang="zh">辅助工具：清除/复制通道、Compute 工具类</span></span></li>
+    <li><span class="fp">Private/RenderGraphValidation.cpp</span><span class="fd"><span lang="en">RDG debug/validation logic (active when <code>RDG_ENABLE_DEBUG</code>)</span><span lang="zh">RDG 调试/验证逻辑</span></span></li>
+  </ul>
+
+  <footer>
+    Unreal Engine 5.6 &middot; Engine/Source/Runtime/RenderCore/<br>
+    Source analysis &middot; For learning purposes
+  </footer>
+</main>
+</div>
+
+<script>
+function toggleLang() {
+  var html = document.documentElement;
+  if (html.classList.contains('lang-zh')) {
+    html.classList.remove('lang-zh'); html.lang = 'en';
+    document.title = 'RDG — Render Dependency Graph';
+    localStorage.setItem('ue-doc-lang', 'en');
+  } else {
+    html.classList.add('lang-zh'); html.lang = 'zh-CN';
+    document.title = 'RDG — 渲染依赖图';
+    localStorage.setItem('ue-doc-lang', 'zh');
+  }
+}
+if (document.documentElement.classList.contains('lang-zh')) document.title = 'RDG — 渲染依赖图';
+</script>
+</body>
+</html>

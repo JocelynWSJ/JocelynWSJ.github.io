@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Custom Shading Model &amp; Substrate</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Gudea">
+  <script>(function(){if(localStorage.getItem('ue-doc-lang')==='zh'){document.documentElement.classList.add('lang-zh');document.documentElement.lang='zh-CN';}})();</script>
+  <style>
+    html:not(.lang-zh) [lang="zh"]{display:none;} html.lang-zh [lang="en"]{display:none;}
+    #lang-btn{position:fixed;top:16px;right:20px;z-index:999;background:#37425d;color:#fff;border:none;border-radius:4px;padding:5px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:Gudea,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.2);transition:background .15s;} #lang-btn:hover{background:#4a5a7a;}
+    *{box-sizing:border-box;margin:0;padding:0;} body{font-family:Gudea,sans-serif;font-size:16px;line-height:1.8;color:#111;background:#eee;}
+    #wrapper{max-width:1100px;margin:0 auto;display:flex;align-items:flex-start;padding:40px 24px;gap:36px;}
+    #sidebar{width:240px;flex-shrink:0;position:sticky;top:24px;max-height:calc(100vh - 48px);overflow-y:auto;font-size:13px;}
+    #sidebar h2{font-size:12px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;border:none;padding:0;}
+    #sidebar ol{list-style:none;padding:0;counter-reset:toc;} #sidebar ol li{counter-increment:toc;margin-bottom:4px;}
+    #sidebar ol li a{color:#555;text-decoration:none;display:block;padding:2px 0;transition:color .12s;} #sidebar ol li a:hover{color:#58A;}
+    #sidebar ol li a::before{content:counter(toc,decimal-leading-zero) '. ';color:#bbb;font-size:11px;font-family:'Courier New',monospace;}
+    #content{flex:1;min-width:0;}
+    .page-header{margin-bottom:32px;padding-bottom:20px;border-bottom:1px solid #ddd;}
+    .page-header .crumb{font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
+    .page-header h1{font-size:1.8rem;font-weight:900;color:#303236;margin-bottom:8px;line-height:1.25;}
+    .page-header .subtitle{font-family:'Courier New',monospace;font-size:13px;color:#777;}
+    h2{color:#37425d;font-size:22px;margin:36px 0 10px;} h3{color:#633739;font-size:17px;margin:24px 0 8px;}
+    p{margin-bottom:14px;} a{color:#58A;text-decoration:none;} a:hover{text-decoration:underline;} strong{color:#222;}
+    .fun{font-family:'Courier New',monospace;color:#2a6496;} .def{color:green;font-weight:600;}
+    code{font-family:'Courier New',monospace;font-size:14px;background:#ddd;border-radius:3px;padding:1px 5px;}
+    pre{background:#282c34;color:#abb2bf;border-radius:5px;padding:16px 18px;overflow-x:auto;margin:14px 0 18px;font-family:'Courier New',monospace;font-size:13.5px;line-height:1.6;}
+    pre code{background:none;padding:0;color:inherit;} .kw{color:#c678dd;} .fn{color:#61afef;} .cm{color:#5c6370;font-style:italic;} .str{color:#98c379;} .num{color:#d19a66;} .type{color:#e5c07b;}
+    .note{display:block;margin:18px 0;padding:15px;background:#D8F5D8;color:#444;border-radius:5px;border:2px solid #AFDFAF;font-size:15px;line-height:1.7;}
+    .warning{display:block;margin:18px 0;padding:15px;background:#FFD2D2;color:#444;border-radius:5px;border:2px solid #E0B3B3;font-size:15px;line-height:1.7;}
+    ul,ol{padding-left:22px;margin-bottom:14px;} li{margin-bottom:5px;}
+    .table-wrap{overflow-x:auto;margin:14px 0;} table{border-collapse:collapse;font-size:14px;width:100%;}
+    th,td{padding:8px 12px;border-bottom:1px solid #aaa;text-align:left;} th{border-bottom:2px solid #888;font-weight:700;background:#ddd;} tr:nth-child(even) td{background:#e8e8e8;}
+    td:first-child{font-family:'Courier New',monospace;font-size:13px;color:#2a6496;white-space:nowrap;}
+    .file-list{list-style:none;padding:0;margin:12px 0;} .file-list li{padding:6px 0;border-bottom:1px solid #ccc;display:flex;align-items:baseline;gap:10px;font-size:14px;} .file-list li:last-child{border-bottom:none;} .file-list .fp{font-family:'Courier New',monospace;font-size:13px;color:#58A;min-width:260px;} .file-list .fd{color:#555;}
+    footer{margin-top:48px;padding-top:16px;border-top:1px solid #ccc;font-size:12px;color:#aaa;text-align:center;}
+    @media(max-width:800px){#wrapper{flex-direction:column;padding:20px 16px;}#sidebar{width:100%;position:static;max-height:none;margin-bottom:24px;}}
+  </style>
+</head>
+<body>
+<button id="lang-btn" onclick="toggleLang()"><span lang="en">中文</span><span lang="zh">English</span></button>
+<div id="wrapper">
+<nav id="sidebar">
+  <h2><span lang="en">Contents</span><span lang="zh">目录</span></h2>
+  <ol>
+    <li><a href="#s1"><span lang="en">Shading Model Architecture</span><span lang="zh">着色模型架构</span></a></li>
+    <li><a href="#s2"><span lang="en">Adding a Custom Shading Model</span><span lang="zh">添加自定义着色模型</span></a></li>
+    <li><a href="#s3"><span lang="en">Step-by-Step: Engine Code Changes</span><span lang="zh">分步骤：引擎代码修改</span></a></li>
+    <li><a href="#s4"><span lang="en">GBuffer Packing for Custom Data</span><span lang="zh">自定义数据的 GBuffer 打包</span></a></li>
+    <li><a href="#s5"><span lang="en">NPR Example: Cel Shading</span><span lang="zh">NPR 示例：卡通渲染</span></a></li>
+    <li><a href="#s6"><span lang="en">Substrate — Next-Gen Material System</span><span lang="zh">Substrate — 下一代材质系统</span></a></li>
+    <li><a href="#s7"><span lang="en">Substrate BSDF Layers</span><span lang="zh">Substrate BSDF 层</span></a></li>
+    <li><a href="#s8"><span lang="en">Source Navigation</span><span lang="zh">源码导航</span></a></li>
+  </ol>
+</nav>
+<main id="content">
+  <div class="page-header">
+    <div class="crumb">Unreal Engine 5.6 &middot; Engine Modding &middot; Part 05-A</div>
+    <h1><span lang="en">Custom Shading Model &amp; Substrate</span><span lang="zh">自定义着色模型与 Substrate</span></h1>
+    <div class="subtitle">Engine/Shaders/Private/ShadingCommon.ush &middot; ShadingModels.ush &middot; DeferredLightingCommon.ush &middot; Substrate/Substrate.h</div>
+  </div>
+
+  <h2 id="s1"><span lang="en">Shading Model Architecture</span><span lang="zh">着色模型架构</span></h2>
+  <p lang="en">Shading models in UE's deferred pipeline are identified by a 4-bit integer packed into GBufferA's alpha channel (<code>SHADINGMODELID_*</code>). The lighting pass reads this ID and dispatches to the appropriate BRDF evaluation. All existing shading models are defined in <code>ShadingCommon.ush</code>:</p>
+  <p lang="zh">UE 延迟管线中的着色模型由打包到 GBufferA Alpha 通道的 4 位整数标识（<code>SHADINGMODELID_*</code>）。光照通道读取此 ID 并分发到相应的 BRDF 计算。所有现有着色模型定义在 <code>ShadingCommon.ush</code> 中：</p>
+
+  <pre><span class="cm">// Engine/Shaders/Private/ShadingCommon.ush</span>
+#<span class="kw">define</span> SHADINGMODELID_UNLIT              <span class="num">0</span>
+#<span class="kw">define</span> SHADINGMODELID_DEFAULT_LIT        <span class="num">1</span>
+#<span class="kw">define</span> SHADINGMODELID_SUBSURFACE         <span class="num">2</span>
+#<span class="kw">define</span> SHADINGMODELID_PREINTEGRATED_SKIN <span class="num">3</span>
+#<span class="kw">define</span> SHADINGMODELID_CLEAR_COAT         <span class="num">4</span>
+#<span class="kw">define</span> SHADINGMODELID_SUBSURFACE_PROFILE <span class="num">5</span>
+#<span class="kw">define</span> SHADINGMODELID_TWOSIDED_FOLIAGE   <span class="num">6</span>
+#<span class="kw">define</span> SHADINGMODELID_HAIR               <span class="num">7</span>
+#<span class="kw">define</span> SHADINGMODELID_CLOTH              <span class="num">8</span>
+#<span class="kw">define</span> SHADINGMODELID_EYE                <span class="num">9</span>
+#<span class="kw">define</span> SHADINGMODELID_SINGLELAYERWATER   <span class="num">10</span>
+#<span class="kw">define</span> SHADINGMODELID_THIN_TRANSLUCENT   <span class="num">11</span>
+#<span class="kw">define</span> SHADINGMODELID_SUBSTRATE          <span class="num">12</span>
+#<span class="kw">define</span> SHADINGMODELID_NUM                <span class="num">13</span>  <span class="cm">// ← max 15 due to 4-bit limit</span>
+#<span class="kw">define</span> SHADINGMODELID_MASK               <span class="num">0xF</span></pre>
+
+  <div class="warning">
+    <span lang="en"><strong>4-bit hard limit:</strong> The shading model ID is only 4 bits, so UE supports a maximum of 15 shading models. Currently 12 are used (0–12), leaving 3 slots. If you add more than 3 custom shading models, you must also expand the GBuffer packing in <code>GBufferInfo.h</code> and related shaders — a significant engine modification.</span>
+    <span lang="zh"><strong>4 位硬限制：</strong>着色模型 ID 仅 4 位，所以 UE 最多支持 15 个着色模型。当前使用了 12 个（0–12），剩余 3 个槽。如果添加超过 3 个自定义着色模型，还需要扩展 <code>GBufferInfo.h</code> 和相关着色器中的 GBuffer 打包——这是重大的引擎修改。</span>
+  </div>
+
+  <h2 id="s2"><span lang="en">Adding a Custom Shading Model — Overview</span><span lang="zh">添加自定义着色模型 — 概览</span></h2>
+  <p lang="en">Adding a custom shading model requires modifying <strong>both C++ and HLSL</strong> in at least 6 files. This is a source-level engine modification — it cannot be done in a plugin without engine source access. The modification points are:</p>
+  <p lang="zh">添加自定义着色模型需要修改至少 6 个文件中的 <strong>C++ 和 HLSL</strong>。这是源码级别的引擎修改——没有引擎源码访问权限无法在插件中完成。修改点包括：</p>
+
+  <h2 id="s3"><span lang="en">Step-by-Step Engine Code Changes</span><span lang="zh">分步骤引擎代码修改</span></h2>
+
+  <h3><span lang="en">Step 1: Define the HLSL ID (ShadingCommon.ush)</span><span lang="zh">步骤 1：定义 HLSL ID（ShadingCommon.ush）</span></h3>
+  <pre><span class="cm">// Engine/Shaders/Private/ShadingCommon.ush</span>
+<span class="cm">// Add before SHADINGMODELID_NUM:</span>
+#<span class="kw">define</span> SHADINGMODELID_CUSTOM_NPR   <span class="num">13</span>  <span class="cm">← your new ID</span>
+#<span class="kw">define</span> SHADINGMODELID_NUM          <span class="num">14</span>  <span class="cm">← increment</span></pre>
+
+  <h3><span lang="en">Step 2: Register in C++ (EngineTypes.h)</span><span lang="zh">步骤 2：在 C++ 中注册（EngineTypes.h）</span></h3>
+  <pre><span class="cm">// Engine/Source/Runtime/Engine/Classes/Engine/EngineTypes.h</span>
+<span class="kw">UENUM</span>(BlueprintType)
+<span class="kw">enum</span> EMaterialShadingModel
+{
+    MSM_Unlit           UMETA(DisplayName=<span class="str">"Unlit"</span>),
+    MSM_DefaultLit      UMETA(DisplayName=<span class="str">"Default Lit"</span>),
+    <span class="cm">// ... existing entries ...</span>
+    MSM_CustomNPR       UMETA(DisplayName=<span class="str">"Custom NPR"</span>),  <span class="cm">← add here</span>
+    MSM_MAX,
+};
+
+<span class="cm">// Also update GetShadingModelString() in EngineTypes.cpp or MaterialShaderType.cpp</span></pre>
+
+  <h3><span lang="en">Step 3: Implement the BRDF (ShadingModels.ush)</span><span lang="zh">步骤 3：实现 BRDF（ShadingModels.ush）</span></h3>
+  <pre><span class="cm">// Engine/Shaders/Private/ShadingModels.ush</span>
+<span class="cm">// Add a new case in GetShadingModelRequiresBackfaceLighting(),</span>
+<span class="cm">// and add your BRDF function:</span>
+
+FDirectLighting <span class="fn">CustomNPRShadingBxDF</span>(FGBufferData GBuffer, half3 N, half3 V, half3 L,
+                                     float Falloff, half NoL, FAreaLight AreaLight,
+                                     FShadowTerms Shadow)
+{
+    FDirectLighting Lighting;
+
+    <span class="cm">// Cel shading example: quantize NdotL into ramp steps</span>
+    half RampedNoL = floor(max(<span class="num">0</span>, NoL) * <span class="num">4.0h</span>) / <span class="num">4.0h</span>;
+
+    Lighting.Diffuse  = GBuffer.DiffuseColor * RampedNoL * Falloff;
+    Lighting.Specular = <span class="num">0</span>;  <span class="cm">// No specular for cel shading</span>
+    Lighting.Transmission = <span class="num">0</span>;
+
+    <span class="kw">return</span> Lighting;
+}
+
+<span class="cm">// In IntegrateBxDF() — the main dispatch function:</span>
+<span class="kw">case</span> SHADINGMODELID_CUSTOM_NPR:
+    <span class="kw">return</span> <span class="fn">CustomNPRShadingBxDF</span>(GBuffer, N, V, L, Falloff, NoL, AreaLight, Shadow);</pre>
+
+  <h3><span lang="en">Step 4: Enable in Material Editor (Material.cpp)</span><span lang="zh">步骤 4：在材质编辑器中启用（Material.cpp）</span></h3>
+  <pre><span class="cm">// Engine/Source/Runtime/Engine/Private/Materials/Material.cpp</span>
+<span class="cm">// Add your model to the allowed list for relevant material domains:</span>
+<span class="kw">static bool</span> <span class="fn">IsShadingModelAllowed</span>(EMaterialShadingModel ShadingModel, EMaterialDomain Domain, ...)
+{
+    <span class="cm">// MSM_CustomNPR is allowed for Surface domain only</span>
+    <span class="kw">if</span> (ShadingModel == MSM_CustomNPR)
+        <span class="kw">return</span> Domain == MD_Surface;
+}</pre>
+
+  <h3><span lang="en">Step 5: GBuffer custom data (GetPrecomputedShadowMasks, etc.)</span><span lang="zh">步骤 5：GBuffer 自定义数据</span></h3>
+  <p lang="en">GBufferD (Custom Data) slots are available for storing per-material shading model data. For example, subsurface scattering uses it for the subsurface color. Your NPR model can use it for a ramp texture UVs, outline width, or other parameters.</p>
+  <p lang="zh">GBufferD（自定义数据）槽可用于存储每材质着色模型数据。例如，次表面散射用它存储次表面颜色。您的 NPR 模型可以用它存储渐变纹理 UV、轮廓线宽度或其他参数。</p>
+
+  <h2 id="s4"><span lang="en">GBuffer Packing for Custom Data</span><span lang="zh">自定义数据的 GBuffer 打包</span></h2>
+  <pre><span class="cm">// In ShadingModels.ush — SetGBufferForShadingModel() macro:</span>
+<span class="kw">case</span> SHADINGMODELID_CUSTOM_NPR:
+    <span class="cm">// Pack custom data into GBufferD.x (available when CustomData input is used)</span>
+    GBuffer.CustomData.x = GetMaterialCustomData0(MaterialParameters); <span class="cm">// e.g., ramp scale</span>
+    GBuffer.CustomData.y = GetMaterialCustomData1(MaterialParameters); <span class="cm">// e.g., outline width</span>
+    GBuffer.ShadingModelID = SHADINGMODELID_CUSTOM_NPR;
+    <span class="kw">break</span>;</pre>
+
+  <h2 id="s5"><span lang="en">NPR Example — Cel Shading with Outline</span><span lang="zh">NPR 示例 — 带轮廓的卡通渲染</span></h2>
+  <p lang="en">A complete NPR cel shading implementation typically combines three elements: a quantized diffuse ramp (implemented in the shading model BRDF above), a rim/fresnel term for stylized specularity, and a screen-space outline pass (typically a separate post-process pass that reads depth/normals to detect edges). The outline pass can be implemented as a custom post-process material or as a dedicated RDG pass injected via a <code>ViewExtension</code>.</p>
+  <p lang="zh">完整的 NPR 卡通渲染实现通常结合三个元素：量化漫反射渐变（在上面的着色模型 BRDF 中实现）、用于程式化高光的边缘/菲涅尔项，以及屏幕空间轮廓线通道（通常是读取深度/法线来检测边缘的独立后处理通道）。轮廓线通道可以实现为自定义后处理材质，或通过 <code>ViewExtension</code> 注入的专用 RDG 通道。</p>
+
+  <h2 id="s6"><span lang="en">Substrate — The Next-Generation Material System</span><span lang="zh">Substrate — 下一代材质系统</span></h2>
+  <p lang="en">Substrate (available in UE 5.4+, enabled via <code>r.Substrate=1</code>) replaces the fixed shading model enum with a <strong>layered BSDF composition</strong> system. Instead of selecting one shading model from a list, artists compose materials from multiple <span class="def">BSDF slabs</span>, each with independent properties (roughness, metallic, subsurface, etc.), blended together with mixing operators.</p>
+  <p lang="zh">Substrate（UE 5.4+ 可用，通过 <code>r.Substrate=1</code> 启用）用<strong>分层 BSDF 组合</strong>系统替代了固定的着色模型枚举。艺术家不再从列表中选择一种着色模型，而是将多个 <span class="def">BSDF 层</span>组合成材质，每层具有独立属性（粗糙度、金属度、次表面等），通过混合运算符混合在一起。</p>
+
+  <div class="table-wrap"><table>
+    <thead><tr><th></th><th><span lang="en">Legacy Shading Models</span><span lang="zh">旧版着色模型</span></th><th><span lang="en">Substrate</span><span lang="zh">Substrate</span></th></tr></thead>
+    <tbody>
+      <tr><td><span lang="en">Model selection</span><span lang="zh">模型选择</span></td><td><span lang="en">One model per material (dropdown)</span><span lang="zh">每材质一个模型（下拉框）</span></td><td><span lang="en">Compose N BSDF slabs with mixing nodes</span><span lang="zh">用混合节点组合 N 个 BSDF 层</span></td></tr>
+      <tr><td><span lang="en">Car paint</span><span lang="zh">车漆</span></td><td><span lang="en">Clear coat shading model</span><span lang="zh">清漆着色模型</span></td><td><span lang="en">Base metallic slab + clearcoat dielectric slab</span><span lang="zh">基础金属层 + 清漆电介质层</span></td></tr>
+      <tr><td><span lang="en">Skin</span><span lang="zh">皮肤</span></td><td><span lang="en">Subsurface Profile model</span><span lang="zh">次表面轮廓模型</span></td><td><span lang="en">SSS slab + specular slab + oily top layer</span><span lang="zh">SSS 层 + 高光层 + 油脂顶层</span></td></tr>
+      <tr><td><span lang="en">GBuffer</span><span lang="zh">GBuffer</span></td><td><span lang="en">Fixed 3–4 render targets</span><span lang="zh">固定 3–4 渲染目标</span></td><td><span lang="en">Variable-size encoded in a compact Substrate buffer</span><span lang="zh">编码在紧凑 Substrate 缓冲区中的可变大小</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <h2 id="s7"><span lang="en">Substrate BSDF Layer Architecture</span><span lang="zh">Substrate BSDF 层架构</span></h2>
+  <p lang="en">Substrate stores material data differently from the legacy GBuffer. Each pixel can store multiple BSDF layers in a compact encoded format. The <span class="fun">FSubstrateSceneData</span> struct tracks the per-frame Substrate state. The key change for lighting: the deferred lighting pass must now iterate over potentially multiple BSDF slabs per pixel and accumulate contributions from each, rather than dispatching to a single BRDF function.</p>
+  <p lang="zh">Substrate 以不同于旧版 GBuffer 的方式存储材质数据。每个像素可以以紧凑编码格式存储多个 BSDF 层。<span class="fun">FSubstrateSceneData</span> 结构体跟踪每帧的 Substrate 状态。光照的关键变化：延迟光照通道现在必须遍历每像素的多个 BSDF 层并从每层累积贡献，而不是分发到单个 BRDF 函数。</p>
+
+  <pre><span class="cm">// Substrate/Substrate.h:106 — per-frame Substrate state</span>
+<span class="kw">struct</span> FSubstrateSceneData
+{
+    FRDGTextureRef TopLayerTexture;    <span class="cm">// compact top-layer data (for reflections)</span>
+    FRDGTextureRef MaterialTextureArray; <span class="cm">// full material data (multiple BSDFs per pixel)</span>
+    int32 PeelLayersAboveDepth;        <span class="cm">// for subsurface / translucency peeling</span>
+    uint32 LayerCount;                 <span class="cm">// max active layers</span>
+    <span class="cm">// ...</span>
+};
+
+<span class="cm">// Enabling Substrate requires:</span>
+<span class="cm">// 1. r.Substrate=1 in project settings</span>
+<span class="cm">// 2. All materials must be re-saved as Substrate materials</span>
+<span class="cm">// 3. Custom shading models must also be ported to Substrate BSDF nodes</span></pre>
+
+  <div class="note">
+    <span lang="en"><strong>Substrate is the future of UE materials.</strong> Epic is actively migrating all built-in shading models to Substrate. For new projects starting on UE 5.4+, consider designing materials with Substrate from the start. The classic shading model approach still works but will eventually be deprecated. Substrate's main advantage for high-end work: physically correct multi-layer materials (e.g., multi-layer car paint, skin with oily sheen) that were impossible to create in the legacy system.</span>
+    <span lang="zh"><strong>Substrate 是 UE 材质的未来。</strong>Epic 正在积极将所有内置着色模型迁移到 Substrate。对于从 UE 5.4+ 开始的新项目，考虑从一开始就使用 Substrate 设计材质。经典着色模型方法仍然有效，但最终将被废弃。Substrate 对高端工作的主要优势：在旧系统中无法创建的物理正确的多层材质（例如，多层车漆、带油脂光泽的皮肤）。</span>
+  </div>
+
+  <h2 id="s8"><span lang="en">Source Navigation</span><span lang="zh">源码导航</span></h2>
+  <ul class="file-list">
+    <li><span class="fp">Shaders/Private/ShadingCommon.ush:20</span><span class="fd"><span lang="en"><code>SHADINGMODELID_*</code> define list — add your ID here</span><span lang="zh"><code>SHADINGMODELID_*</code> 定义列表 — 在此添加你的 ID</span></span></li>
+    <li><span class="fp">Shaders/Private/ShadingModels.ush</span><span class="fd"><span lang="en"><span class="fun">IntegrateBxDF()</span> dispatch, all BRDF implementations</span><span lang="zh"><span class="fun">IntegrateBxDF()</span> 分发，所有 BRDF 实现</span></span></li>
+    <li><span class="fp">Shaders/Private/DeferredLightingCommon.ush</span><span class="fd"><span lang="en">Deferred lighting loop that calls IntegrateBxDF per pixel</span><span lang="zh">调用 IntegrateBxDF 的延迟光照循环</span></span></li>
+    <li><span class="fp">Engine/Classes/Engine/EngineTypes.h</span><span class="fd"><span lang="en"><code>EMaterialShadingModel</code> enum — add your C++ enum entry</span><span lang="zh"><code>EMaterialShadingModel</code> 枚举 — 添加 C++ 枚举条目</span></span></li>
+    <li><span class="fp">Engine/Private/Materials/Material.cpp</span><span class="fd"><span lang="en">Material domain validation, shading model filtering</span><span lang="zh">材质域验证、着色模型过滤</span></span></li>
+    <li><span class="fp">Renderer/Private/Substrate/Substrate.h:106</span><span class="fd"><span lang="en"><span class="fun">FSubstrateSceneData</span> — per-frame Substrate state</span><span lang="zh"><span class="fun">FSubstrateSceneData</span> — 每帧 Substrate 状态</span></span></li>
+    <li><span class="fp">Shaders/Private/Substrate/SubstrateEvaluation.ush</span><span class="fd"><span lang="en">Substrate BSDF evaluation shaders</span><span lang="zh">Substrate BSDF 评估着色器</span></span></li>
+  </ul>
+  <footer>Unreal Engine 5.6 &middot; Engine/Shaders/Private/ &amp; Engine/Source/Runtime/Engine/<br>Source analysis &middot; For learning purposes</footer>
+</main>
+</div>
+<script>
+function toggleLang(){var h=document.documentElement;if(h.classList.contains('lang-zh')){h.classList.remove('lang-zh');h.lang='en';document.title='Custom Shading Model & Substrate';localStorage.setItem('ue-doc-lang','en');}else{h.classList.add('lang-zh');h.lang='zh-CN';document.title='自定义着色模型与Substrate';localStorage.setItem('ue-doc-lang','zh');}}
+if(document.documentElement.classList.contains('lang-zh'))document.title='自定义着色模型与Substrate';
+</script>
+</body>
+</html>

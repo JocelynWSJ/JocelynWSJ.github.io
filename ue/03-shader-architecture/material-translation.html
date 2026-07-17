@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shader Architecture — Compilation, Permutations &amp; Material Translation</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Gudea">
+  <script>(function(){if(localStorage.getItem('ue-doc-lang')==='zh'){document.documentElement.classList.add('lang-zh');document.documentElement.lang='zh-CN';}})();</script>
+  <style>
+    html:not(.lang-zh) [lang="zh"]{display:none;} html.lang-zh [lang="en"]{display:none;}
+    #lang-btn{position:fixed;top:16px;right:20px;z-index:999;background:#37425d;color:#fff;border:none;border-radius:4px;padding:5px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:Gudea,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.2);transition:background .15s;}
+    #lang-btn:hover{background:#4a5a7a;}
+    *{box-sizing:border-box;margin:0;padding:0;} body{font-family:Gudea,sans-serif;font-size:16px;line-height:1.8;color:#111;background:#eee;}
+    #wrapper{max-width:1100px;margin:0 auto;display:flex;align-items:flex-start;padding:40px 24px;gap:36px;}
+    #sidebar{width:240px;flex-shrink:0;position:sticky;top:24px;max-height:calc(100vh - 48px);overflow-y:auto;font-size:13px;}
+    #sidebar h2{font-size:12px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;border:none;padding:0;}
+    #sidebar ol{list-style:none;padding:0;counter-reset:toc;}
+    #sidebar ol li{counter-increment:toc;margin-bottom:4px;}
+    #sidebar ol li a{color:#555;text-decoration:none;display:block;padding:2px 0;transition:color .12s;}
+    #sidebar ol li a:hover{color:#58A;}
+    #sidebar ol li a::before{content:counter(toc,decimal-leading-zero) '. ';color:#bbb;font-size:11px;font-family:'Courier New',monospace;}
+    #content{flex:1;min-width:0;}
+    .page-header{margin-bottom:32px;padding-bottom:20px;border-bottom:1px solid #ddd;}
+    .page-header .crumb{font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
+    .page-header h1{font-size:1.8rem;font-weight:900;color:#303236;margin-bottom:8px;line-height:1.25;}
+    .page-header .subtitle{font-family:'Courier New',monospace;font-size:13px;color:#777;}
+    h2{color:#37425d;font-size:22px;margin:36px 0 10px;} h3{color:#633739;font-size:17px;margin:24px 0 8px;}
+    p{margin-bottom:14px;} a{color:#58A;text-decoration:none;} a:hover{text-decoration:underline;} strong{color:#222;}
+    .fun{font-family:'Courier New',monospace;color:#2a6496;} .def{color:green;font-weight:600;}
+    code{font-family:'Courier New',monospace;font-size:14px;background:#ddd;border-radius:3px;padding:1px 5px;}
+    pre{background:#282c34;color:#abb2bf;border-radius:5px;padding:16px 18px;overflow-x:auto;margin:14px 0 18px;font-family:'Courier New',monospace;font-size:13.5px;line-height:1.6;}
+    pre code{background:none;padding:0;color:inherit;}
+    .kw{color:#c678dd;} .fn{color:#61afef;} .cm{color:#5c6370;font-style:italic;} .str{color:#98c379;} .num{color:#d19a66;} .type{color:#e5c07b;}
+    .note{display:block;margin:18px 0;padding:15px;background:#D8F5D8;color:#444;border-radius:5px;border:2px solid #AFDFAF;font-size:15px;line-height:1.7;}
+    .warning{display:block;margin:18px 0;padding:15px;background:#FFD2D2;color:#444;border-radius:5px;border:2px solid #E0B3B3;font-size:15px;line-height:1.7;}
+    ul,ol{padding-left:22px;margin-bottom:14px;} li{margin-bottom:5px;}
+    .table-wrap{overflow-x:auto;margin:14px 0;} table{border-collapse:collapse;font-size:14px;width:100%;}
+    th,td{padding:8px 12px;border-bottom:1px solid #aaa;text-align:left;} th{border-bottom:2px solid #888;font-weight:700;background:#ddd;} tr:nth-child(even) td{background:#e8e8e8;}
+    td:first-child{font-family:'Courier New',monospace;font-size:13px;color:#2a6496;white-space:nowrap;}
+    .diagram{background:#fff;border:1px solid #ccc;border-radius:5px;padding:20px;margin:16px 0;font-family:'Courier New',monospace;font-size:13px;line-height:1.8;overflow-x:auto;}
+    .file-list{list-style:none;padding:0;margin:12px 0;} .file-list li{padding:6px 0;border-bottom:1px solid #ccc;display:flex;align-items:baseline;gap:10px;font-size:14px;} .file-list li:last-child{border-bottom:none;} .file-list .fp{font-family:'Courier New',monospace;font-size:13px;color:#58A;min-width:260px;} .file-list .fd{color:#555;}
+    footer{margin-top:48px;padding-top:16px;border-top:1px solid #ccc;font-size:12px;color:#aaa;text-align:center;}
+    @media(max-width:800px){#wrapper{flex-direction:column;padding:20px 16px;}#sidebar{width:100%;position:static;max-height:none;margin-bottom:24px;}}
+  </style>
+</head>
+<body>
+<button id="lang-btn" onclick="toggleLang()"><span lang="en">中文</span><span lang="zh">English</span></button>
+<div id="wrapper">
+<nav id="sidebar">
+  <h2><span lang="en">Contents</span><span lang="zh">目录</span></h2>
+  <ol>
+    <li><a href="#s1"><span lang="en">Shader Class Hierarchy</span><span lang="zh">Shader 类层级</span></a></li>
+    <li><a href="#s2"><span lang="en">DECLARE / IMPLEMENT Macros</span><span lang="zh">DECLARE / IMPLEMENT 宏</span></a></li>
+    <li><a href="#s3"><span lang="en">Permutation Domain System</span><span lang="zh">排列组合域系统</span></a></li>
+    <li><a href="#s4"><span lang="en">Shader Parameter Binding</span><span lang="zh">Shader 参数绑定</span></a></li>
+    <li><a href="#s5"><span lang="en">Compilation Pipeline</span><span lang="zh">编译管线</span></a></li>
+    <li><a href="#s6"><span lang="en">Material → HLSL Translation</span><span lang="zh">材质 → HLSL 翻译</span></a></li>
+    <li><a href="#s7"><span lang="en">ShaderMap &amp; Caching</span><span lang="zh">ShaderMap 与缓存</span></a></li>
+    <li><a href="#s8"><span lang="en">TShaderMapRef — Runtime Lookup</span><span lang="zh">TShaderMapRef — 运行时查找</span></a></li>
+    <li><a href="#s9"><span lang="en">Source Navigation</span><span lang="zh">源码导航</span></a></li>
+  </ol>
+</nav>
+<main id="content">
+  <div class="page-header">
+    <div class="crumb">Unreal Engine 5.6 &middot; Shader Architecture &middot; Part 03-A</div>
+    <h1><span lang="en">Shader Architecture — Compilation, Permutations &amp; Material Translation</span><span lang="zh">Shader 架构 — 编译、排列组合与材质翻译</span></h1>
+    <div class="subtitle">RenderCore/Public/Shader.h &middot; GlobalShader.h &middot; ShaderPermutation.h &middot; HLSLMaterialTranslator.cpp</div>
+  </div>
+
+  <h2 id="s1"><span lang="en">Shader Class Hierarchy</span><span lang="zh">Shader 类层级</span></h2>
+  <p lang="en">All shaders in UE inherit from <span class="fun">FShader</span>. The hierarchy reflects the shader's scope of use:</p>
+  <p lang="zh">UE 中所有 Shader 均继承自 <span class="fun">FShader</span>。层级结构反映了 Shader 的使用范围：</p>
+
+  <div class="diagram">
+FShader                  ← base: source file, entry point, permutation count, parameter layout
+ ├── FGlobalShader       ← one instance per platform; not tied to any material
+ │    └── FMyComputeCS, FMyScreenPassPS, ...
+ ├── FMaterialShader     ← one instance per (material × permutation); has access to material params
+ │    └── FBasePassPS, FDepthOnlyPS, ...
+ └── FMeshMaterialShader ← FMaterialShader + vertex factory data (position, UV, normals)
+      └── FBasePassVS, TDepthOnlyVS&lt;...&gt;, ...</div>
+
+  <div class="table-wrap"><table>
+    <thead><tr><th><span lang="en">Type</span><span lang="zh">类型</span></th><th><span lang="en">Instances per platform</span><span lang="zh">每平台实例数</span></th><th><span lang="en">Use case</span><span lang="zh">使用场景</span></th></tr></thead>
+    <tbody>
+      <tr><td>FGlobalShader</td><td><span lang="en">1 per permutation</span><span lang="zh">每排列 1 个</span></td><td><span lang="en">Post-process, compute, screen-space effects</span><span lang="zh">后处理、计算、屏幕空间效果</span></td></tr>
+      <tr><td>FMaterialShader</td><td><span lang="en">1 per material × permutation</span><span lang="zh">每材质 × 排列 1 个</span></td><td><span lang="en">Material-dependent passes (base pass, shadow depth)</span><span lang="zh">依赖材质的通道（Base Pass、阴影深度）</span></td></tr>
+      <tr><td>FMeshMaterialShader</td><td><span lang="en">1 per (material × VF × permutation)</span><span lang="zh">每（材质 × VF × 排列）1 个</span></td><td><span lang="en">Vertex shaders that need vertex factory data</span><span lang="zh">需要顶点工厂数据的顶点着色器</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <h2 id="s2"><span lang="en">DECLARE / IMPLEMENT Macros — Registration System</span><span lang="zh">DECLARE / IMPLEMENT 宏 — 注册系统</span></h2>
+  <p lang="en">The <code>DECLARE_GLOBAL_SHADER</code> + <code>IMPLEMENT_GLOBAL_SHADER</code> pair is the most common pattern. <code>IMPLEMENT_GLOBAL_SHADER</code> expands to <code>IMPLEMENT_SHADER_TYPE</code> which creates a static <span class="fun">FShaderType</span> object and registers it in UE's global shader type registry at static initialization time (before <code>main()</code>). This registry drives the shader compilation job system.</p>
+  <p lang="zh"><code>DECLARE_GLOBAL_SHADER</code> + <code>IMPLEMENT_GLOBAL_SHADER</code> 对是最常见的模式。<code>IMPLEMENT_GLOBAL_SHADER</code> 展开为 <code>IMPLEMENT_SHADER_TYPE</code>，在静态初始化时（<code>main()</code> 之前）创建一个静态 <span class="fun">FShaderType</span> 对象并注册到 UE 的全局 Shader 类型注册表中。这个注册表驱动着 Shader 编译作业系统。</p>
+
+  <pre><span class="cm">// === Pattern 1: Global Compute Shader ===</span>
+<span class="kw">class</span> <span class="type">FMyBlurCS</span> : <span class="kw">public</span> FGlobalShader
+{
+    DECLARE_GLOBAL_SHADER(FMyBlurCS);          <span class="cm">// Declares GetStaticType(), ShaderTypeRegistration</span>
+    SHADER_USE_PARAMETER_STRUCT(FMyBlurCS, FGlobalShader); <span class="cm">// Use parameter struct system</span>
+
+    BEGIN_SHADER_PARAMETER_STRUCT(FParameters, )
+        SHADER_PARAMETER_RDG_TEXTURE(Texture2D, Input)
+        SHADER_PARAMETER_RDG_TEXTURE_UAV(RWTexture2D&lt;float4&gt;, Output)
+        SHADER_PARAMETER(FVector4f, BlurParams)
+    END_SHADER_PARAMETER_STRUCT()
+
+    <span class="cm">// Static dispatch: can this permutation compile on this platform?</span>
+    <span class="kw">static bool</span> <span class="fn">ShouldCompilePermutation</span>(<span class="kw">const</span> FGlobalShaderPermutationParameters& P)
+    { <span class="kw">return</span> <span class="fn">IsFeatureLevelSupported</span>(P.Platform, ERHIFeatureLevel::SM5); }
+
+    <span class="cm">// Optional: inject defines into the compile environment</span>
+    <span class="kw">static void</span> <span class="fn">ModifyCompilationEnvironment</span>(<span class="kw">const</span> FGlobalShaderPermutationParameters& P,
+                                              FShaderCompilerEnvironment& Env)
+    {
+        FGlobalShader::<span class="fn">ModifyCompilationEnvironment</span>(P, Env);
+        Env.<span class="fn">SetDefine</span>(TEXT(<span class="str">"KERNEL_RADIUS"</span>), <span class="num">5</span>);
+    }
+};
+<span class="cm">// Registers at static init: source file, entry point, shader frequency</span>
+IMPLEMENT_GLOBAL_SHADER(FMyBlurCS, <span class="str">"/Engine/Private/MyBlur.usf"</span>, <span class="str">"MainCS"</span>, SF_Compute);
+
+<span class="cm">// IMPLEMENT_GLOBAL_SHADER expands to IMPLEMENT_SHADER_TYPE which calls (Shader.h:1754):</span>
+<span class="cm">//   new ShaderMetaType(StaticGetTypeLayout(), "FMyBlurCS", SourceFile, FunctionName,</span>
+<span class="cm">//                      Frequency, PermutationCount, ...);</span></pre>
+
+  <h2 id="s3"><span lang="en">Permutation Domain System — Compile-Time Shader Variants</span><span lang="zh">排列组合域系统 — 编译时 Shader 变体</span></h2>
+  <p lang="en">Shader permutations let a single HLSL file compile into multiple variants, each with different <code>#define</code> values. The <span class="def">permutation domain</span> is a C++ type that describes all dimensions. The total shader count = product of all dimension counts. UE compiles <em>all</em> permutations upfront and caches them in the DDC.</p>
+  <p lang="zh">Shader 排列允许单个 HLSL 文件编译为多个变体，每个变体具有不同的 <code>#define</code> 值。<span class="def">排列组合域</span>是描述所有维度的 C++ 类型。总 Shader 数 = 所有维度数量的乘积。UE 预先编译<em>所有</em>排列并在 DDC 中缓存它们。</p>
+
+  <pre><span class="cm">// === Permutation Domain declaration ===</span>
+<span class="kw">class</span> <span class="type">FMyLightingCS</span> : <span class="kw">public</span> FGlobalShader
+{
+    DECLARE_GLOBAL_SHADER(FMyLightingCS);
+    SHADER_USE_PARAMETER_STRUCT(FMyLightingCS, FGlobalShader);
+
+    <span class="cm">// Each dimension becomes a #define in the shader</span>
+    <span class="kw">class</span> FUseHairTransmittance  : SHADER_PERMUTATION_BOOL(<span class="str">"USE_HAIR_TRANSMITTANCE"</span>);
+    <span class="kw">class</span> FNumShadowCascades     : SHADER_PERMUTATION_INT(<span class="str">"NUM_SHADOW_CASCADES"</span>, <span class="num">4</span>); <span class="cm">// values 0-3</span>
+    <span class="kw">class</span> FShadingModelDim       : SHADER_PERMUTATION_ENUM_CLASS(<span class="str">"SHADING_MODEL"</span>, EMyModel);
+
+    <span class="cm">// Combine into a domain — total = 2 × 4 × EMyModel::MAX variants</span>
+    <span class="kw">using</span> FPermutationDomain = TShaderPermutationDomain&lt;FUseHairTransmittance,
+                                                      FNumShadowCascades,
+                                                      FShadingModelDim&gt;;
+
+    <span class="cm">// Prune unnecessary permutations (reduces compile count)</span>
+    <span class="kw">static bool</span> <span class="fn">ShouldCompilePermutation</span>(<span class="kw">const</span> FGlobalShaderPermutationParameters& P)
+    {
+        FPermutationDomain Domain(P.PermutationId);
+        <span class="cm">// Skip hair transmittance on mobile (feature not supported)</span>
+        <span class="kw">if</span> (Domain.<span class="fn">Get</span>&lt;FUseHairTransmittance&gt;() && !<span class="fn">IsFeatureLevelSupported</span>(P.Platform, ERHIFeatureLevel::SM5))
+            <span class="kw">return false</span>;
+        <span class="kw">return true</span>;
+    }
+};
+
+<span class="cm">// At runtime: select the right permutation and retrieve the compiled shader</span>
+FMyLightingCS::FPermutationDomain PermutationVector;
+PermutationVector.<span class="fn">Set</span>&lt;FMyLightingCS::FUseHairTransmittance&gt;(bHairEnabled);
+PermutationVector.<span class="fn">Set</span>&lt;FMyLightingCS::FNumShadowCascades&gt;(NumCascades);
+TShaderMapRef&lt;FMyLightingCS&gt; ComputeShader(GetGlobalShaderMap(GMaxRHIFeatureLevel),
+                                           PermutationVector);</pre>
+
+  <h2 id="s4"><span lang="en">Shader Parameter Binding — The Two Systems</span><span lang="zh">Shader 参数绑定 — 两种系统</span></h2>
+  <p lang="en">UE 5 has two parameter binding systems. The modern system uses <code>SHADER_USE_PARAMETER_STRUCT</code> which auto-binds all members from the <code>BEGIN_SHADER_PARAMETER_STRUCT</code> block. The legacy system uses explicit <code>FShaderParameter</code> / <code>FShaderResourceParameter</code> member variables that are manually bound in <code>SetParameters()</code>.</p>
+  <p lang="zh">UE 5 有两种参数绑定系统。现代系统使用 <code>SHADER_USE_PARAMETER_STRUCT</code>，自动绑定 <code>BEGIN_SHADER_PARAMETER_STRUCT</code> 块中的所有成员。旧版系统使用显式的 <code>FShaderParameter</code> / <code>FShaderResourceParameter</code> 成员变量，在 <code>SetParameters()</code> 中手动绑定。</p>
+
+  <pre><span class="cm">// === Modern system (RDG-compatible, recommended) ===</span>
+<span class="kw">class</span> <span class="type">FModernShaderCS</span> : <span class="kw">public</span> FGlobalShader
+{
+    DECLARE_GLOBAL_SHADER(FModernShaderCS);
+    SHADER_USE_PARAMETER_STRUCT(FModernShaderCS, FGlobalShader); <span class="cm">// auto-binding</span>
+
+    BEGIN_SHADER_PARAMETER_STRUCT(FParameters, )
+        SHADER_PARAMETER_RDG_TEXTURE_SRV(Texture2D, SceneColor)
+        SHADER_PARAMETER_RDG_BUFFER_UAV(RWBuffer&lt;uint&gt;, OutputBuffer)
+        SHADER_PARAMETER_STRUCT_REF(FViewUniformShaderParameters, View) <span class="cm">// UB reference</span>
+        SHADER_PARAMETER(float, Exposure)
+    END_SHADER_PARAMETER_STRUCT()
+};
+
+<span class="cm">// === Legacy system (still used in many existing shaders) ===</span>
+<span class="kw">class</span> <span class="type">FLegacyShaderCS</span> : <span class="kw">public</span> FGlobalShader
+{
+    DECLARE_GLOBAL_SHADER(FLegacyShaderCS);
+    <span class="kw">class</span> FMyParam : <span class="kw">public</span> FShaderParameter  <span class="cm">{ ... }</span>
+    <span class="kw">class</span> FMyTexture : <span class="kw">public</span> FShaderResourceParameter <span class="cm">{ ... }</span>
+
+    <span class="kw">void</span> <span class="fn">SetParameters</span>(FRHIBatchedShaderParameters& BatchedParameters, ...)
+    {
+        <span class="cm">// Manually bind each parameter to its RHI slot</span>
+        SetShaderValue(BatchedParameters, FMyParam, SomeValue);
+        SetTextureParameter(BatchedParameters, FMyTexture, SomeTexture);
+    }
+};</pre>
+
+  <h2 id="s5"><span lang="en">Compilation Pipeline — From Source to Bytecode</span><span lang="zh">编译管线 — 从源码到字节码</span></h2>
+  <p lang="en">Shader compilation is asynchronous and multi-threaded. The high-level flow:</p>
+  <p lang="zh">Shader 编译是异步多线程的。高级流程：</p>
+
+  <div class="diagram">
+Shader type registered (static init)
+        ↓
+FShaderCompileUtilities::AddPermutationsToWorkerInput()
+  → Creates FShaderCompileJob for each permutation
+  → Applies ShouldCompilePermutation() filter
+  → Calls ModifyCompilationEnvironment() to inject defines
+        ↓
+FShaderCompilingManager::AddJobs()
+  → Distributed to worker processes (ShaderCompileWorker.exe)
+  → Can compile in parallel: HLSL → DXIL / SPIRV / Metal MSL
+        ↓
+FShaderCompilingManager::ProcessCompiledShaderMaps()
+  → Results stored in FShaderMap (in-memory)
+  → Serialized to DDC (Derived Data Cache) by ShaderMapId hash
+        ↓
+TShaderMapRef&lt;FMyShader&gt;(GetGlobalShaderMap(...))
+  → Looks up compiled shader from FGlobalShaderMap
+  → Returns typed shader reference for SetShaderParameters()</div>
+
+  <div class="note">
+    <span lang="en"><strong>DDC (Derived Data Cache):</strong> Compiled shader bytecode is identified by a hash combining the source file hash, platform, feature level, and permutation ID. On a cache hit, compilation is skipped entirely. This is why clean builds are slow but iterative development is fast once the DDC is warm.</span>
+    <span lang="zh"><strong>DDC（派生数据缓存）：</strong>编译后的 Shader 字节码通过源文件哈希、平台、功能级别和排列 ID 组合的哈希标识。缓存命中时完全跳过编译。这就是全新构建很慢但 DDC 预热后迭代开发很快的原因。</span>
+  </div>
+
+  <h2 id="s6"><span lang="en">Material → HLSL Translation (FHLSLMaterialTranslator)</span><span lang="zh">材质 → HLSL 翻译（FHLSLMaterialTranslator）</span></h2>
+  <p lang="en">Material graphs in the editor are not shaders — they are node graphs stored as <code>UMaterialExpression</code> objects. The translation from graph → HLSL happens in <span class="fun">FHLSLMaterialTranslator</span> (<code>HLSLMaterialTranslator.cpp</code>, 17,000+ lines). This translator walks the expression graph, emitting HLSL code chunks for each node, and assembles them into the final shader template.</p>
+  <p lang="zh">编辑器中的材质图不是着色器——它们是存储为 <code>UMaterialExpression</code> 对象的节点图。图 → HLSL 的翻译发生在 <span class="fun">FHLSLMaterialTranslator</span>（<code>HLSLMaterialTranslator.cpp</code>，17000+ 行）中。该翻译器遍历表达式图，为每个节点生成 HLSL 代码块，并将它们组装到最终的着色器模板中。</p>
+
+  <pre><span class="cm">// Translation flow (simplified)</span>
+<span class="cm">// 1. For each material output (BaseColor, Roughness, Normal, etc.),</span>
+<span class="cm">//    FHLSLMaterialTranslator recursively translates the connected expression tree:</span>
+<span class="cm">//    UMaterialExpressionTextureSample::Compile() → "Texture2DSample(Tex0, Samp0, TexCoord)"</span>
+<span class="cm">//    UMaterialExpressionMultiply::Compile()      → "(A * B)"</span>
+<span class="cm">//    UMaterialExpressionAdd::Compile()            → "(A + B)"</span>
+<span class="cm">//</span>
+<span class="cm">// 2. GetMaterialShaderCode() (line 3316) assembles the final HLSL by injecting</span>
+<span class="cm">//    generated code chunks into the template: /Engine/Private/MaterialTemplate.ush</span>
+<span class="cm">//    This template provides the CalcMaterialParameters(), GetMaterialBaseColor(), etc. functions</span>
+<span class="cm">//</span>
+<span class="cm">// 3. The resulting HLSL is keyed by FMaterialShaderMapId (shader map id hash)</span>
+<span class="cm">//    and sent to the shader compiler worker.</span>
+<span class="cm">//</span>
+<span class="cm">// Generated code example for "Multiply(TextureSample, Constant(0.5))":</span>
+<span class="cm">//   half3 Local0 = Texture2DSample(Material_Texture2D_0, ..., Parameters.TexCoords[0].xy);</span>
+<span class="cm">//   half3 Local1 = 0.5f;</span>
+<span class="cm">//   half3 Local2 = (Local0 * Local1);  ← output</span>
+
+<span class="cm">// Key function in FHLSLMaterialTranslator:</span>
+FString <span class="fn">GetMaterialShaderCode</span>()  <span class="cm">// line 3316 — assembles everything into final HLSL</span>
+FString <span class="fn">GenerateFunctionCode</span>(uint32 Index, ECompiledPartialDerivativeVariation)  <span class="cm">// per-output code</span></pre>
+
+  <div class="warning">
+    <span lang="en"><strong>Shader permutation explosion:</strong> Every unique combination of material settings (blend mode, two-sided, masked, static lighting) creates a new shader permutation. A complex material with 5 bool settings generates 32 permutations × number of mesh passes × vertex factory variants. This is why material complexity directly impacts loading times and memory.</span>
+    <span lang="zh"><strong>Shader 排列组合爆炸：</strong>材质设置的每个唯一组合（混合模式、双面、遮罩、静态光照）都会创建新的 Shader 排列。一个具有 5 个布尔设置的复杂材质会生成 32 个排列 × 网格通道数 × 顶点工厂变体数。这就是为什么材质复杂度直接影响加载时间和内存的原因。</span>
+  </div>
+
+  <h2 id="s7"><span lang="en">ShaderMap &amp; Caching</span><span lang="zh">ShaderMap 与缓存</span></h2>
+  <p lang="en">A <span class="def">ShaderMap</span> is a collection of compiled shader instances for a specific (material, platform, quality level) combination. <span class="fun">FMaterialShaderMap</span> and <span class="fun">FGlobalShaderMap</span> store shaders indexed by type and permutation. They are serialized to the DDC using a hash key (<span class="fun">FMaterialShaderMapId</span>) that captures all inputs that affect compilation — source code hash, platform, quality settings, static parameters.</p>
+  <p lang="zh"><span class="def">ShaderMap</span> 是特定（材质、平台、质量级别）组合的编译 Shader 实例集合。<span class="fun">FMaterialShaderMap</span> 和 <span class="fun">FGlobalShaderMap</span> 按类型和排列索引存储 Shader。它们使用捕获所有影响编译的输入的哈希键（<span class="fun">FMaterialShaderMapId</span>）序列化到 DDC——源代码哈希、平台、质量设置、静态参数。</p>
+
+  <h2 id="s8"><span lang="en">TShaderMapRef — Runtime Shader Lookup</span><span lang="zh">TShaderMapRef — 运行时 Shader 查找</span></h2>
+  <pre><span class="cm">// Look up a compiled global shader at runtime (render thread)</span>
+TShaderMapRef&lt;FMyBlurCS&gt; Shader(<span class="fn">GetGlobalShaderMap</span>(GMaxRHIFeatureLevel));
+
+<span class="cm">// For a specific permutation:</span>
+FMyLightingCS::FPermutationDomain PermutationVector;
+PermutationVector.<span class="fn">Set</span>&lt;FMyLightingCS::FUseHairTransmittance&gt;(<span class="kw">true</span>);
+TShaderMapRef&lt;FMyLightingCS&gt; LightingShader(GetGlobalShaderMap(GMaxRHIFeatureLevel), PermutationVector);
+
+<span class="cm">// Dispatch via FComputeShaderUtils (helper wrapper around SetShaderParameters + Dispatch)</span>
+FComputeShaderUtils::<span class="fn">AddFullscreenPass</span>(GraphBuilder,
+    <span class="fn">GetGlobalShaderMap</span>(GMaxRHIFeatureLevel),
+    RDG_EVENT_NAME(<span class="str">"MyBlur"</span>),
+    Shader, PassParams,
+    FIntVector(DispatchX, DispatchY, <span class="num">1</span>));</pre>
+
+  <h2 id="s9"><span lang="en">Source Navigation</span><span lang="zh">源码导航</span></h2>
+  <ul class="file-list">
+    <li><span class="fp">RenderCore/Public/Shader.h:845</span><span class="fd"><span lang="en"><span class="fun">FShader</span> base class — parameters, bindings, type system</span><span lang="zh"><span class="fun">FShader</span> 基类 — 参数、绑定、类型系统</span></span></li>
+    <li><span class="fp">RenderCore/Public/Shader.h:1754</span><span class="fd"><span lang="en"><code>IMPLEMENT_SHADER_TYPE</code> macro — static type registration</span><span lang="zh"><code>IMPLEMENT_SHADER_TYPE</code> 宏 — 静态类型注册</span></span></li>
+    <li><span class="fp">RenderCore/Public/GlobalShader.h:274</span><span class="fd"><span lang="en"><span class="fun">FGlobalShader</span> + <code>DECLARE/IMPLEMENT_GLOBAL_SHADER</code></span><span lang="zh"><span class="fun">FGlobalShader</span> + <code>DECLARE/IMPLEMENT_GLOBAL_SHADER</code></span></span></li>
+    <li><span class="fp">RenderCore/Public/ShaderPermutation.h:482</span><span class="fd"><span lang="en"><code>SHADER_PERMUTATION_BOOL/INT/ENUM_CLASS</code> macros</span><span lang="zh">排列组合宏定义</span></span></li>
+    <li><span class="fp">RenderCore/Public/ShaderParameterMacros.h</span><span class="fd"><span lang="en">All <code>SHADER_PARAMETER_*</code>, <code>BEGIN/END_SHADER_PARAMETER_STRUCT</code> macros</span><span lang="zh">所有参数宏定义</span></span></li>
+    <li><span class="fp">Engine/Private/Materials/HLSLMaterialTranslator.cpp:3316</span><span class="fd"><span lang="en"><span class="fun">GetMaterialShaderCode()</span> — final HLSL assembly from expression graph</span><span lang="zh"><span class="fun">GetMaterialShaderCode()</span> — 从表达式图生成最终 HLSL</span></span></li>
+    <li><span class="fp">Engine/Private/Materials/HLSLMaterialTranslator.cpp:1042</span><span class="fd"><span lang="en"><span class="fun">CompileMaterialAttributesCustomOutputs()</span> — per-output translation</span><span lang="zh">每输出翻译</span></span></li>
+  </ul>
+  <footer>Unreal Engine 5.6 &middot; Engine/Source/Runtime/RenderCore/ &amp; Engine/Private/Materials/<br>Source analysis &middot; For learning purposes</footer>
+</main>
+</div>
+<script>
+function toggleLang(){var h=document.documentElement;if(h.classList.contains('lang-zh')){h.classList.remove('lang-zh');h.lang='en';document.title='Shader Architecture';localStorage.setItem('ue-doc-lang','en');}else{h.classList.add('lang-zh');h.lang='zh-CN';document.title='Shader 架构';localStorage.setItem('ue-doc-lang','zh');}}
+if(document.documentElement.classList.contains('lang-zh'))document.title='Shader 架构';
+</script>
+</body>
+</html>

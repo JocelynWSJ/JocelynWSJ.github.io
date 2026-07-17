@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Profiling Deep Dive — Unreal Insights, RDG &amp; Hardware Profilers</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Gudea">
+  <script>(function(){if(localStorage.getItem('ue-doc-lang')==='zh'){document.documentElement.classList.add('lang-zh');document.documentElement.lang='zh-CN';}})();</script>
+  <style>
+    html:not(.lang-zh) [lang="zh"]{display:none;} html.lang-zh [lang="en"]{display:none;}
+    #lang-btn{position:fixed;top:16px;right:20px;z-index:999;background:#37425d;color:#fff;border:none;border-radius:4px;padding:5px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:Gudea,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.2);transition:background .15s;} #lang-btn:hover{background:#4a5a7a;}
+    *{box-sizing:border-box;margin:0;padding:0;} body{font-family:Gudea,sans-serif;font-size:16px;line-height:1.8;color:#111;background:#eee;}
+    #wrapper{max-width:1100px;margin:0 auto;display:flex;align-items:flex-start;padding:40px 24px;gap:36px;}
+    #sidebar{width:240px;flex-shrink:0;position:sticky;top:24px;max-height:calc(100vh - 48px);overflow-y:auto;font-size:13px;}
+    #sidebar h2{font-size:12px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;border:none;padding:0;}
+    #sidebar ol{list-style:none;padding:0;counter-reset:toc;} #sidebar ol li{counter-increment:toc;margin-bottom:4px;}
+    #sidebar ol li a{color:#555;text-decoration:none;display:block;padding:2px 0;transition:color .12s;} #sidebar ol li a:hover{color:#58A;}
+    #sidebar ol li a::before{content:counter(toc,decimal-leading-zero) '. ';color:#bbb;font-size:11px;font-family:'Courier New',monospace;}
+    #content{flex:1;min-width:0;}
+    .page-header{margin-bottom:32px;padding-bottom:20px;border-bottom:1px solid #ddd;}
+    .page-header .crumb{font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
+    .page-header h1{font-size:1.8rem;font-weight:900;color:#303236;margin-bottom:8px;line-height:1.25;}
+    .page-header .subtitle{font-family:'Courier New',monospace;font-size:13px;color:#777;}
+    h2{color:#37425d;font-size:22px;margin:36px 0 10px;} h3{color:#633739;font-size:17px;margin:24px 0 8px;}
+    p{margin-bottom:14px;} a{color:#58A;text-decoration:none;} a:hover{text-decoration:underline;} strong{color:#222;}
+    .fun{font-family:'Courier New',monospace;color:#2a6496;} .def{color:green;font-weight:600;}
+    code{font-family:'Courier New',monospace;font-size:14px;background:#ddd;border-radius:3px;padding:1px 5px;}
+    pre{background:#282c34;color:#abb2bf;border-radius:5px;padding:16px 18px;overflow-x:auto;margin:14px 0 18px;font-family:'Courier New',monospace;font-size:13.5px;line-height:1.6;}
+    pre code{background:none;padding:0;color:inherit;} .kw{color:#c678dd;} .fn{color:#61afef;} .cm{color:#5c6370;font-style:italic;} .str{color:#98c379;} .num{color:#d19a66;} .type{color:#e5c07b;}
+    .note{display:block;margin:18px 0;padding:15px;background:#D8F5D8;color:#444;border-radius:5px;border:2px solid #AFDFAF;font-size:15px;line-height:1.7;}
+    .warning{display:block;margin:18px 0;padding:15px;background:#FFD2D2;color:#444;border-radius:5px;border:2px solid #E0B3B3;font-size:15px;line-height:1.7;}
+    ul,ol{padding-left:22px;margin-bottom:14px;} li{margin-bottom:5px;}
+    .table-wrap{overflow-x:auto;margin:14px 0;} table{border-collapse:collapse;font-size:14px;width:100%;}
+    th,td{padding:8px 12px;border-bottom:1px solid #aaa;text-align:left;} th{border-bottom:2px solid #888;font-weight:700;background:#ddd;} tr:nth-child(even) td{background:#e8e8e8;}
+    td:first-child{font-family:'Courier New',monospace;font-size:13px;color:#2a6496;white-space:nowrap;}
+    .diagram{background:#fff;border:1px solid #ccc;border-radius:5px;padding:20px;margin:16px 0;font-family:'Courier New',monospace;font-size:13px;line-height:1.8;overflow-x:auto;}
+    .file-list{list-style:none;padding:0;margin:12px 0;} .file-list li{padding:6px 0;border-bottom:1px solid #ccc;display:flex;align-items:baseline;gap:10px;font-size:14px;} .file-list li:last-child{border-bottom:none;} .file-list .fp{font-family:'Courier New',monospace;font-size:13px;color:#58A;min-width:220px;} .file-list .fd{color:#555;}
+    footer{margin-top:48px;padding-top:16px;border-top:1px solid #ccc;font-size:12px;color:#aaa;text-align:center;}
+    @media(max-width:800px){#wrapper{flex-direction:column;padding:20px 16px;}#sidebar{width:100%;position:static;max-height:none;margin-bottom:24px;}}
+  </style>
+</head>
+<body>
+<button id="lang-btn" onclick="toggleLang()"><span lang="en">中文</span><span lang="zh">English</span></button>
+<div id="wrapper">
+<nav id="sidebar">
+  <h2><span lang="en">Contents</span><span lang="zh">目录</span></h2>
+  <ol>
+    <li><a href="#s1"><span lang="en">Profiling Workflow Overview</span><span lang="zh">性能分析工作流概览</span></a></li>
+    <li><a href="#s2"><span lang="en">Unreal Insights — CPU Analysis</span><span lang="zh">Unreal Insights — CPU 分析</span></a></li>
+    <li><a href="#s3"><span lang="en">GPU Visualizer</span><span lang="zh">GPU 可视化工具</span></a></li>
+    <li><a href="#s4"><span lang="en">RDG Insights</span><span lang="zh">RDG Insights</span></a></li>
+    <li><a href="#s5"><span lang="en">stat Commands</span><span lang="zh">stat 命令</span></a></li>
+    <li><a href="#s6"><span lang="en">RenderDoc Integration</span><span lang="zh">RenderDoc 集成</span></a></li>
+    <li><a href="#s7"><span lang="en">PIX (Windows/Xbox)</span><span lang="zh">PIX（Windows/Xbox）</span></a></li>
+    <li><a href="#s8"><span lang="en">NSight (NVIDIA)</span><span lang="zh">NSight（NVIDIA）</span></a></li>
+    <li><a href="#s9"><span lang="en">Snapdragon Profiler (Mobile)</span><span lang="zh">Snapdragon Profiler（移动端）</span></a></li>
+    <li><a href="#s10"><span lang="en">Bandwidth &amp; VRAM Analysis</span><span lang="zh">带宽与 VRAM 分析</span></a></li>
+    <li><a href="#s11"><span lang="en">Custom Profiling Instrumentation</span><span lang="zh">自定义性能分析插桩</span></a></li>
+  </ol>
+</nav>
+<main id="content">
+  <div class="page-header">
+    <div class="crumb">Unreal Engine 5.6 &middot; Profiling Deep Dives &middot; Part 06</div>
+    <h1><span lang="en">Profiling Deep Dive — Insights, RDG &amp; Hardware Profilers</span><span lang="zh">性能分析深度解析 — Insights、RDG 与硬件 Profiler</span></h1>
+    <div class="subtitle">Unreal Insights · GPU Visualizer · RenderDoc · PIX · NSight · Snapdragon Profiler</div>
+  </div>
+
+  <h2 id="s1"><span lang="en">Profiling Workflow — Layered Approach</span><span lang="zh">性能分析工作流 — 分层方法</span></h2>
+  <p lang="en">Effective profiling in UE requires a layered approach: start with high-level UE tools to identify which system is slow, then drill down into hardware-level profilers to understand <em>why</em> it's slow. The tools form a hierarchy from most accessible to most detailed:</p>
+  <p lang="zh">UE 中有效的性能分析需要分层方法：从高级 UE 工具开始确定哪个系统慢，然后深入到硬件级 profiler 了解<em>为什么</em>慢。工具形成从最易访问到最详细的层次结构：</p>
+
+  <div class="diagram">
+Level 1: In-editor stats           stat FPS, stat GPU, ProfileGPU
+  ↓ Found a slow pass? Identify which system
+Level 2: Unreal Insights            CPU timeline, GT/RT/RHI breakdown
+  ↓ Found a CPU bottleneck? Drill into thread timings
+Level 3: GPU Visualizer / RDG       Per-pass GPU timing, resource usage
+  ↓ Found a slow GPU pass? Need shader assembly?
+Level 4: RenderDoc / PIX / NSight   Draw call inspection, shader bytecode, bandwidth
+  ↓ Need hardware counter data?
+Level 5: GPU-specific profilers     Warp occupancy, L2 cache miss rate, memory bandwidth</div>
+
+  <h2 id="s2"><span lang="en">Unreal Insights — CPU Thread Analysis</span><span lang="zh">Unreal Insights — CPU 线程分析</span></h2>
+  <p lang="en">Unreal Insights is UE's primary CPU profiling tool. It captures trace data from the running application and displays CPU thread timelines with nanosecond precision. The key instrument for rendering analysis:</p>
+  <p lang="zh">Unreal Insights 是 UE 的主要 CPU 性能分析工具。它从运行中的应用程序捕获追踪数据，并以纳秒精度显示 CPU 线程时间线。渲染分析的关键工具：</p>
+
+  <ul>
+    <li lang="en"><strong>Game Thread view:</strong> Find per-tick bottlenecks (physics, Blueprint, animation). Look for long <code>UWorld::Tick</code> spans.</li>
+    <li lang="zh"><strong>Game Thread 视图：</strong>查找每帧瓶颈（物理、蓝图、动画）。寻找长 <code>UWorld::Tick</code> 跨度。</li>
+    <li lang="en"><strong>Render Thread view:</strong> Find slow <code>FDeferredShadingSceneRenderer::Render</code> spans. Long <code>InitViews</code> = CPU visibility bottleneck. Long <code>RenderDeferredLighting</code> = many lights.</li>
+    <li lang="zh"><strong>Render Thread 视图：</strong>查找慢的 <code>FDeferredShadingSceneRenderer::Render</code> 跨度。长 <code>InitViews</code> = CPU 可见性瓶颈。长 <code>RenderDeferredLighting</code> = 大量灯光。</li>
+    <li lang="en"><strong>RHI Thread view:</strong> If the RT finishes early but the RHI is slow, you have an RHI bottleneck (too many API calls, resource binding overhead).</li>
+    <li lang="zh"><strong>RHI Thread 视图：</strong>如果 RT 早早完成但 RHI 慢，则存在 RHI 瓶颈（过多 API 调用、资源绑定开销）。</li>
+    <li lang="en"><strong>Frame interlock pattern:</strong> A healthy frame shows GT and RT running in near-perfect lockstep with ~1 frame of offset. If RT latency exceeds GT frame time, frames start stacking.</li>
+    <li lang="zh"><strong>帧互锁模式：</strong>健康帧显示 GT 和 RT 以近乎完美的节拍运行，偏移约 1 帧。如果 RT 延迟超过 GT 帧时间，帧开始堆叠。</li>
+  </ul>
+
+  <pre><span class="cm">// To enable Unreal Insights capture from the application itself:</span>
+<span class="cm">// Launch with -trace=cpu,gpu,frame,log,bookmark,counters -tracehost=127.0.0.1</span>
+<span class="cm">// Or from editor: Window → Unreal Insights → Live session</span>
+
+<span class="cm">// Add custom trace events to your code:</span>
+TRACE_CPUPROFILER_EVENT_SCOPE(TEXT(<span class="str">"FMySystem::Update"</span>));
+<span class="cm">// or with channel filtering:</span>
+TRACE_CPUPROFILER_EVENT_SCOPE_ON_CHANNEL_STR(<span class="str">"MyFeature"</span>, MyFeatureChannel, <span class="kw">true</span>);</pre>
+
+  <h2 id="s3"><span lang="en">GPU Visualizer — Per-Pass GPU Timing</span><span lang="zh">GPU 可视化工具 — 每通道 GPU 计时</span></h2>
+  <p lang="en">The GPU Visualizer (<code>ProfileGPU</code> command, or <strong>Ctrl+Shift+,</strong> in editor) shows the GPU time consumed by each render pass. This is UE's equivalent of a coarse GPU profiler — it uses hardware timer queries to measure pass durations. It's the fastest way to identify which render pass is most expensive.</p>
+  <p lang="zh">GPU 可视化工具（<code>ProfileGPU</code> 命令，或编辑器中的 <strong>Ctrl+Shift+,</strong>）显示每个渲染通道消耗的 GPU 时间。这是 UE 的粗粒度 GPU profiler 等价物——使用硬件计时器查询来测量通道持续时间。这是识别哪个渲染通道最昂贵的最快方法。</p>
+
+  <pre><span class="cm">// Useful console commands for GPU timing:</span>
+ProfileGPU                    <span class="cm">// capture one frame, show GPU pass tree</span>
+stat GPU                      <span class="cm">// continuous overlay showing per-category GPU time</span>
+r.GPUStatsEnabled 1           <span class="cm">// enable fine-grained GPU stats collection</span>
+r.RDG.Stats 1                 <span class="cm">// print RDG pass stats (pass count, cull count, merge count)</span></pre>
+
+  <h2 id="s4"><span lang="en">RDG Insights — Graph-Level Analysis</span><span lang="zh">RDG Insights — 图级别分析</span></h2>
+  <p lang="en">RDG Insights (available in Unreal Insights) shows the RDG dependency graph visualization: which passes were culled, which were merged, and where async compute passes overlapped with graphics. Use it to validate that your optimization hypotheses are correct:</p>
+  <p lang="zh">RDG Insights（在 Unreal Insights 中可用）显示 RDG 依赖图可视化：哪些通道被剔除，哪些被合并，以及异步计算通道在哪里与图形重叠。用它验证你的优化假设是否正确：</p>
+
+  <ul>
+    <li lang="en">If a pass shows as <strong>culled</strong> when it shouldn't be: you're missing a <code>NeverCull</code> flag or the output resource isn't extracted.</li>
+    <li lang="zh">如果通道显示为<strong>已剔除</strong>但不应该：缺少 <code>NeverCull</code> 标志，或输出资源未被提取。</li>
+    <li lang="en">If two passes you expect to <strong>merge</strong> don't: one of them has <code>NeverMerge</code>, writes to a UAV inside the render pass, or has different render targets.</li>
+    <li lang="zh">如果你期望<strong>合并</strong>的两个通道没有合并：其中一个有 <code>NeverMerge</code>，在渲染通道内写入 UAV，或具有不同的渲染目标。</li>
+    <li lang="en">If an <strong>async compute</strong> pass isn't overlapping: check if the platform supports efficient async compute (<code>GSupportsEfficientAsyncCompute</code>) and that the pass doesn't have a direct dependency on the previous graphics pass.</li>
+    <li lang="zh">如果<strong>异步计算</strong>通道没有重叠：检查平台是否支持高效异步计算（<code>GSupportsEfficientAsyncCompute</code>），以及通道是否与前一个图形通道有直接依赖。</li>
+  </ul>
+
+  <h2 id="s5"><span lang="en">stat Commands — Quick In-Game Profiling</span><span lang="zh">stat 命令 — 游戏内快速性能分析</span></h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th><span lang="en">Command</span><span lang="zh">命令</span></th><th><span lang="en">What it shows</span><span lang="zh">显示内容</span></th></tr></thead>
+    <tbody>
+      <tr><td>stat FPS</td><td><span lang="en">Frame time + FPS overlay</span><span lang="zh">帧时间 + FPS 叠加</span></td></tr>
+      <tr><td>stat Unit</td><td><span lang="en">GT / RT / GPU / Draw breakdown per frame</span><span lang="zh">每帧 GT / RT / GPU / Draw 分解</span></td></tr>
+      <tr><td>stat GPU</td><td><span lang="en">Per-category GPU time (base pass, shadows, post-process, etc.)</span><span lang="zh">每类别 GPU 时间（基础通道、阴影、后处理等）</span></td></tr>
+      <tr><td>stat RHI</td><td><span lang="en">Draw primitives count, RHI memory, triangle count</span><span lang="zh">Draw Primitives 数量、RHI 内存、三角形数量</span></td></tr>
+      <tr><td>stat SceneRendering</td><td><span lang="en">Detailed render thread timing: InitViews, BasePass, Lighting, etc.</span><span lang="zh">详细渲染线程计时：InitViews、BasePass、光照等</span></td></tr>
+      <tr><td>stat Nanite</td><td><span lang="en">Nanite cluster/triangle counts, visibility query stats</span><span lang="zh">Nanite Cluster/三角形数量、可见性查询统计</span></td></tr>
+      <tr><td>stat VirtualShadowMaps</td><td><span lang="en">VSM page counts, cache hit rate, physical pool usage</span><span lang="zh">VSM 页面数量、缓存命中率、物理池使用量</span></td></tr>
+      <tr><td>stat Lumen</td><td><span lang="en">Lumen surface cache update counts, trace budgets</span><span lang="zh">Lumen 表面缓存更新数量、追踪预算</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <h2 id="s6"><span lang="en">RenderDoc — Draw Call Inspection</span><span lang="zh">RenderDoc — 绘制调用检查</span></h2>
+  <p lang="en">RenderDoc is the go-to tool for GPU frame debugging. In UE, trigger a capture via:</p>
+  <p lang="zh">RenderDoc 是 GPU 帧调试的首选工具。在 UE 中，通过以下方式触发捕获：</p>
+
+  <pre><span class="cm">// Method 1: Console command (in any build)</span>
+r.CaptureNextDeferredShadingRendererFrame 1  <span class="cm">// capture next frame</span>
+
+<span class="cm">// Method 2: RenderDoc overlay (attach to process or launch with -renderdoc)</span>
+
+<span class="cm">// Method 3: Programmatic capture in code (non-shipping builds)</span>
+#<span class="kw">include</span> <span class="str">"RenderCaptureInterface.h"</span>
+RenderCaptureInterface::FScopedCapture Capture(<span class="kw">true</span>, GraphBuilder, TEXT(<span class="str">"MyCapture"</span>));</pre>
+
+  <p lang="en">RenderDoc with UE shows the full RDG event hierarchy because UE calls <code>IRHICommanList::PushEvent/PopEvent</code> for every <code>RDG_EVENT_NAME()</code> scope. Use the event list to navigate to the exact draw call you're interested in, then inspect: input resources, output resources, shader bytecode, constant buffer values, and pipeline state.</p>
+  <p lang="zh">带 UE 的 RenderDoc 显示完整的 RDG 事件层级，因为 UE 为每个 <code>RDG_EVENT_NAME()</code> 范围调用 <code>IRHICommanList::PushEvent/PopEvent</code>。使用事件列表导航到你感兴趣的精确绘制调用，然后检查：输入资源、输出资源、着色器字节码、常量缓冲值和管线状态。</p>
+
+  <h2 id="s7"><span lang="en">PIX (Windows / Xbox) — Timeline + Shader Analysis</span><span lang="zh">PIX（Windows / Xbox）— 时间线 + 着色器分析</span></h2>
+  <p lang="en">PIX for Windows (and Xbox) offers several modes that go beyond RenderDoc: <strong>GPU Capture</strong> (similar to RenderDoc), <strong>Timing Capture</strong> (GPU timeline with hardware counters per pass), and <strong>Function-Level Profiling</strong> (D3D12 command queue visualization). For UE specifically, PIX's Timing Capture is the most useful for identifying GPU bubbles — gaps in the Graphics or Compute queues where the GPU is idle waiting for a fence or sync point.</p>
+  <p lang="zh">Windows/Xbox 的 PIX 提供了超越 RenderDoc 的几种模式：<strong>GPU 捕获</strong>（类似 RenderDoc）、<strong>计时捕获</strong>（每通道带硬件计数器的 GPU 时间线）和<strong>函数级分析</strong>（D3D12 命令队列可视化）。特别是对于 UE，PIX 的计时捕获对于识别 GPU 气泡最有用——图形或计算队列中 GPU 空闲等待 fence 或同步点的间隙。</p>
+
+  <h2 id="s8"><span lang="en">NSight (NVIDIA) — Shader-Level Analysis</span><span lang="zh">NSight（NVIDIA）— 着色器级别分析</span></h2>
+  <p lang="en">NVIDIA NSight Graphics and NSight Systems together provide the deepest analysis on NVIDIA GPUs. NSight Graphics captures GPU frames like RenderDoc but adds hardware performance counter data: L1/L2 cache hit rates, DRAM bandwidth utilization, warp occupancy, texture fetch efficiency, and more. NSight Systems shows the full CPU+GPU timeline with CUDA/DX12/Vulkan overlaid, ideal for identifying async compute overlap quality.</p>
+  <p lang="zh">NVIDIA NSight Graphics 和 NSight Systems 共同提供了 NVIDIA GPU 上最深入的分析。NSight Graphics 像 RenderDoc 一样捕获 GPU 帧，但增加了硬件性能计数器数据：L1/L2 缓存命中率、DRAM 带宽利用率、Warp 占用率、纹理获取效率等。NSight Systems 显示完整的 CPU+GPU 时间线，叠加 CUDA/DX12/Vulkan，非常适合识别异步计算重叠质量。</p>
+
+  <p lang="en">Key NSight metrics for UE rendering:</p>
+  <p lang="zh">UE 渲染的关键 NSight 指标：</p>
+
+  <div class="table-wrap"><table>
+    <thead><tr><th><span lang="en">Metric</span><span lang="zh">指标</span></th><th><span lang="en">Healthy range</span><span lang="zh">健康范围</span></th><th><span lang="en">What it means if bad</span><span lang="zh">不健康时意味着</span></th></tr></thead>
+    <tbody>
+      <tr><td>SM Active Cycles</td><td>&gt;80%</td><td><span lang="en">GPU underutilized — too few draw calls or small dispatches</span><span lang="zh">GPU 利用率不足——绘制调用太少或分发太小</span></td></tr>
+      <tr><td>DRAM Bandwidth</td><td>&lt;80% peak</td><td><span lang="en">Memory bandwidth bottleneck — GBuffer too large, too many texture reads</span><span lang="zh">内存带宽瓶颈——GBuffer 太大，纹理读取太多</span></td></tr>
+      <tr><td>Warp Stall (Texture)</td><td>&lt;20%</td><td><span lang="en">Shader spends too much time waiting for texture fetches (cache miss)</span><span lang="zh">着色器等待纹理读取的时间太多（缓存未命中）</span></td></tr>
+      <tr><td>L2 Hit Rate</td><td>&gt;70%</td><td><span lang="en">Low = poor texture cache reuse, possibly random access patterns</span><span lang="zh">低 = 纹理缓存复用差，可能是随机访问模式</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <h2 id="s9"><span lang="en">Snapdragon Profiler (Mobile) — Tile-Based Bandwidth</span><span lang="zh">Snapdragon Profiler（移动端）— 基于瓦片的带宽</span></h2>
+  <p lang="en">On Qualcomm Adreno devices, Snapdragon Profiler is essential for understanding TBDR-specific performance. Key metrics unique to mobile:</p>
+  <p lang="zh">在高通 Adreno 设备上，Snapdragon Profiler 对于理解 TBDR 特定性能至关重要。移动端特有的关键指标：</p>
+
+  <ul>
+    <li lang="en"><strong>Tile writes to DRAM:</strong> Each tile write is a bandwidth cost. UE's <code>NextSubpass()</code> / <code>ESubpassHint</code> reduce these — verify they're being used in the frame capture.</li>
+    <li lang="zh"><strong>瓦片写入 DRAM：</strong>每次瓦片写入都有带宽成本。UE 的 <code>NextSubpass()</code> / <code>ESubpassHint</code> 减少这些——在帧捕获中验证它们是否被使用。</li>
+    <li lang="en"><strong>Overdraw:</strong> High overdraw means many pixels are shaded multiple times. Use <code>r.ShaderComplexity</code> to visualize it in-engine first.</li>
+    <li lang="zh"><strong>过度绘制：</strong>高过度绘制意味着许多像素被多次着色。首先在引擎中使用 <code>r.ShaderComplexity</code> 可视化它。</li>
+    <li lang="en"><strong>BinningTime:</strong> The time the GPU spends in the binning phase (tiling geometry to tiles). If high, reduce triangle count or draw call count.</li>
+    <li lang="zh"><strong>BinningTime：</strong>GPU 在分 Bin 阶段（将几何体分配到瓦片）花费的时间。如果高，减少三角形数量或绘制调用数量。</li>
+  </ul>
+
+  <h2 id="s10"><span lang="en">Bandwidth &amp; VRAM Analysis</span><span lang="zh">带宽与 VRAM 分析</span></h2>
+  <p lang="en">Bandwidth problems manifest as GPU utilization that's high but GPU speed (ALU throughput) is low — the shader is spending most of its time waiting for memory. Key strategies:</p>
+  <p lang="zh">带宽问题表现为 GPU 利用率高但 GPU 速度（ALU 吞吐量）低——着色器大部分时间在等待内存。关键策略：</p>
+
+  <ul>
+    <li lang="en"><strong>Reduce GBuffer resolution:</strong> Use temporal upscaling (TSR) to render at lower resolution. Each 50% resolution reduction = 75% GBuffer bandwidth reduction.</li>
+    <li lang="zh"><strong>降低 GBuffer 分辨率：</strong>使用时间超分辨率（TSR）以较低分辨率渲染。每降低 50% 分辨率 = GBuffer 带宽减少 75%。</li>
+    <li lang="en"><strong>Reduce VRAM usage:</strong> Use <code>r.Streaming.PoolSize</code> to control texture pool, enable texture streaming to prevent VRAM overflow. Monitor with <code>stat RHI</code> → TextureMemory.</li>
+    <li lang="zh"><strong>减少 VRAM 使用：</strong>使用 <code>r.Streaming.PoolSize</code> 控制纹理池，启用纹理流送防止 VRAM 溢出。通过 <code>stat RHI</code> → TextureMemory 监控。</li>
+    <li lang="en"><strong>Transient resource aliasing:</strong> RDG's transient heap allocator automatically reuses VRAM between non-overlapping passes. Enable with <code>r.RDG.TransientAllocator=1</code> and confirm it's active via RDG Insights.</li>
+    <li lang="zh"><strong>瞬态资源别名：</strong>RDG 的瞬态堆分配器自动在不重叠的通道之间重用 VRAM。使用 <code>r.RDG.TransientAllocator=1</code> 启用，并通过 RDG Insights 确认其活跃。</li>
+  </ul>
+
+  <h2 id="s11"><span lang="en">Custom Profiling Instrumentation</span><span lang="zh">自定义性能分析插桩</span></h2>
+  <pre><span class="cm">// Add CPU trace events (visible in Unreal Insights):</span>
+TRACE_CPUPROFILER_EVENT_SCOPE(TEXT(<span class="str">"FMyRenderer::DoExpensiveWork"</span>));
+
+<span class="cm">// Add GPU stat scopes (visible in ProfileGPU / Insights GPU trace):</span>
+DECLARE_GPU_STAT(MyCustomPass);
+RDG_GPU_STAT_SCOPE(GraphBuilder, MyCustomPass);  <span class="cm">// in RDG pass setup</span>
+
+<span class="cm">// CSV profiling (useful for automated regression testing):</span>
+CSV_SCOPED_TIMING_STAT(MyCsvCategory, MyExpensiveOperation);
+
+<span class="cm">// Add named events visible in RenderDoc / PIX:</span>
+RDG_EVENT_SCOPE(GraphBuilder, <span class="str">"MySystem::ComputePass (%d instances)"</span>, InstanceCount);
+<span class="cm">// ↑ These appear as GPU event groups in RenderDoc's event list</span>
+
+<span class="cm">// Performance counters for continuous monitoring:</span>
+SET_DWORD_STAT(STAT_MyCustomTriangleCount, TriCount);
+INC_DWORD_STAT(STAT_MyCustomDrawCalls);</pre>
+
+  <footer>Unreal Engine 5.6 &middot; Profiling Tools Documentation<br>Source analysis &middot; For learning purposes</footer>
+</main>
+</div>
+<script>
+function toggleLang(){var h=document.documentElement;if(h.classList.contains('lang-zh')){h.classList.remove('lang-zh');h.lang='en';document.title='Profiling Deep Dive';localStorage.setItem('ue-doc-lang','en');}else{h.classList.add('lang-zh');h.lang='zh-CN';document.title='性能分析深度解析';localStorage.setItem('ue-doc-lang','zh');}}
+if(document.documentElement.classList.contains('lang-zh'))document.title='性能分析深度解析';
+</script>
+</body>
+</html>

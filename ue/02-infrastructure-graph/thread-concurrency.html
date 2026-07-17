@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thread Concurrency — Game, Render &amp; RHI Threads</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Gudea">
+  <script>(function(){if(localStorage.getItem('ue-doc-lang')==='zh'){document.documentElement.classList.add('lang-zh');document.documentElement.lang='zh-CN';}})();</script>
+  <style>
+    html:not(.lang-zh) [lang="zh"]{display:none;} html.lang-zh [lang="en"]{display:none;}
+    #lang-btn{position:fixed;top:16px;right:20px;z-index:999;background:#37425d;color:#fff;border:none;border-radius:4px;padding:5px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:Gudea,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.2);transition:background .15s;}
+    #lang-btn:hover{background:#4a5a7a;}
+    *{box-sizing:border-box;margin:0;padding:0;} body{font-family:Gudea,sans-serif;font-size:16px;line-height:1.8;color:#111;background:#eee;}
+    #wrapper{max-width:1100px;margin:0 auto;display:flex;align-items:flex-start;padding:40px 24px;gap:36px;}
+    #sidebar{width:240px;flex-shrink:0;position:sticky;top:24px;max-height:calc(100vh - 48px);overflow-y:auto;font-size:13px;}
+    #sidebar h2{font-size:12px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;border:none;padding:0;}
+    #sidebar ol{list-style:none;padding:0;counter-reset:toc;}
+    #sidebar ol li{counter-increment:toc;margin-bottom:4px;}
+    #sidebar ol li a{color:#555;text-decoration:none;display:block;padding:2px 0;transition:color .12s;}
+    #sidebar ol li a:hover{color:#58A;}
+    #sidebar ol li a::before{content:counter(toc,decimal-leading-zero) '. ';color:#bbb;font-size:11px;font-family:'Courier New',monospace;}
+    #content{flex:1;min-width:0;}
+    .page-header{margin-bottom:32px;padding-bottom:20px;border-bottom:1px solid #ddd;}
+    .page-header .crumb{font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
+    .page-header h1{font-size:1.8rem;font-weight:900;color:#303236;margin-bottom:8px;line-height:1.25;}
+    .page-header .subtitle{font-family:'Courier New',monospace;font-size:13px;color:#777;}
+    h2{color:#37425d;font-size:22px;margin:36px 0 10px;} h3{color:#633739;font-size:17px;margin:24px 0 8px;}
+    p{margin-bottom:14px;} a{color:#58A;text-decoration:none;} a:hover{text-decoration:underline;} strong{color:#222;}
+    .fun{font-family:'Courier New',monospace;color:#2a6496;} .def{color:green;font-weight:600;}
+    code{font-family:'Courier New',monospace;font-size:14px;background:#ddd;border-radius:3px;padding:1px 5px;}
+    pre{background:#282c34;color:#abb2bf;border-radius:5px;padding:16px 18px;overflow-x:auto;margin:14px 0 18px;font-family:'Courier New',monospace;font-size:13.5px;line-height:1.6;}
+    pre code{background:none;padding:0;color:inherit;}
+    .kw{color:#c678dd;} .fn{color:#61afef;} .cm{color:#5c6370;font-style:italic;} .str{color:#98c379;} .num{color:#d19a66;} .type{color:#e5c07b;}
+    .note{display:block;margin:18px 0;padding:15px;background:#D8F5D8;color:#444;border-radius:5px;border:2px solid #AFDFAF;font-size:15px;line-height:1.7;}
+    .warning{display:block;margin:18px 0;padding:15px;background:#FFD2D2;color:#444;border-radius:5px;border:2px solid #E0B3B3;font-size:15px;line-height:1.7;}
+    ul,ol{padding-left:22px;margin-bottom:14px;} li{margin-bottom:5px;}
+    .step{display:inline-block;font-size:11px;font-weight:700;font-family:'Courier New',monospace;color:#fff;background:#37425d;padding:2px 7px;border-radius:3px;margin-right:8px;vertical-align:middle;}
+    .table-wrap{overflow-x:auto;margin:14px 0;} table{border-collapse:collapse;font-size:14px;width:100%;}
+    th,td{padding:8px 12px;border-bottom:1px solid #aaa;text-align:left;} th{border-bottom:2px solid #888;font-weight:700;background:#ddd;} tr:nth-child(even) td{background:#e8e8e8;}
+    td:first-child{font-family:'Courier New',monospace;font-size:13px;color:#2a6496;white-space:nowrap;}
+    .diagram{background:#fff;border:1px solid #ccc;border-radius:5px;padding:20px;margin:16px 0;font-family:'Courier New',monospace;font-size:13px;line-height:1.8;overflow-x:auto;}
+    .file-list{list-style:none;padding:0;margin:12px 0;} .file-list li{padding:6px 0;border-bottom:1px solid #ccc;display:flex;align-items:baseline;gap:10px;font-size:14px;} .file-list li:last-child{border-bottom:none;} .file-list .fp{font-family:'Courier New',monospace;font-size:13px;color:#58A;min-width:260px;} .file-list .fd{color:#555;}
+    footer{margin-top:48px;padding-top:16px;border-top:1px solid #ccc;font-size:12px;color:#aaa;text-align:center;}
+    @media(max-width:800px){#wrapper{flex-direction:column;padding:20px 16px;}#sidebar{width:100%;position:static;max-height:none;margin-bottom:24px;}}
+  </style>
+</head>
+<body>
+<button id="lang-btn" onclick="toggleLang()"><span lang="en">中文</span><span lang="zh">English</span></button>
+<div id="wrapper">
+<nav id="sidebar">
+  <h2><span lang="en">Contents</span><span lang="zh">目录</span></h2>
+  <ol>
+    <li><a href="#s1"><span lang="en">Three-Thread Architecture</span><span lang="zh">三线程架构</span></a></li>
+    <li><a href="#s2"><span lang="en">ENQUEUE_RENDER_COMMAND</span><span lang="zh">ENQUEUE_RENDER_COMMAND 宏</span></a></li>
+    <li><a href="#s3"><span lang="en">FRenderCommandFence</span><span lang="zh">FRenderCommandFence</span></a></li>
+    <li><a href="#s4"><span lang="en">FlushRenderingCommands</span><span lang="zh">FlushRenderingCommands</span></a></li>
+    <li><a href="#s5"><span lang="en">RenderCommandPipe System</span><span lang="zh">RenderCommandPipe 系统</span></a></li>
+    <li><a href="#s6"><span lang="en">RHI Thread &amp; Command Lists</span><span lang="zh">RHI 线程与命令列表</span></a></li>
+    <li><a href="#s7"><span lang="en">Frame Pipelining &amp; Latency</span><span lang="zh">帧流水线与延迟</span></a></li>
+    <li><a href="#s8"><span lang="en">Common Pitfalls</span><span lang="zh">常见陷阱</span></a></li>
+    <li><a href="#s9"><span lang="en">Source Navigation</span><span lang="zh">源码导航</span></a></li>
+  </ol>
+</nav>
+<main id="content">
+  <div class="page-header">
+    <div class="crumb">Unreal Engine 5.6 &middot; Infrastructure &middot; Part 02-B</div>
+    <h1><span lang="en">Thread Concurrency — Game, Render &amp; RHI Threads</span><span lang="zh">线程并发 — Game、Render 与 RHI 线程</span></h1>
+    <div class="subtitle">Engine/Source/Runtime/RenderCore/Public/RenderingThread.h &middot; RenderingThread.cpp</div>
+  </div>
+
+  <h2 id="s1"><span lang="en">The Three-Thread Architecture</span><span lang="zh">三线程架构</span></h2>
+  <p lang="en">UE runs rendering work across three threads, each with a distinct role and a strict rule: <strong>never touch another thread's objects from the wrong thread</strong>.</p>
+  <p lang="zh">UE 将渲染工作分布在三个线程上，每个线程有明确的职责和严格规则：<strong>绝不从错误的线程访问另一个线程的对象</strong>。</p>
+
+  <div class="diagram">
+Game Thread (GT)          Render Thread (RT)           RHI Thread
+─────────────────         ──────────────────           ──────────
+UObjects, Blueprints  →   FSceneRenderer::Render()  →  RHICreateTexture()
+UWorld::Tick()            FRDGBuilder setup            RHIDrawIndexedPrimitive()
+Actor/Component API       RDG compile + execute        Platform API (D3D12/Vulkan)
+                          ↕  ENQUEUE_RENDER_COMMAND     ↕  RHICmdList.Flush()
+                 Frame N  |         Frame N+1           |       Frame N+2</div>
+
+  <ul>
+    <li lang="en"><strong>Game Thread:</strong> Runs UObject logic, Blueprint, physics, AI. Issues render commands via <code>ENQUEUE_RENDER_COMMAND</code>. Never calls RHI directly.</li>
+    <li lang="zh"><strong>Game Thread：</strong>运行 UObject 逻辑、蓝图、物理、AI。通过 <code>ENQUEUE_RENDER_COMMAND</code> 发出渲染命令。永远不直接调用 RHI。</li>
+    <li lang="en"><strong>Render Thread:</strong> Executes render commands from the GT queue. Builds and executes the RDG. Creates <em>logical</em> RHI commands (<code>FRHICommandList</code>). Does not submit to GPU directly.</li>
+    <li lang="zh"><strong>Render Thread：</strong>执行来自 GT 队列的渲染命令。构建并执行 RDG。创建<em>逻辑</em> RHI 命令（<code>FRHICommandList</code>）。不直接向 GPU 提交。</li>
+    <li lang="en"><strong>RHI Thread:</strong> Translates <code>FRHICommandList</code> to actual platform API calls (D3D12, Vulkan, Metal). Handles GPU submission, fence management, and resource destruction.</li>
+    <li lang="zh"><strong>RHI Thread：</strong>将 <code>FRHICommandList</code> 翻译为实际平台 API 调用（D3D12、Vulkan、Metal）。处理 GPU 提交、fence 管理和资源销毁。</li>
+  </ul>
+
+  <h2 id="s2"><span lang="en">ENQUEUE_RENDER_COMMAND — The Primary Sync Mechanism</span><span lang="zh">ENQUEUE_RENDER_COMMAND — 主要同步机制</span></h2>
+  <p lang="en">The canonical way to send work from the Game Thread to the Render Thread. Under the hood, <span class="fun">EnqueueUniqueRenderCommand()</span> dispatches a task to the render thread's task graph.</p>
+  <p lang="zh">从 Game Thread 向 Render Thread 发送工作的规范方式。在底层，<span class="fun">EnqueueUniqueRenderCommand()</span> 将任务分发到渲染线程的任务图。</p>
+
+  <pre><span class="cm">// Typical usage: pass data from game thread to render thread</span>
+<span class="cm">// IMPORTANT: capture data by VALUE — the game thread may move on before the lambda executes</span>
+<span class="kw">float</span> MyValue = SomeActor->GetValue(); <span class="cm">// game thread reads UObject</span>
+FMyRenderResource* RenderResource = MyRenderComponent->GetRenderResource(); <span class="cm">// proxy pointer</span>
+
+ENQUEUE_RENDER_COMMAND(FMyUpdateCommand)(
+    [MyValue, RenderResource](FRHICommandListImmediate& RHICmdList)
+    {
+        <span class="cm">// This lambda runs on the RENDER THREAD</span>
+        <span class="cm">// Safe to access FRenderResource, FSceneProxy, RHI resources</span>
+        <span class="cm">// NOT safe to access UObjects, AActor, etc.</span>
+        RenderResource->UpdateUniformBuffer(RHICmdList, MyValue);
+    });
+
+<span class="cm">// Implementation (RenderingThread.h:378):</span>
+<span class="kw">template</span>&lt;<span class="kw">typename</span> RenderCommandTag, <span class="kw">typename</span> LambdaType&gt;
+FORCEINLINE_DEBUGGABLE <span class="kw">void</span> <span class="fn">EnqueueUniqueRenderCommand</span>(LambdaType&& Lambda)
+{
+    <span class="kw">if</span> (<span class="fn">IsInRenderingThread</span>())
+        Lambda(<span class="fn">GetImmediateCommandList_ForRenderCommand</span>()); <span class="cm">// already on RT: run immediately</span>
+    <span class="kw">else if</span> (<span class="fn">ShouldExecuteOnRenderThread</span>())
+        FRenderThreadCommandPipe::<span class="fn">Enqueue</span>&lt;RenderCommandTag&gt;(MoveTemp(Lambda)); <span class="cm">// enqueue to RT</span>
+    <span class="kw">else</span>
+        Lambda(<span class="fn">GetImmediateCommandList_ForRenderCommand</span>()); <span class="cm">// single-threaded: run now</span>
+}</pre>
+
+  <div class="note">
+    <span lang="en"><strong>Thread check macros:</strong> Always guard code with the correct thread assertion: <code>check(IsInGameThread())</code>, <code>check(IsInRenderingThread())</code>, or <code>check(IsInRHIThread())</code>. These are compiled out in Shipping builds but are invaluable for catching threading bugs.</span>
+    <span lang="zh"><strong>线程检查宏：</strong>始终用正确的线程断言保护代码：<code>check(IsInGameThread())</code>、<code>check(IsInRenderingThread())</code> 或 <code>check(IsInRHIThread())</code>。这些在 Shipping 版本中被编译掉，但对于发现线程错误非常有价值。</span>
+  </div>
+
+  <h2 id="s3"><span lang="en">FRenderCommandFence — Waiting for the Render Thread</span><span lang="zh">FRenderCommandFence — 等待渲染线程</span></h2>
+  <p lang="en"><span class="fun">FRenderCommandFence</span> is the standard mechanism for the Game Thread to wait for a specific render command to complete — for example, when destroying a component whose render proxy is still in use.</p>
+  <p lang="zh"><span class="fun">FRenderCommandFence</span> 是 Game Thread 等待特定渲染命令完成的标准机制——例如，当销毁一个渲染代理仍在使用中的组件时。</p>
+
+  <pre><span class="cm">// In a component's destructor:</span>
+<span class="kw">class</span> <span class="type">UMyRenderComponent</span> : <span class="kw">public</span> UPrimitiveComponent
+{
+    FRenderCommandFence RenderFence;
+    <span class="kw">virtual</span> <span class="kw">void</span> BeginDestroy() <span class="kw">override</span>
+    {
+        <span class="fn">Super::BeginDestroy</span>();
+        <span class="cm">// Enqueue cleanup command to render thread, then insert a fence</span>
+        <span class="fn">DetachFromScene</span>();
+        RenderFence.<span class="fn">BeginFence</span>(); <span class="cm">// signals RT to insert fence after processing current commands</span>
+    }
+
+    <span class="kw">virtual bool</span> IsReadyForFinishDestroy() <span class="kw">override</span>
+    {
+        <span class="cm">// Called repeatedly by the GC — return true only when RT has passed the fence</span>
+        <span class="kw">return</span> RenderFence.<span class="fn">IsFenceComplete</span>();
+    }
+};</pre>
+
+  <h2 id="s4"><span lang="en">FlushRenderingCommands — Full RT Sync</span><span lang="zh">FlushRenderingCommands — 完全 RT 同步</span></h2>
+  <p lang="en"><span class="fun">FlushRenderingCommands()</span> blocks the calling thread (always the Game Thread) until the Render Thread has processed all pending commands. This is expensive — it stalls both threads and should only be used during level loads, editor operations, or one-off maintenance tasks, <strong>never per-frame</strong>.</p>
+  <p lang="zh"><span class="fun">FlushRenderingCommands()</span> 阻塞调用线程（始终是 Game Thread），直到 Render Thread 处理完所有待处理命令。这很昂贵——它会停滞两个线程，应该只在关卡加载、编辑器操作或一次性维护任务中使用，<strong>绝不用于每帧</strong>。</p>
+
+  <pre><span class="cm">// Correct usage: during hot-reload or asset reimport</span>
+<span class="fn">FlushRenderingCommands</span>(); <span class="cm">// blocks until RT is empty</span>
+<span class="cm">// Now safe to modify resources that the RT was using</span>
+MyMaterial-><span class="fn">Modify</span>();
+
+<span class="cm">// Internally dispatches a sentinel render command and waits on it:</span>
+<span class="cm">// ENQUEUE_RENDER_COMMAND → FRenderCommandFence::BeginFence → wait</span></pre>
+
+  <h2 id="s5"><span lang="en">RenderCommandPipe — Parallel Scene Update</span><span lang="zh">RenderCommandPipe — 并行场景更新</span></h2>
+  <p lang="en">UE 5.x introduced <span class="fun">FRenderCommandPipe</span> — a system where the Game Thread can <em>record</em> batches of render commands into named pipes, which are then replayed on the Render Thread. This allows parallel recording of render commands from multiple game thread tasks without immediate RT dispatch. Commands within a pipe are ordered; commands across pipes may be concurrent.</p>
+  <p lang="zh">UE 5.x 引入了 <span class="fun">FRenderCommandPipe</span>——Game Thread 可以将一批渲染命令<em>记录</em>到命名管道，然后在 Render Thread 上重放。这允许多个 Game Thread 任务并行记录渲染命令，而无需立即分发到 RT。同一管道内的命令有序；不同管道间的命令可能并发。</p>
+
+  <pre><span class="cm">// Define a named pipe (static, registered at startup)</span>
+DEFINE_RENDER_COMMAND_PIPE(FMyComponentPipe, <span class="str">"MyComponent"</span>);
+
+<span class="cm">// Record commands into the pipe from any thread:</span>
+FRenderCommandPipe::<span class="fn">Enqueue</span>&lt;FMyComponentPipe&gt;(
+    [Data = MyData](FRHICommandList& RHICmdList)
+    {
+        <span class="cm">// Executes on RT, in-order relative to other FMyComponentPipe commands</span>
+    });
+
+<span class="cm">// Stop recording and sync all pipes to RT (called at end of GT tick)</span>
+UE::RenderCommandPipe::<span class="fn">StopRecording</span>();</pre>
+
+  <h2 id="s6"><span lang="en">RHI Thread &amp; Command Lists</span><span lang="zh">RHI 线程与命令列表</span></h2>
+  <p lang="en">The Render Thread does not submit commands to the GPU — it records them into <code>FRHICommandList</code> objects. The <span class="def">RHI Thread</span> then drains these lists, translating each <code>FRHICommand</code> into platform API calls. This separation allows the RT to stay ahead of GPU submission, buffering commands for the driver to pipeline.</p>
+  <p lang="zh">Render Thread 不直接向 GPU 提交命令——它将命令记录到 <code>FRHICommandList</code> 对象中。<span class="def">RHI Thread</span> 随后排空这些列表，将每个 <code>FRHICommand</code> 转换为平台 API 调用。这种分离使 RT 能够领先于 GPU 提交，为驱动程序流水线化命令提供缓冲。</p>
+
+  <div class="table-wrap"><table>
+    <thead><tr><th><span lang="en">Type</span><span lang="zh">类型</span></th><th><span lang="en">Used by</span><span lang="zh">使用方</span></th><th><span lang="en">Notes</span><span lang="zh">说明</span></th></tr></thead>
+    <tbody>
+      <tr><td>FRHICommandListImmediate</td><td><span lang="en">Render Thread (primary)</span><span lang="zh">渲染线程（主）</span></td><td><span lang="en">Commands execute immediately if RHI thread disabled; otherwise enqueued</span><span lang="zh">禁用 RHI 线程时立即执行；否则入队</span></td></tr>
+      <tr><td>FRHICommandList</td><td><span lang="en">Parallel recording</span><span lang="zh">并行录制</span></td><td><span lang="en">Secondary command lists for parallel render passes</span><span lang="zh">并行渲染通道的辅助命令列表</span></td></tr>
+      <tr><td>FRHIComputeCommandList</td><td><span lang="en">Compute passes</span><span lang="zh">计算通道</span></td><td><span lang="en">Subset of FRHICommandList — only compute commands</span><span lang="zh">FRHICommandList 的子集——仅计算命令</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <h2 id="s7"><span lang="en">Frame Pipelining — GT Leads RT by 1+ Frames</span><span lang="zh">帧流水线 — GT 领先 RT 1+ 帧</span></h2>
+  <p lang="en">Under normal operation, the Game Thread runs ahead of the Render Thread by approximately one frame. This is controlled by <span class="fun">FFrameEndSync::Sync()</span>, called at the end of each GT tick. The sync policy determines how far the GT is allowed to lead:</p>
+  <p lang="zh">正常运行下，Game Thread 领先 Render Thread 约一帧。这由每次 GT Tick 结束时调用的 <span class="fun">FFrameEndSync::Sync()</span> 控制。同步策略决定 GT 允许领先的程度：</p>
+
+  <div class="diagram">
+Frame N:   GT runs world tick ──────────────────────────────→
+           RT renders frame N ─────────────────────→
+Frame N+1: GT runs world tick (starts before RT finishes N!)  ──→
+           RT renders frame N+1                              ──→
+                            ↑ This is the "1 frame latency"</div>
+
+  <div class="warning">
+    <span lang="en"><strong>Input latency implication:</strong> Because GT runs ahead of RT, there is inherently 1 frame of render latency on PC. On some platforms UE can reduce this to zero with <code>r.OneFrameThreadLag=0</code>, but this eliminates the pipelining benefit and may cause hitches.</span>
+    <span lang="zh"><strong>输入延迟影响：</strong>由于 GT 领先 RT，PC 上固有 1 帧渲染延迟。在某些平台上，UE 可以通过 <code>r.OneFrameThreadLag=0</code> 将其减少到零，但这会消除流水线收益并可能导致卡顿。</span>
+  </div>
+
+  <h2 id="s8"><span lang="en">Common Pitfalls</span><span lang="zh">常见陷阱</span></h2>
+  <ul>
+    <li lang="en"><strong>Capturing UObject pointers in render commands:</strong> UObjects can be garbage collected at any time on the GT. If a render command captures a raw <code>UObject*</code>, it may be invalid by the time it executes. Always capture proxy data by value, or use <code>TWeakObjectPtr</code> and check validity inside the lambda.</li>
+    <li lang="zh"><strong>在渲染命令中捕获 UObject 指针：</strong>UObject 可能在 GT 上随时被垃圾回收。如果渲染命令捕获了裸 <code>UObject*</code>，执行时可能已无效。始终按值捕获代理数据，或使用 <code>TWeakObjectPtr</code> 并在 lambda 内检查有效性。</li>
+    <li lang="en"><strong>Calling FlushRenderingCommands() per-frame:</strong> This is a frame-rate killer. Each call stalls the GT until the RT drains its queue, breaking the pipeline. Profile with Unreal Insights to find per-frame flushes.</li>
+    <li lang="zh"><strong>每帧调用 FlushRenderingCommands()：</strong>这会严重影响帧率。每次调用都会停滞 GT，直到 RT 排空队列，破坏流水线。使用 Unreal Insights 查找每帧的 flush。</li>
+    <li lang="en"><strong>Modifying RenderProxy data on the GT after enqueue:</strong> Data captured in a render command lambda must not be modified after enqueue. Once the lambda is in the queue, the RT may read it at any moment.</li>
+    <li lang="zh"><strong>入队后在 GT 修改 RenderProxy 数据：</strong>在渲染命令 lambda 中捕获的数据在入队后不得修改。一旦 lambda 进入队列，RT 随时可能读取它。</li>
+  </ul>
+
+  <h2 id="s9"><span lang="en">Source Navigation</span><span lang="zh">源码导航</span></h2>
+  <ul class="file-list">
+    <li><span class="fp">RenderCore/Public/RenderingThread.h:378</span><span class="fd"><span lang="en"><span class="fun">EnqueueUniqueRenderCommand()</span> — full implementation with thread dispatch logic</span><span lang="zh"><span class="fun">EnqueueUniqueRenderCommand()</span> — 含线程分发逻辑的完整实现</span></span></li>
+    <li><span class="fp">RenderCore/Public/RenderingThread.h:404</span><span class="fd"><span lang="en"><span class="fun">FRenderCommandPipe</span> — parallel render command pipe system</span><span lang="zh"><span class="fun">FRenderCommandPipe</span> — 并行渲染命令管道系统</span></span></li>
+    <li><span class="fp">RenderCore/Private/RenderingThread.cpp</span><span class="fd"><span lang="en">RT startup, <span class="fun">FlushRenderingCommands()</span>, <span class="fun">FFrameEndSync</span></span><span lang="zh">RT 启动、<span class="fun">FlushRenderingCommands()</span>、<span class="fun">FFrameEndSync</span></span></span></li>
+    <li><span class="fp">RHI/Public/RHICommandList.h</span><span class="fd"><span lang="en"><span class="fun">FRHICommandList</span>, <span class="fun">FRHICommandListImmediate</span> — command recording API</span><span lang="zh">命令录制 API</span></span></li>
+    <li><span class="fp">Engine/Source/Runtime/Engine/Public/PrimitiveSceneProxy.h</span><span class="fd"><span lang="en">RT-side scene object — the render thread's view of UPrimitiveComponent</span><span lang="zh">RT 侧场景对象——渲染线程对 UPrimitiveComponent 的视图</span></span></li>
+  </ul>
+  <footer>Unreal Engine 5.6 &middot; Engine/Source/Runtime/RenderCore/<br>Source analysis &middot; For learning purposes</footer>
+</main>
+</div>
+<script>
+function toggleLang(){var h=document.documentElement;if(h.classList.contains('lang-zh')){h.classList.remove('lang-zh');h.lang='en';document.title='Thread Concurrency';localStorage.setItem('ue-doc-lang','en');}else{h.classList.add('lang-zh');h.lang='zh-CN';document.title='线程并发';localStorage.setItem('ue-doc-lang','zh');}}
+if(document.documentElement.classList.contains('lang-zh'))document.title='线程并发';
+</script>
+</body>
+</html>

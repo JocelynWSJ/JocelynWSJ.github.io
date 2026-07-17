@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lumen — Dynamic Global Illumination &amp; Reflections</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Gudea">
+  <script>(function(){if(localStorage.getItem('ue-doc-lang')==='zh'){document.documentElement.classList.add('lang-zh');document.documentElement.lang='zh-CN';}})();</script>
+  <style>
+    html:not(.lang-zh) [lang="zh"]{display:none;} html.lang-zh [lang="en"]{display:none;}
+    #lang-btn{position:fixed;top:16px;right:20px;z-index:999;background:#37425d;color:#fff;border:none;border-radius:4px;padding:5px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:Gudea,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.2);transition:background .15s;} #lang-btn:hover{background:#4a5a7a;}
+    *{box-sizing:border-box;margin:0;padding:0;} body{font-family:Gudea,sans-serif;font-size:16px;line-height:1.8;color:#111;background:#eee;}
+    #wrapper{max-width:1100px;margin:0 auto;display:flex;align-items:flex-start;padding:40px 24px;gap:36px;}
+    #sidebar{width:240px;flex-shrink:0;position:sticky;top:24px;max-height:calc(100vh - 48px);overflow-y:auto;font-size:13px;}
+    #sidebar h2{font-size:12px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;border:none;padding:0;}
+    #sidebar ol{list-style:none;padding:0;counter-reset:toc;} #sidebar ol li{counter-increment:toc;margin-bottom:4px;}
+    #sidebar ol li a{color:#555;text-decoration:none;display:block;padding:2px 0;transition:color .12s;} #sidebar ol li a:hover{color:#58A;}
+    #sidebar ol li a::before{content:counter(toc,decimal-leading-zero) '. ';color:#bbb;font-size:11px;font-family:'Courier New',monospace;}
+    #content{flex:1;min-width:0;}
+    .page-header{margin-bottom:32px;padding-bottom:20px;border-bottom:1px solid #ddd;}
+    .page-header .crumb{font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
+    .page-header h1{font-size:1.8rem;font-weight:900;color:#303236;margin-bottom:8px;line-height:1.25;}
+    .page-header .subtitle{font-family:'Courier New',monospace;font-size:13px;color:#777;}
+    h2{color:#37425d;font-size:22px;margin:36px 0 10px;} h3{color:#633739;font-size:17px;margin:24px 0 8px;}
+    p{margin-bottom:14px;} a{color:#58A;text-decoration:none;} a:hover{text-decoration:underline;} strong{color:#222;}
+    .fun{font-family:'Courier New',monospace;color:#2a6496;} .def{color:green;font-weight:600;}
+    code{font-family:'Courier New',monospace;font-size:14px;background:#ddd;border-radius:3px;padding:1px 5px;}
+    pre{background:#282c34;color:#abb2bf;border-radius:5px;padding:16px 18px;overflow-x:auto;margin:14px 0 18px;font-family:'Courier New',monospace;font-size:13.5px;line-height:1.6;}
+    pre code{background:none;padding:0;color:inherit;} .kw{color:#c678dd;} .fn{color:#61afef;} .cm{color:#5c6370;font-style:italic;} .str{color:#98c379;} .num{color:#d19a66;} .type{color:#e5c07b;}
+    .note{display:block;margin:18px 0;padding:15px;background:#D8F5D8;color:#444;border-radius:5px;border:2px solid #AFDFAF;font-size:15px;line-height:1.7;}
+    .warning{display:block;margin:18px 0;padding:15px;background:#FFD2D2;color:#444;border-radius:5px;border:2px solid #E0B3B3;font-size:15px;line-height:1.7;}
+    ul,ol{padding-left:22px;margin-bottom:14px;} li{margin-bottom:5px;}
+    .table-wrap{overflow-x:auto;margin:14px 0;} table{border-collapse:collapse;font-size:14px;width:100%;}
+    th,td{padding:8px 12px;border-bottom:1px solid #aaa;text-align:left;} th{border-bottom:2px solid #888;font-weight:700;background:#ddd;} tr:nth-child(even) td{background:#e8e8e8;}
+    td:first-child{font-family:'Courier New',monospace;font-size:13px;color:#2a6496;white-space:nowrap;}
+    .diagram{background:#fff;border:1px solid #ccc;border-radius:5px;padding:20px;margin:16px 0;font-family:'Courier New',monospace;font-size:13px;line-height:1.8;overflow-x:auto;}
+    .file-list{list-style:none;padding:0;margin:12px 0;} .file-list li{padding:6px 0;border-bottom:1px solid #ccc;display:flex;align-items:baseline;gap:10px;font-size:14px;} .file-list li:last-child{border-bottom:none;} .file-list .fp{font-family:'Courier New',monospace;font-size:13px;color:#58A;min-width:260px;} .file-list .fd{color:#555;}
+    footer{margin-top:48px;padding-top:16px;border-top:1px solid #ccc;font-size:12px;color:#aaa;text-align:center;}
+    @media(max-width:800px){#wrapper{flex-direction:column;padding:20px 16px;}#sidebar{width:100%;position:static;max-height:none;margin-bottom:24px;}}
+  </style>
+</head>
+<body>
+<button id="lang-btn" onclick="toggleLang()"><span lang="en">中文</span><span lang="zh">English</span></button>
+<div id="wrapper">
+<nav id="sidebar">
+  <h2><span lang="en">Contents</span><span lang="zh">目录</span></h2>
+  <ol>
+    <li><a href="#s1"><span lang="en">Architecture Overview</span><span lang="zh">架构概览</span></a></li>
+    <li><a href="#s2"><span lang="en">Surface Cache (Mesh Cards)</span><span lang="zh">表面缓存（Mesh Cards）</span></a></li>
+    <li><a href="#s3"><span lang="en">Tracing Decision Tree</span><span lang="zh">追踪决策树</span></a></li>
+    <li><a href="#s4"><span lang="en">Screen Probes</span><span lang="zh">屏幕探针</span></a></li>
+    <li><a href="#s5"><span lang="en">Radiance Cache</span><span lang="zh">辐射缓存</span></a></li>
+    <li><a href="#s6"><span lang="en">Lumen Reflections</span><span lang="zh">Lumen 反射</span></a></li>
+    <li><a href="#s7"><span lang="en">Async Compute Integration</span><span lang="zh">异步计算集成</span></a></li>
+    <li><a href="#s8"><span lang="en">Performance Tuning</span><span lang="zh">性能调优</span></a></li>
+    <li><a href="#s9"><span lang="en">Lumen Limitations</span><span lang="zh">Lumen 限制</span></a></li>
+    <li><a href="#s10"><span lang="en">Source Navigation</span><span lang="zh">源码导航</span></a></li>
+  </ol>
+</nav>
+<main id="content">
+  <div class="page-header">
+    <div class="crumb">Unreal Engine 5.6 &middot; Next-Gen Hardware &middot; Part 04-B</div>
+    <h1>Lumen — Dynamic Global Illumination &amp; Reflections</h1>
+    <div class="subtitle">Renderer/Private/Lumen/LumenSceneRendering.cpp &middot; LumenSceneLighting.cpp &middot; LumenScreenProbeGather.cpp &middot; Lumen.cpp</div>
+  </div>
+
+  <h2 id="s1"><span lang="en">Architecture Overview — A Hybrid Tracing System</span><span lang="zh">架构概览 — 混合追踪系统</span></h2>
+  <p lang="en">Lumen is UE's fully dynamic global illumination system. Unlike baked lightmaps, it reacts to moving lights, geometry changes, and sky light at runtime. It achieves this through a <span class="def">hybrid tracing</span> architecture that selects the cheapest tracing method for each situation, trading precision for performance at different scene scales.</p>
+  <p lang="zh">Lumen 是 UE 的完全动态全局光照系统。与烘焙光照贴图不同，它在运行时对移动的灯光、几何体变化和天空光做出反应。它通过<span class="def">混合追踪</span>架构实现这一目标，为每种情况选择最经济的追踪方法，在不同场景尺度上用精度换取性能。</p>
+
+  <div class="diagram">
+Per-frame rendering pipeline:
+
+1. Update Surface Cache (LumenSceneRendering.cpp)
+   → Re-capture changed cards with direct lighting
+
+2. DispatchAsyncLumenIndirectLightingWork() [Async Compute]
+   ├── RenderLumenScreenProbeGather()    ← diffuse GI
+   │    ├── Screen Space Radiance Cache   (nearest occluders)
+   │    ├── Mesh SDF Tracing              (medium range)
+   │    └── Hardware Ray Tracing          (optional, long range)
+   ├── RenderLumenReflections()          ← specular GI
+   └── (optional) RenderLumenReSTIRGather()  ← higher quality GI
+
+3. RenderDiffuseIndirectAndAmbientOcclusion()
+   → Composite Lumen GI into scene color</div>
+
+  <h2 id="s2"><span lang="en">Surface Cache — The Indirect Lighting Foundation</span><span lang="zh">表面缓存 — 间接光照基础</span></h2>
+  <p lang="en">The <span class="def">Surface Cache</span> is Lumen's most critical component. It maintains a collection of <strong>mesh cards</strong> — low-resolution 2D atlases that approximate the direct lighting on the surfaces of nearby objects. Think of it as a dynamic, simplified "fake GBuffer" for the scene from multiple directions.</p>
+  <p lang="zh"><span class="def">表面缓存</span>是 Lumen 最关键的组件。它维护一组<strong>Mesh Cards</strong>——近似附近物体表面直接光照的低分辨率 2D 图集。可以把它想成场景从多个方向的动态简化"伪 GBuffer"。</p>
+
+  <p lang="en">For each object, Lumen generates 6 cards (one per major axis direction, like a cube map projection). Each card stores: radiance, direct lighting, albedo, normal, and emissive — all at low resolution (typically 32×32 to 256×256 texels per card). This surface cache is updated incrementally each frame, prioritizing cards that changed (new light, geometry, or stream-in).</p>
+  <p lang="zh">对于每个物体，Lumen 生成 6 张 Card（每个主轴方向一张，类似 Cube Map 投影）。每张 Card 存储：辐射率、直接光照、反照率、法线和自发光——均为低分辨率（通常每 Card 32×32 到 256×256 纹素）。此表面缓存每帧增量更新，优先处理已变化的 Card（新灯光、几何体或流入）。</p>
+
+  <pre><span class="cm">// Card capture is driven by UpdateLumenScene() → LumenSceneCardCapture.cpp</span>
+<span class="cm">// Priority system: recently changed cards get higher recapture priority</span>
+<span class="kw">bool</span> FLumenSceneData::<span class="fn">RecaptureCardPage</span>(
+    <span class="kw">const</span> FViewInfo& MainView,
+    FLumenCardRenderer& LumenCardRenderer,
+    <span class="cm">// ...)  — adds pages to LumenCardRenderer.CardPagesToRender</span>
+
+<span class="cm">// Direct lighting is injected into the surface cache via compute shaders</span>
+<span class="cm">// (LumenSceneDirectLighting.cpp) — all dynamic lights in the scene illuminate cards</span>
+<span class="cm">// Result: each card texel has accurate direct radiance from all lights</span>
+
+<span class="cm">// Radiosity bounces are computed separately (LumenRadiosity.cpp)</span>
+<span class="cm">// — each card texel shoots rays into the Surface Cache to accumulate indirect light</span></pre>
+
+  <h2 id="s3"><span lang="en">Tracing Decision Tree — When Does Lumen Use What?</span><span lang="zh">追踪决策树 — Lumen 何时使用什么？</span></h2>
+  <p lang="en">The core tracing decision is made in <span class="fun">AnyLumenHardwareRayTracingPassEnabled()</span> (<code>Lumen.cpp:128</code>) and related functions. The selection depends on hardware support, CVar settings, and scene conditions:</p>
+  <p lang="zh">核心追踪决策在 <span class="fun">AnyLumenHardwareRayTracingPassEnabled()</span>（<code>Lumen.cpp:128</code>）及相关函数中做出。选择取决于硬件支持、CVar 设置和场景条件：</p>
+
+  <div class="diagram">
+For each screen probe ray:
+
+Is HWRT available AND r.Lumen.HardwareRayTracing=1?
+  ├── YES → UseHardwareRayTracing() == true
+  │    └── Full scene HWRT via TLAS (most accurate)
+  │         BUT: expensive, requires DXR/VK_RT
+  └── NO → Software tracing path:
+       ├── Screen Space Radiance Cache (SSRC)
+       │    ← fast, only sees what camera sees, range ~2m
+       │
+       ├── Mesh SDF Tracing (Global Distance Field)
+       │    ← traces rays through per-object signed distance fields
+       │    ← range: several hundred meters, ~90% of samples hit here
+       │    ← misses thin geometry, no LOD transitions visible
+       │
+       └── Surface Cache fallback
+            ← ray samples nearest card texel for far hits
+            ← unlimited range but low precision</div>
+
+  <h2 id="s4"><span lang="en">Screen Probes — Sparse Diffuse GI Sampling</span><span lang="zh">屏幕探针 — 稀疏漫反射 GI 采样</span></h2>
+  <p lang="en">Screen Probes are the output stage of Lumen GI. Instead of computing indirect lighting at every pixel (which would be prohibitively expensive), Lumen places a sparse grid of probes on visible surfaces (one probe every ~8×8 pixels). Each probe traces many rays into the scene, samples the Surface Cache for hits, and accumulates irradiance. The probe results are then interpolated back to full resolution for every pixel.</p>
+  <p lang="zh">屏幕探针是 Lumen GI 的输出阶段。Lumen 不在每个像素处计算间接光照（这成本过高），而是在可见表面上放置稀疏的探针网格（每约 8×8 像素一个探针）。每个探针向场景追踪多条光线，对命中处采样表面缓存，并累积辐照度。然后将探针结果插值回每个像素的完整分辨率。</p>
+
+  <p lang="en">Temporal reprojection accumulates probe results across frames for higher quality — newer frames refine with fewer rays, older frames provide variance reduction. The screen probe gather is implemented in <code>LumenScreenProbeGather.cpp</code> (the largest single file in the Lumen system at 140K).</p>
+  <p lang="zh">时间重投影跨帧累积探针结果以提高质量——新帧用更少光线细化，旧帧提供方差减少。屏幕探针采集在 <code>LumenScreenProbeGather.cpp</code>（Lumen 系统中最大的单个文件，140K）中实现。</p>
+
+  <h2 id="s5"><span lang="en">Radiance Cache — Long-Range Indirect Lighting</span><span lang="zh">辐射缓存 — 长距离间接光照</span></h2>
+  <p lang="en">The <span class="def">Radiance Cache</span> extends Lumen's reach beyond what the Screen Probes can see. It's a world-space 3D cache of probes placed at logarithmically spaced distances from the camera. Each probe in the Radiance Cache stores irradiance from all directions. Screen Probes that trace rays beyond mesh SDF range fall back to sampling the Radiance Cache for long-range indirect illumination — this is how sky light, distant fog, and inter-room bounce lighting is approximated.</p>
+  <p lang="zh"><span class="def">辐射缓存</span>将 Lumen 的覆盖范围扩展到屏幕探针所能看到的范围之外。它是一个以对数间距距离摄像机放置的世界空间 3D 探针缓存。辐射缓存中的每个探针存储所有方向的辐照度。追踪超出 Mesh SDF 范围的屏幕探针回退到采样辐射缓存以获取长距离间接照明——这就是天空光、远处雾以及房间间反弹照明的近似方式。</p>
+
+  <h2 id="s6"><span lang="en">Lumen Reflections</span><span lang="zh">Lumen 反射</span></h2>
+  <p lang="en">Lumen Reflections replaces SSR for specular indirect lighting. Like diffuse GI, it uses a hybrid tracing strategy. For rough surfaces the reflection rays are wide-cone and can be approximated cheaply with the Surface Cache. For mirror-like surfaces, rays must be traced precisely — using either HWRT or software SDF tracing. Reflections are denoised with a temporal reprojection filter that handles the variable ray length inherent to specular tracing.</p>
+  <p lang="zh">Lumen 反射替代 SSR 用于镜面间接光照。与漫反射 GI 一样，它使用混合追踪策略。对于粗糙表面，反射光线是宽锥形的，可以用表面缓存廉价近似。对于镜面，光线必须精确追踪——使用 HWRT 或软件 SDF 追踪。反射通过处理镜面追踪固有的可变光线长度的时间重投影滤波器降噪。</p>
+
+  <h2 id="s7"><span lang="en">Async Compute Integration</span><span lang="zh">异步计算集成</span></h2>
+  <pre><span class="cm">// Lumen.cpp:72 — async compute availability check</span>
+<span class="kw">bool</span> Lumen::<span class="fn">UseAsyncCompute</span>(<span class="kw">const</span> FViewFamilyInfo& ViewFamily)
+{
+    <span class="kw">bool</span> bUseAsync = GSupportsEfficientAsyncCompute
+        && CVarLumenAsyncCompute.<span class="fn">GetValueOnRenderThread</span>() != <span class="num">0</span>;
+    
+    <span class="kw">if</span> (Lumen::<span class="fn">UseHardwareRayTracing</span>(ViewFamily))
+    {
+        <span class="cm">// HWRT async requires platform support for async RT dispatch</span>
+        bUseAsync &= GRHIGlobals.RayTracing.SupportsAsyncRayTraceDispatch
+                  || Lumen::<span class="fn">UseHardwareInlineRayTracing</span>(ViewFamily);
+    }
+    <span class="kw">return</span> bUseAsync;
+}
+
+<span class="cm">// When async compute is active:</span>
+<span class="cm">// Surface Cache lighting runs on Graphics queue</span>
+<span class="cm">// Screen Probe gather + Reflections run on Async Compute queue</span>
+<span class="cm">// → These overlap on the GPU with shadow map rendering</span>
+<span class="cm">// → Net effect: ~15-20% frame time reduction on console/high-end PC</span></pre>
+
+  <h2 id="s8"><span lang="en">Performance Tuning</span><span lang="zh">性能调优</span></h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>CVar</th><th><span lang="en">Effect</span><span lang="zh">效果</span></th></tr></thead>
+    <tbody>
+      <tr><td>r.Lumen.DiffuseIndirect.Allow=0</td><td><span lang="en">Disable Lumen GI entirely (use with static lighting)</span><span lang="zh">完全禁用 Lumen GI（与静态光照配合使用）</span></td></tr>
+      <tr><td>r.Lumen.Reflections.Allow=0</td><td><span lang="en">Disable Lumen reflections, fall back to SSR</span><span lang="zh">禁用 Lumen 反射，回退到 SSR</span></td></tr>
+      <tr><td>r.LumenScene.SurfaceCacheResolution</td><td><span lang="en">Scale surface cache resolution (0.5 = half res, big savings)</span><span lang="zh">缩放表面缓存分辨率（0.5 = 半分辨率，节省大量开销）</span></td></tr>
+      <tr><td>r.Lumen.ScreenProbeGather.ScreenSpaceReconstructionKernelRadius</td><td><span lang="en">Probe interpolation radius — higher = smoother but more blurry</span><span lang="zh">探针插值半径——越高越平滑但越模糊</span></td></tr>
+      <tr><td>r.Lumen.HardwareRayTracing=0</td><td><span lang="en">Force software SDF tracing even on RT-capable hardware</span><span lang="zh">即使在支持 RT 的硬件上也强制使用软件 SDF 追踪</span></td></tr>
+      <tr><td>r.Lumen.AsyncCompute=1</td><td><span lang="en">Enable async compute overlap (requires efficient async compute support)</span><span lang="zh">启用异步计算重叠（需要高效异步计算支持）</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <h2 id="s9"><span lang="en">Lumen Limitations &amp; Known Issues</span><span lang="zh">Lumen 限制与已知问题</span></h2>
+  <ul>
+    <li lang="en"><strong>Light leaking through thin geometry:</strong> Mesh SDFs are approximate — walls thinner than ~2× the SDF resolution will leak light. Increase <code>r.DistanceFields.MaxObjectBoundingRadius</code> or add Lumen Scene Detail for thin objects.</li>
+    <li lang="zh"><strong>薄几何体漏光：</strong>Mesh SDF 是近似的——比 SDF 分辨率约 2 倍薄的墙壁会漏光。增加 <code>r.DistanceFields.MaxObjectBoundingRadius</code> 或为薄物体添加 Lumen 场景细节。</li>
+    <li lang="en"><strong>Hair and translucency:</strong> Hair strands are not represented in the Surface Cache, causing GI to be incorrect around hair. Translucent materials receive but do not inject GI into the Surface Cache.</li>
+    <li lang="zh"><strong>头发和半透明：</strong>发丝未在表面缓存中表示，导致头发周围 GI 不正确。半透明材质接收 GI，但不向表面缓存注入 GI。</li>
+    <li lang="en"><strong>Very large open worlds:</strong> Surface Cache memory grows with scene complexity. Monitor <code>Lumen.Stats</code> for cache overflow. Limit <code>r.LumenScene.ObjectsPerFrame</code> to bound update cost.</li>
+    <li lang="zh"><strong>超大开放世界：</strong>表面缓存内存随场景复杂度增长。监控 <code>Lumen.Stats</code> 以检查缓存溢出。限制 <code>r.LumenScene.ObjectsPerFrame</code> 以控制更新成本。</li>
+  </ul>
+
+  <h2 id="s10"><span lang="en">Source Navigation</span><span lang="zh">源码导航</span></h2>
+  <ul class="file-list">
+    <li><span class="fp">Lumen/Lumen.cpp:67</span><span class="fd"><span lang="en"><span class="fun">UseAsyncCompute()</span>, <span class="fun">AnyLumenHardwareRayTracingPassEnabled()</span></span><span lang="zh">异步计算与硬件光追判断函数</span></span></li>
+    <li><span class="fp">Lumen/LumenSceneRendering.cpp</span><span class="fd"><span lang="en">Surface Cache update, card capture scheduling</span><span lang="zh">表面缓存更新、Card 捕获调度</span></span></li>
+    <li><span class="fp">Lumen/LumenSceneLighting.cpp</span><span class="fd"><span lang="en">Direct lighting injection into Surface Cache</span><span lang="zh">直接光照注入表面缓存</span></span></li>
+    <li><span class="fp">Lumen/LumenScreenProbeGather.cpp</span><span class="fd"><span lang="en">Screen probe sampling, radiance cache lookup, temporal accumulation</span><span lang="zh">屏幕探针采样、辐射缓存查找、时间累积</span></span></li>
+    <li><span class="fp">Lumen/LumenRadianceCache.cpp</span><span class="fd"><span lang="en">World-space radiance cache for long-range indirect lighting</span><span lang="zh">长距离间接光照的世界空间辐射缓存</span></span></li>
+    <li><span class="fp">Lumen/LumenReflections.cpp</span><span class="fd"><span lang="en">Specular reflection tracing and denoising</span><span lang="zh">镜面反射追踪与降噪</span></span></li>
+    <li><span class="fp">Lumen/LumenRadiosity.cpp</span><span class="fd"><span lang="en">Multi-bounce radiosity within the Surface Cache</span><span lang="zh">表面缓存内的多次弹跳辐射度</span></span></li>
+  </ul>
+  <footer>Unreal Engine 5.6 &middot; Engine/Source/Runtime/Renderer/Private/Lumen/<br>Source analysis &middot; For learning purposes</footer>
+</main>
+</div>
+<script>
+function toggleLang(){var h=document.documentElement;if(h.classList.contains('lang-zh')){h.classList.remove('lang-zh');h.lang='en';document.title='Lumen — Dynamic GI';localStorage.setItem('ue-doc-lang','en');}else{h.classList.add('lang-zh');h.lang='zh-CN';document.title='Lumen — 动态全局光照';localStorage.setItem('ue-doc-lang','zh');}}
+if(document.documentElement.classList.contains('lang-zh'))document.title='Lumen — 动态全局光照';
+</script>
+</body>
+</html>

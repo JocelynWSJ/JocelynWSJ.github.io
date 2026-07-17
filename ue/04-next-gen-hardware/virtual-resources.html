@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Virtual Shadow Maps — Page Management &amp; Cache</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Gudea">
+  <script>(function(){if(localStorage.getItem('ue-doc-lang')==='zh'){document.documentElement.classList.add('lang-zh');document.documentElement.lang='zh-CN';}})();</script>
+  <style>
+    html:not(.lang-zh) [lang="zh"]{display:none;} html.lang-zh [lang="en"]{display:none;}
+    #lang-btn{position:fixed;top:16px;right:20px;z-index:999;background:#37425d;color:#fff;border:none;border-radius:4px;padding:5px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:Gudea,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.2);transition:background .15s;} #lang-btn:hover{background:#4a5a7a;}
+    *{box-sizing:border-box;margin:0;padding:0;} body{font-family:Gudea,sans-serif;font-size:16px;line-height:1.8;color:#111;background:#eee;}
+    #wrapper{max-width:1100px;margin:0 auto;display:flex;align-items:flex-start;padding:40px 24px;gap:36px;}
+    #sidebar{width:240px;flex-shrink:0;position:sticky;top:24px;max-height:calc(100vh - 48px);overflow-y:auto;font-size:13px;}
+    #sidebar h2{font-size:12px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;border:none;padding:0;}
+    #sidebar ol{list-style:none;padding:0;counter-reset:toc;} #sidebar ol li{counter-increment:toc;margin-bottom:4px;}
+    #sidebar ol li a{color:#555;text-decoration:none;display:block;padding:2px 0;transition:color .12s;} #sidebar ol li a:hover{color:#58A;}
+    #sidebar ol li a::before{content:counter(toc,decimal-leading-zero) '. ';color:#bbb;font-size:11px;font-family:'Courier New',monospace;}
+    #content{flex:1;min-width:0;}
+    .page-header{margin-bottom:32px;padding-bottom:20px;border-bottom:1px solid #ddd;}
+    .page-header .crumb{font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
+    .page-header h1{font-size:1.8rem;font-weight:900;color:#303236;margin-bottom:8px;line-height:1.25;}
+    .page-header .subtitle{font-family:'Courier New',monospace;font-size:13px;color:#777;}
+    h2{color:#37425d;font-size:22px;margin:36px 0 10px;} h3{color:#633739;font-size:17px;margin:24px 0 8px;}
+    p{margin-bottom:14px;} a{color:#58A;text-decoration:none;} a:hover{text-decoration:underline;} strong{color:#222;}
+    .fun{font-family:'Courier New',monospace;color:#2a6496;} .def{color:green;font-weight:600;}
+    code{font-family:'Courier New',monospace;font-size:14px;background:#ddd;border-radius:3px;padding:1px 5px;}
+    pre{background:#282c34;color:#abb2bf;border-radius:5px;padding:16px 18px;overflow-x:auto;margin:14px 0 18px;font-family:'Courier New',monospace;font-size:13.5px;line-height:1.6;}
+    pre code{background:none;padding:0;color:inherit;} .kw{color:#c678dd;} .fn{color:#61afef;} .cm{color:#5c6370;font-style:italic;} .str{color:#98c379;} .num{color:#d19a66;} .type{color:#e5c07b;}
+    .note{display:block;margin:18px 0;padding:15px;background:#D8F5D8;color:#444;border-radius:5px;border:2px solid #AFDFAF;font-size:15px;line-height:1.7;}
+    .warning{display:block;margin:18px 0;padding:15px;background:#FFD2D2;color:#444;border-radius:5px;border:2px solid #E0B3B3;font-size:15px;line-height:1.7;}
+    ul,ol{padding-left:22px;margin-bottom:14px;} li{margin-bottom:5px;}
+    .table-wrap{overflow-x:auto;margin:14px 0;} table{border-collapse:collapse;font-size:14px;width:100%;}
+    th,td{padding:8px 12px;border-bottom:1px solid #aaa;text-align:left;} th{border-bottom:2px solid #888;font-weight:700;background:#ddd;} tr:nth-child(even) td{background:#e8e8e8;}
+    td:first-child{font-family:'Courier New',monospace;font-size:13px;color:#2a6496;white-space:nowrap;}
+    .diagram{background:#fff;border:1px solid #ccc;border-radius:5px;padding:20px;margin:16px 0;font-family:'Courier New',monospace;font-size:13px;line-height:1.8;overflow-x:auto;}
+    .file-list{list-style:none;padding:0;margin:12px 0;} .file-list li{padding:6px 0;border-bottom:1px solid #ccc;display:flex;align-items:baseline;gap:10px;font-size:14px;} .file-list li:last-child{border-bottom:none;} .file-list .fp{font-family:'Courier New',monospace;font-size:13px;color:#58A;min-width:260px;} .file-list .fd{color:#555;}
+    footer{margin-top:48px;padding-top:16px;border-top:1px solid #ccc;font-size:12px;color:#aaa;text-align:center;}
+    @media(max-width:800px){#wrapper{flex-direction:column;padding:20px 16px;}#sidebar{width:100%;position:static;max-height:none;margin-bottom:24px;}}
+  </style>
+</head>
+<body>
+<button id="lang-btn" onclick="toggleLang()"><span lang="en">中文</span><span lang="zh">English</span></button>
+<div id="wrapper">
+<nav id="sidebar">
+  <h2><span lang="en">Contents</span><span lang="zh">目录</span></h2>
+  <ol>
+    <li><a href="#s1"><span lang="en">Why VSM Exists</span><span lang="zh">VSM 的存在原因</span></a></li>
+    <li><a href="#s2"><span lang="en">Virtual Address Space</span><span lang="zh">虚拟地址空间</span></a></li>
+    <li><a href="#s3"><span lang="en">Physical Page Pool</span><span lang="zh">物理页面池</span></a></li>
+    <li><a href="#s4"><span lang="en">Page Table Indirection</span><span lang="zh">页表间接</span></a></li>
+    <li><a href="#s5"><span lang="en">Page Marking &amp; Allocation</span><span lang="zh">页面标记与分配</span></a></li>
+    <li><a href="#s6"><span lang="en">Cache Manager — Static vs Dynamic</span><span lang="zh">缓存管理器 — 静态与动态</span></a></li>
+    <li><a href="#s7"><span lang="en">Nanite Integration</span><span lang="zh">Nanite 集成</span></a></li>
+    <li><a href="#s8"><span lang="en">Performance Bottlenecks</span><span lang="zh">性能瓶颈</span></a></li>
+    <li><a href="#s9"><span lang="en">Source Navigation</span><span lang="zh">源码导航</span></a></li>
+  </ol>
+</nav>
+<main id="content">
+  <div class="page-header">
+    <div class="crumb">Unreal Engine 5.6 &middot; Next-Gen Hardware &middot; Part 04-C</div>
+    <h1>Virtual Shadow Maps — Page Management &amp; Cache</h1>
+    <div class="subtitle">Renderer/Private/VirtualShadowMaps/VirtualShadowMapArray.cpp &middot; VirtualShadowMapArray.h &middot; VirtualShadowMapCacheManager.h</div>
+  </div>
+
+  <h2 id="s1"><span lang="en">Why VSM Exists — The Problem with Traditional Shadow Maps</span><span lang="zh">VSM 的存在原因 — 传统阴影贴图的问题</span></h2>
+  <p lang="en">Traditional Cascaded Shadow Maps (CSM) have a resolution problem: there are only a few fixed cascades, each covering a large area. Nearby surfaces get decent resolution, but at cascade boundaries or for point lights the effective texel density is much lower than the rendered scene resolution. The result: shadow edge artifacts, aliasing, and light leaking.</p>
+  <p lang="zh">传统级联阴影贴图（CSM）有分辨率问题：只有几个固定的级联，每个覆盖大片区域。近处表面分辨率还行，但在级联边界或点光源处，有效纹素密度远低于渲染场景分辨率。结果：阴影边缘锯齿、走样和漏光。</p>
+
+  <p lang="en">Virtual Shadow Maps solve this with a radically different approach: instead of a few fixed-resolution maps, every light has access to a single <strong>huge virtual shadow map</strong> (16384×16384 pixels per light!) whose pages are allocated <em>on demand</em> only where shadow data is actually needed. Pages that are off-screen, occluded, or too far away are never allocated. This gives uniformly high shadow resolution everywhere, at the cost of a more complex allocation system.</p>
+  <p lang="zh">虚拟阴影贴图用截然不同的方法解决了这个问题：每个光源不是几张固定分辨率贴图，而是可以访问单张<strong>巨大的虚拟阴影贴图</strong>（每光源 16384×16384 像素！），其页面仅在实际需要阴影数据的地方<em>按需</em>分配。不在屏幕上、被遮挡或太远的页面永不分配。这在任何地方都能提供均匀的高分辨率阴影，代价是更复杂的分配系统。</p>
+
+  <h2 id="s2"><span lang="en">Virtual Address Space — 16K² Per Light</span><span lang="zh">虚拟地址空间 — 每光源 16K²</span></h2>
+  <p lang="en">The virtual address space is defined by constants in <span class="fun">FVirtualShadowMap</span> (<code>VirtualShadowMapArray.h:64</code>):</p>
+  <p lang="zh">虚拟地址空间由 <span class="fun">FVirtualShadowMap</span>（<code>VirtualShadowMapArray.h:64</code>）中的常量定义：</p>
+
+  <pre><span class="cm">// FVirtualShadowMap constants (VirtualShadowMapArray.h:63)</span>
+<span class="kw">class</span> <span class="type">FVirtualShadowMap</span>
+{
+    <span class="cm">// PageSize * Level0DimPagesXY = virtual resolution</span>
+    <span class="cm">// e.g. 128 * 128 = 16384 = 16K texels per dimension per light</span>
+    <span class="kw">static constexpr</span> uint32 PageSize = VSM_PAGE_SIZE;           <span class="cm">// 128 texels per page</span>
+    <span class="kw">static constexpr</span> uint32 Level0DimPagesXY = VSM_LEVEL0_DIM_PAGES_XY; <span class="cm">// 128 pages × 128 pages</span>
+    <span class="kw">static constexpr</span> uint32 VirtualMaxResolutionXY = VSM_VIRTUAL_MAX_RESOLUTION_XY; <span class="cm">// 16384</span>
+    <span class="kw">static constexpr</span> uint32 MaxMipLevels = VSM_MAX_MIP_LEVELS;  <span class="cm">// 8 mip levels</span>
+};
+
+<span class="cm">// The virtual address space has 128×128 = 16384 pages at level 0</span>
+<span class="cm">// Each page is 128×128 texels</span>
+<span class="cm">// Total virtual resolution = 16384×16384 per light</span>
+<span class="cm">// But: most of these pages are NEVER allocated — only ~1-5% are active</span></pre>
+
+  <p lang="en">For directional lights, VSM uses a <span class="def">clipmap</span> structure: multiple virtual maps at different resolutions, centered on the camera, cover near-to-far distances with decreasing texel density. This is similar to CSM but with the page-on-demand optimization.</p>
+  <p lang="zh">对于方向光，VSM 使用<span class="def">裁剪贴图</span>结构：以相机为中心的不同分辨率的多张虚拟贴图，以递减的纹素密度覆盖从近到远的距离。这类似于 CSM，但具有按需分配页面的优化。</p>
+
+  <h2 id="s3"><span lang="en">Physical Page Pool — The GPU Memory Budget</span><span lang="zh">物理页面池 — GPU 内存预算</span></h2>
+  <p lang="en">All physical shadow texels live in a single large 2D physical pool texture. Its size is controlled by <code>r.Shadow.Virtual.MaxPhysicalPages</code> (default: ~4096 pages for console quality). The pool is shared across ALL lights — this is the key memory saving: instead of one shadow map per light, all lights share a unified pool.</p>
+  <p lang="zh">所有物理阴影纹素存在于单张大型 2D 物理池纹理中。其大小由 <code>r.Shadow.Virtual.MaxPhysicalPages</code> 控制（主机质量默认约 4096 页）。池在所有光源间共享——这是关键的内存节省：不是每个光源一张阴影贴图，所有光源共享一个统一的池。</p>
+
+  <div class="diagram">
+Physical Pool Texture (e.g., 4096×4096 texels total):
+┌───────────┬───────────┬───────────┬───────────┐
+│ Sun page  │ Sun page  │ SpotLight │ SpotLight │ ← 128×128 texel pages
+│  (0,0)    │  (1,0)    │  page     │  page     │
+├───────────┼───────────┼───────────┼───────────┤
+│ Sun page  │ (unused)  │ PointLight│ (unused)  │
+│  (0,1)    │           │  page     │           │
+└───────────┴───────────┴───────────┴───────────┘
+  ↑ 32 pages × 32 pages = 1024 physical pages in this example</div>
+
+  <h2 id="s4"><span lang="en">Page Table Indirection — Virtual to Physical Mapping</span><span lang="zh">页表间接 — 虚拟到物理映射</span></h2>
+  <p lang="en">The page table is a 2D GPU texture that maps virtual page coordinates to physical page coordinates. For each light and each virtual page address, the page table stores either the physical page index (if the page is allocated) or a sentinel value (0xFFFFFFFF = not allocated). The shadow projection shader samples the page table first, then uses the result to sample the physical depth pool.</p>
+  <p lang="zh">页表是一张 2D GPU 纹理，将虚拟页面坐标映射到物理页面坐标。对于每个光源和每个虚拟页面地址，页表存储物理页面索引（如果页面已分配）或哨兵值（0xFFFFFFFF = 未分配）。阴影投影着色器首先采样页表，然后使用结果采样物理深度池。</p>
+
+  <pre><span class="cm">// Simplified shadow lookup in projection shader:</span>
+<span class="cm">// (VirtualShadowMapProjectionCommon.ush)</span>
+
+<span class="kw">float</span> <span class="fn">SampleVSMShadow</span>(uint VirtualShadowMapId, float3 WorldPos)
+{
+    <span class="cm">// 1. Project world position into light-space (gets virtual page + texel coords)</span>
+    float2 ShadowUV = <span class="fn">ProjectToShadowSpace</span>(VirtualShadowMapId, WorldPos);
+    uint2 VirtualPageCoord = <span class="fn">GetVirtualPageCoord</span>(ShadowUV);
+    
+    <span class="cm">// 2. Lookup page table: virtual → physical</span>
+    uint PageTableEntry = PageTable.<span class="fn">Load</span>(int3(VirtualPageCoord, <span class="num">0</span>));
+    
+    <span class="kw">if</span> (PageTableEntry == <span class="num">0xFFFFFFFF</span>)
+        <span class="kw">return</span> <span class="num">1.0f</span>; <span class="cm">// page not allocated = assume lit (no shadow data)</span>
+    
+    <span class="cm">// 3. Compute physical texel coordinate from page table entry</span>
+    uint2 PhysicalTexel = <span class="fn">GetPhysicalTexelFromPageEntry</span>(PageTableEntry, ShadowUV);
+    
+    <span class="cm">// 4. Sample the physical depth pool</span>
+    float ShadowDepth = PhysicalShadowPool.<span class="fn">Load</span>(int3(PhysicalTexel, <span class="num">0</span>)).r;
+    
+    <span class="kw">return</span> (WorldDepth > ShadowDepth) ? <span class="num">0.0f</span> : <span class="num">1.0f</span>; <span class="cm">// in shadow?</span>
+}</pre>
+
+  <h2 id="s5"><span lang="en">Page Marking &amp; Allocation — GPU-Driven</span><span lang="zh">页面标记与分配 — GPU 驱动</span></h2>
+  <p lang="en">Page allocation is a multi-stage GPU-driven process each frame:</p>
+  <p lang="zh">页面分配是每帧的多阶段 GPU 驱动过程：</p>
+
+  <ul>
+    <li lang="en"><strong>Page marking:</strong> Before shadow rendering, a pass iterates all visible receivers (opaque geometry + translucency marked via <code>RenderFrontLayerTranslucency()</code>). For each receiver, it marks which virtual pages need shadow data by projecting receiver positions into light space.</li>
+    <li lang="zh"><strong>页面标记：</strong>阴影渲染前，一个通道遍历所有可见接收体（不透明几何体 + 通过 <code>RenderFrontLayerTranslucency()</code> 标记的半透明）。对于每个接收体，通过将接收体位置投影到光源空间来标记哪些虚拟页面需要阴影数据。</li>
+    <li lang="en"><strong>Page allocation:</strong> A Compute shader processes the marked pages, allocates physical pages from the pool, and updates the page table. Pages that were used last frame and haven't changed (static geometry + static lights) are <em>reused from cache</em> without re-rendering.</li>
+    <li lang="zh"><strong>页面分配：</strong>Compute 着色器处理标记的页面，从池中分配物理页面，并更新页表。上帧使用过且未更改的页面（静态几何体 + 静态光源）从缓存<em>重用</em>而无需重新渲染。</li>
+    <li lang="en"><strong>Shadow rendering:</strong> Only the <em>newly allocated</em> (dirty) pages are rendered. This is the key performance optimization — frames with little movement render almost no shadow pages because the cache provides most of the data.</li>
+    <li lang="zh"><strong>阴影渲染：</strong>只渲染<em>新分配的</em>（脏）页面。这是关键性能优化——移动较少的帧几乎不渲染阴影页面，因为缓存提供了大部分数据。</li>
+  </ul>
+
+  <h2 id="s6"><span lang="en">Cache Manager — Static vs Dynamic Split</span><span lang="zh">缓存管理器 — 静态与动态分离</span></h2>
+  <p lang="en">The <span class="fun">FVirtualShadowMapCacheManager</span> tracks page validity across frames. It splits geometry into two categories:</p>
+  <p lang="zh"><span class="fun">FVirtualShadowMapCacheManager</span> 跨帧跟踪页面有效性。它将几何体分为两类：</p>
+
+  <div class="table-wrap"><table>
+    <thead><tr><th></th><th><span lang="en">Static Pages</span><span lang="zh">静态页面</span></th><th><span lang="en">Dynamic Pages</span><span lang="zh">动态页面</span></th></tr></thead>
+    <tbody>
+      <tr><td><span lang="en">Geometry</span><span lang="zh">几何体</span></td><td><span lang="en">Static meshes that never move</span><span lang="zh">从不移动的静态网格</span></td><td><span lang="en">Skeletal meshes, Nanite (which can stream), moving objects</span><span lang="zh">骨骼网格、Nanite（可以流送）、移动对象</span></td></tr>
+      <tr><td><span lang="en">Caching</span><span lang="zh">缓存</span></td><td><span lang="en">Cached indefinitely; only invalidated when geometry or light changes</span><span lang="zh">无限期缓存；仅在几何体或光源改变时失效</span></td><td><span lang="en">Cached for one frame; must re-render if receiver moved into page</span><span lang="zh">缓存一帧；若接收体移入页面则必须重新渲染</span></td></tr>
+      <tr><td><span lang="en">Cost</span><span lang="zh">成本</span></td><td><span lang="en">Near-zero after first render (cache hit)</span><span lang="zh">首次渲染后近乎为零（缓存命中）</span></td><td><span lang="en">Re-rendered every frame for active pages</span><span lang="zh">每帧重新渲染活跃页面</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <h2 id="s7"><span lang="en">Nanite Integration — One-Pass Shadow Rendering</span><span lang="zh">Nanite 集成 — 单通道阴影渲染</span></h2>
+  <p lang="en">VSM is designed to work with Nanite's cluster hierarchy. When rendering shadow pages for Nanite geometry, the culling shader can evaluate all visible pages across all lights in a single GPU pass by treating each light's virtual pages as additional views. The cluster LOD selection is the same algorithm as the main view but with adjusted screen-space error thresholds for the shadow resolution.</p>
+  <p lang="zh">VSM 被设计为与 Nanite 的 Cluster 层级协同工作。为 Nanite 几何体渲染阴影页面时，剔除着色器可以通过将每个光源的虚拟页面视为额外视图，在单个 GPU 通道中评估所有光源的所有可见页面。Cluster LOD 选择使用与主视图相同的算法，但根据阴影分辨率调整了屏幕空间误差阈值。</p>
+
+  <h2 id="s8"><span lang="en">Performance Bottlenecks &amp; CVars</span><span lang="zh">性能瓶颈与控制台变量</span></h2>
+  <p lang="en">VSM performance depends heavily on the number of <em>dirty pages</em> per frame. Common bottlenecks:</p>
+  <p lang="zh">VSM 性能很大程度上取决于每帧<em>脏页面</em>的数量。常见瓶颈：</p>
+
+  <ul>
+    <li lang="en"><strong>Many moving objects:</strong> Each skinned mesh invalidates nearby shadow pages every frame. Reduce by grouping animations, increasing <code>r.Shadow.Virtual.Cache.DynamicRes.MinLod</code>.</li>
+    <li lang="zh"><strong>大量移动物体：</strong>每个蒙皮网格每帧使附近阴影页面失效。通过分组动画、增加 <code>r.Shadow.Virtual.Cache.DynamicRes.MinLod</code> 来减少。</li>
+    <li lang="en"><strong>Light movement:</strong> Moving a light invalidates <em>all</em> its cached pages. Keep key lights static where possible.</li>
+    <li lang="zh"><strong>光源移动：</strong>移动光源会使其<em>所有</em>缓存页面失效。尽可能保持关键光源静止。</li>
+    <li lang="en"><strong>Pool overflow:</strong> When <code>r.Shadow.Virtual.MaxPhysicalPages</code> is too small, pages get evicted prematurely, causing cache thrashing. Monitor with <code>stat VirtualShadowMaps</code>.</li>
+    <li lang="zh"><strong>池溢出：</strong>当 <code>r.Shadow.Virtual.MaxPhysicalPages</code> 太小时，页面会过早被驱逐，导致缓存抖动。使用 <code>stat VirtualShadowMaps</code> 监控。</li>
+  </ul>
+
+  <div class="table-wrap"><table>
+    <thead><tr><th>CVar</th><th><span lang="en">Recommended range</span><span lang="zh">推荐范围</span></th><th><span lang="en">Effect</span><span lang="zh">效果</span></th></tr></thead>
+    <tbody>
+      <tr><td>r.Shadow.Virtual.MaxPhysicalPages</td><td>2048–8192</td><td><span lang="en">Total pool size. Higher = less eviction, more VRAM</span><span lang="zh">总池大小。越高 = 越少驱逐，更多 VRAM</span></td></tr>
+      <tr><td>r.Shadow.Virtual.ResolutionLodBiasLocal</td><td>-2 to 0</td><td><span lang="en">Negative = lower res for local lights (save pages)</span><span lang="zh">负值 = 局部光源分辨率更低（节省页面）</span></td></tr>
+      <tr><td>r.Shadow.Virtual.SMRT.RayCountLocal</td><td>4–16</td><td><span lang="en">Ray count for SMRT soft shadows on local lights</span><span lang="zh">局部光源 SMRT 软阴影的光线数</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <h2 id="s9"><span lang="en">Source Navigation</span><span lang="zh">源码导航</span></h2>
+  <ul class="file-list">
+    <li><span class="fp">VirtualShadowMaps/VirtualShadowMapArray.h:63</span><span class="fd"><span lang="en"><span class="fun">FVirtualShadowMap</span> constants: PageSize, Level0DimPagesXY, VirtualMaxResolutionXY</span><span lang="zh"><span class="fun">FVirtualShadowMap</span> 常量定义</span></span></li>
+    <li><span class="fp">VirtualShadowMaps/VirtualShadowMapArray.cpp:682</span><span class="fd"><span lang="en">Physical pool size calculation and initialization</span><span lang="zh">物理池大小计算与初始化</span></span></li>
+    <li><span class="fp">VirtualShadowMaps/VirtualShadowMapCacheManager.h</span><span class="fd"><span lang="en"><span class="fun">FVirtualShadowMapCacheManager</span> — static/dynamic page cache tracking</span><span lang="zh">静态/动态页面缓存追踪</span></span></li>
+    <li><span class="fp">VirtualShadowMaps/VirtualShadowMapClipmap.cpp</span><span class="fd"><span lang="en">Directional light clipmap management</span><span lang="zh">方向光裁剪贴图管理</span></span></li>
+    <li><span class="fp">VirtualShadowMaps/VirtualShadowMapProjection.cpp</span><span class="fd"><span lang="en">Shadow projection pass — page table lookup, PCF/SMRT soft shadows</span><span lang="zh">阴影投影通道 — 页表查找、PCF/SMRT 软阴影</span></span></li>
+    <li><span class="fp">Shaders/Private/VirtualShadowMaps/VirtualShadowMapPageManagement.usf</span><span class="fd"><span lang="en">GPU page marking and allocation compute shaders</span><span lang="zh">GPU 页面标记与分配计算着色器</span></span></li>
+  </ul>
+  <footer>Unreal Engine 5.6 &middot; Engine/Source/Runtime/Renderer/Private/VirtualShadowMaps/<br>Source analysis &middot; For learning purposes</footer>
+</main>
+</div>
+<script>
+function toggleLang(){var h=document.documentElement;if(h.classList.contains('lang-zh')){h.classList.remove('lang-zh');h.lang='en';document.title='Virtual Shadow Maps';localStorage.setItem('ue-doc-lang','en');}else{h.classList.add('lang-zh');h.lang='zh-CN';document.title='虚拟阴影贴图';localStorage.setItem('ue-doc-lang','zh');}}
+if(document.documentElement.classList.contains('lang-zh'))document.title='虚拟阴影贴图';
+</script>
+</body>
+</html>

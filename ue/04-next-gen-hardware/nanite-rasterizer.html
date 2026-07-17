@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nanite — Virtual Geometry &amp; Software Rasterizer</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Gudea">
+  <script>(function(){if(localStorage.getItem('ue-doc-lang')==='zh'){document.documentElement.classList.add('lang-zh');document.documentElement.lang='zh-CN';}})();</script>
+  <style>
+    html:not(.lang-zh) [lang="zh"]{display:none;} html.lang-zh [lang="en"]{display:none;}
+    #lang-btn{position:fixed;top:16px;right:20px;z-index:999;background:#37425d;color:#fff;border:none;border-radius:4px;padding:5px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:Gudea,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.2);transition:background .15s;} #lang-btn:hover{background:#4a5a7a;}
+    *{box-sizing:border-box;margin:0;padding:0;} body{font-family:Gudea,sans-serif;font-size:16px;line-height:1.8;color:#111;background:#eee;}
+    #wrapper{max-width:1100px;margin:0 auto;display:flex;align-items:flex-start;padding:40px 24px;gap:36px;}
+    #sidebar{width:240px;flex-shrink:0;position:sticky;top:24px;max-height:calc(100vh - 48px);overflow-y:auto;font-size:13px;}
+    #sidebar h2{font-size:12px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;border:none;padding:0;}
+    #sidebar ol{list-style:none;padding:0;counter-reset:toc;} #sidebar ol li{counter-increment:toc;margin-bottom:4px;}
+    #sidebar ol li a{color:#555;text-decoration:none;display:block;padding:2px 0;transition:color .12s;} #sidebar ol li a:hover{color:#58A;}
+    #sidebar ol li a::before{content:counter(toc,decimal-leading-zero) '. ';color:#bbb;font-size:11px;font-family:'Courier New',monospace;}
+    #content{flex:1;min-width:0;}
+    .page-header{margin-bottom:32px;padding-bottom:20px;border-bottom:1px solid #ddd;}
+    .page-header .crumb{font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
+    .page-header h1{font-size:1.8rem;font-weight:900;color:#303236;margin-bottom:8px;line-height:1.25;}
+    .page-header .subtitle{font-family:'Courier New',monospace;font-size:13px;color:#777;}
+    h2{color:#37425d;font-size:22px;margin:36px 0 10px;} h3{color:#633739;font-size:17px;margin:24px 0 8px;}
+    p{margin-bottom:14px;} a{color:#58A;text-decoration:none;} a:hover{text-decoration:underline;} strong{color:#222;}
+    .fun{font-family:'Courier New',monospace;color:#2a6496;} .def{color:green;font-weight:600;}
+    code{font-family:'Courier New',monospace;font-size:14px;background:#ddd;border-radius:3px;padding:1px 5px;}
+    pre{background:#282c34;color:#abb2bf;border-radius:5px;padding:16px 18px;overflow-x:auto;margin:14px 0 18px;font-family:'Courier New',monospace;font-size:13.5px;line-height:1.6;}
+    pre code{background:none;padding:0;color:inherit;} .kw{color:#c678dd;} .fn{color:#61afef;} .cm{color:#5c6370;font-style:italic;} .str{color:#98c379;} .num{color:#d19a66;} .type{color:#e5c07b;}
+    .note{display:block;margin:18px 0;padding:15px;background:#D8F5D8;color:#444;border-radius:5px;border:2px solid #AFDFAF;font-size:15px;line-height:1.7;}
+    .warning{display:block;margin:18px 0;padding:15px;background:#FFD2D2;color:#444;border-radius:5px;border:2px solid #E0B3B3;font-size:15px;line-height:1.7;}
+    ul,ol{padding-left:22px;margin-bottom:14px;} li{margin-bottom:5px;}
+    .table-wrap{overflow-x:auto;margin:14px 0;} table{border-collapse:collapse;font-size:14px;width:100%;}
+    th,td{padding:8px 12px;border-bottom:1px solid #aaa;text-align:left;} th{border-bottom:2px solid #888;font-weight:700;background:#ddd;} tr:nth-child(even) td{background:#e8e8e8;}
+    td:first-child{font-family:'Courier New',monospace;font-size:13px;color:#2a6496;white-space:nowrap;}
+    .diagram{background:#fff;border:1px solid #ccc;border-radius:5px;padding:20px;margin:16px 0;font-family:'Courier New',monospace;font-size:13px;line-height:1.8;overflow-x:auto;}
+    .file-list{list-style:none;padding:0;margin:12px 0;} .file-list li{padding:6px 0;border-bottom:1px solid #ccc;display:flex;align-items:baseline;gap:10px;font-size:14px;} .file-list li:last-child{border-bottom:none;} .file-list .fp{font-family:'Courier New',monospace;font-size:13px;color:#58A;min-width:260px;} .file-list .fd{color:#555;}
+    footer{margin-top:48px;padding-top:16px;border-top:1px solid #ccc;font-size:12px;color:#aaa;text-align:center;}
+    @media(max-width:800px){#wrapper{flex-direction:column;padding:20px 16px;}#sidebar{width:100%;position:static;max-height:none;margin-bottom:24px;}}
+  </style>
+</head>
+<body>
+<button id="lang-btn" onclick="toggleLang()"><span lang="en">中文</span><span lang="zh">English</span></button>
+<div id="wrapper">
+<nav id="sidebar">
+  <h2><span lang="en">Contents</span><span lang="zh">目录</span></h2>
+  <ol>
+    <li><a href="#s1"><span lang="en">What Problem Does Nanite Solve?</span><span lang="zh">Nanite 解决什么问题？</span></a></li>
+    <li><a href="#s2"><span lang="en">Cluster Hierarchy (BVH/DAG)</span><span lang="zh">Cluster 层级（BVH/DAG）</span></a></li>
+    <li><a href="#s3"><span lang="en">FPackedCluster — GPU Layout</span><span lang="zh">FPackedCluster — GPU 布局</span></a></li>
+    <li><a href="#s4"><span lang="en">Two-Pass Occlusion Culling</span><span lang="zh">两阶段遮挡剔除</span></a></li>
+    <li><a href="#s5"><span lang="en">Software vs Hardware Rasterizer</span><span lang="zh">软件 vs 硬件光栅器</span></a></li>
+    <li><a href="#s6"><span lang="en">Visibility Buffer &amp; Shading Bins</span><span lang="zh">可见性缓冲与着色 Bin</span></a></li>
+    <li><a href="#s7"><span lang="en">BuildShadingCommands()</span><span lang="zh">BuildShadingCommands()</span></a></li>
+    <li><a href="#s8"><span lang="en">Nanite Limitations</span><span lang="zh">Nanite 的限制</span></a></li>
+    <li><a href="#s9"><span lang="en">Art Guidelines</span><span lang="zh">美术规范</span></a></li>
+    <li><a href="#s10"><span lang="en">Source Navigation</span><span lang="zh">源码导航</span></a></li>
+  </ol>
+</nav>
+<main id="content">
+  <div class="page-header">
+    <div class="crumb">Unreal Engine 5.6 &middot; Next-Gen Hardware &middot; Part 04-A</div>
+    <h1>Nanite — Virtual Geometry &amp; Software Rasterizer</h1>
+    <div class="subtitle">Renderer/Private/Nanite/NaniteCullRaster.cpp &middot; NaniteShading.cpp &middot; Engine/Public/Rendering/NaniteResources.h</div>
+  </div>
+
+  <h2 id="s1"><span lang="en">What Problem Does Nanite Solve?</span><span lang="zh">Nanite 解决什么问题？</span></h2>
+  <p lang="en">Traditional rendering has a hard constraint: the number of triangles drawn per frame is bounded by the GPU's rasterization throughput and the CPU's draw call overhead. Artists must create multiple LOD levels and spend significant time on polygon budgets. Nanite eliminates this constraint by virtualizing geometry: it renders only the triangles that are <em>pixel-sized or larger</em> on screen, streaming and culling the rest automatically. The result: imported CAD/ZBrush meshes with 100M+ triangles render at the same cost as a 10K polygon game mesh, because Nanite never renders more detail than the screen can display.</p>
+  <p lang="zh">传统渲染有一个硬性约束：每帧绘制的三角形数量受 GPU 光栅化吞吐量和 CPU 绘制调用开销的限制。美术必须创建多个 LOD 级别，并在多边形预算上花费大量时间。Nanite 通过虚拟化几何体消除了这一约束：它只渲染屏幕上<em>像素大小或更大</em>的三角形，其余自动流送和剔除。结果：拥有 1 亿以上三角形的 CAD/ZBrush 网格与 10K 多边形游戏网格的渲染成本相同，因为 Nanite 永远不会渲染超出屏幕显示能力的细节。</p>
+
+  <h2 id="s2"><span lang="en">Cluster Hierarchy — The BVH/DAG Structure</span><span lang="zh">Cluster 层级 — BVH/DAG 结构</span></h2>
+  <p lang="en">Every Nanite mesh is preprocessed (offline, during cook) into a <span class="def">cluster hierarchy</span> — a directed acyclic graph (DAG) of triangle groups called clusters, each containing 64–128 triangles. This hierarchy is the key data structure that enables GPU-side LOD selection and culling.</p>
+  <p lang="zh">每个 Nanite 网格在预处理期间（离线，在 Cook 时）被处理成<span class="def">Cluster 层级</span>——一个由三角形组（称为 Cluster）组成的有向无环图（DAG），每个 Cluster 包含 64–128 个三角形。这个层级结构是实现 GPU 侧 LOD 选择和剔除的关键数据结构。</p>
+
+  <div class="diagram">
+Root (low-detail, 1 cluster, entire mesh)
+  └── Group (medium detail)
+       ├── Cluster [64-128 tris] ← leaf: maximum detail page
+       ├── Cluster [64-128 tris]
+       └── Cluster [64-128 tris]
+
+FPackedHierarchyNode (NaniteResources.h:50):
+  LODBounds[NANITE_MAX_BVH_NODE_FANOUT]     ← sphere bounds for LOD error test
+  BoxBoundsCenter, BoxBoundsExtent          ← AABB for frustum/HZB cull
+  MinLODError_MaxParentLODError             ← error range for LOD selection
+  ChildStartReference                       ← pointer to child clusters or page data</div>
+
+  <p lang="en">The hierarchy enables the GPU culling shader to select the finest level of detail that results in sub-pixel triangles being skipped. The LOD error metric is a screen-space projected error: if the error a cluster introduces (vs its parent) projects to less than 1 pixel, the parent is chosen instead.</p>
+  <p lang="zh">层级结构使 GPU 剔除着色器能够选择最细的细节级别，同时跳过投影为亚像素的三角形。LOD 误差度量是屏幕空间投影误差：如果某个 Cluster 引入的误差（相对于其父节点）投影小于 1 像素，则选择父节点。</p>
+
+  <h2 id="s3"><span lang="en">FPackedCluster — GPU Memory Layout</span><span lang="zh">FPackedCluster — GPU 内存布局</span></h2>
+  <p lang="en">Each cluster is stored as a tightly packed GPU struct <span class="fun">FPackedCluster</span> (<code>NaniteResources.h:94</code>). The packing is extremely aggressive — positions are stored as integer deltas from a cluster-local origin, with variable precision determined per-cluster to minimize bandwidth.</p>
+  <p lang="zh">每个 Cluster 存储为紧密打包的 GPU 结构体 <span class="fun">FPackedCluster</span>（<code>NaniteResources.h:94</code>）。打包极为紧凑——位置存储为从 Cluster 本地原点的整数偏移量，精度按 Cluster 可变以最小化带宽。</p>
+
+  <pre><span class="cm">// FPackedCluster — GPU layout (NaniteResources.h:94)</span>
+struct FPackedCluster
+{
+    uint32 NumVerts_PositionOffset;   <span class="cm">// NumVerts:14, PositionOffset:18</span>
+    uint32 NumTris_IndexOffset;       <span class="cm">// NumTris:8,  IndexOffset:24</span>
+    uint32 ColorMin;
+    uint32 ColorBits_GroupIndex;      <span class="cm">// R:4, G:4, B:4, A:4 + debug group index</span>
+
+    FIntVector PosStart;              <span class="cm">// cluster-local origin (integer world position)</span>
+    uint32 BitsPerIndex_PosPrecision_PosBits_NormalPrecision_TangentPrecision;
+
+    <span class="cm">// Culling data:</span>
+    FSphere3f LODBounds;              <span class="cm">// sphere for LOD error test</span>
+    FVector3f BoxBoundsCenter;
+    uint32 LODErrorAndEdgeLength;
+    FVector3f BoxBoundsExtent;
+    uint32 Flags_NumClusterBoneInfluences;
+
+    <span class="cm">// Material data:</span>
+    uint32 AttributeOffset_BitsPerAttribute;
+    uint32 DecodeInfoOffset_HasTangents_Skinning_NumUVs_ColorMode;
+    uint32 UVBitOffsets;              <span class="cm">// UV sets encoded as bit offsets</span>
+    <span class="cm">// ...</span>
+};</pre>
+
+  <h2 id="s4"><span lang="en">Two-Pass Occlusion Culling</span><span lang="zh">两阶段遮挡剔除</span></h2>
+  <p lang="en">Nanite's culling runs in two passes, enabled by <code>r.Nanite.Culling.TwoPass=1</code> (default). This is a hierarchical GPU-driven approach that achieves near-perfect occlusion culling without any CPU involvement:</p>
+  <p lang="zh">Nanite 的剔除分两个通道运行，由 <code>r.Nanite.Culling.TwoPass=1</code>（默认）启用。这是一种分层 GPU 驱动的方法，无需 CPU 参与即可实现近乎完美的遮挡剔除：</p>
+
+  <div class="diagram">
+PASS 1: CULLING_PASS_OCCLUSION_MAIN
+  Input:   All instances + clusters
+  Cull by: Frustum + HZB from PREVIOUS frame  ← "conservative": only reject definitely occluded
+  Output:  "Probably visible" clusters → rasterize → depth buffer written
+           "Possibly occluded" clusters → deferred to Pass 2
+
+PASS 2: CULLING_PASS_OCCLUSION_POST
+  Input:   Deferred "possibly occluded" clusters from Pass 1
+  Cull by: HZB rebuilt from Pass 1's depth buffer ← now current frame
+  Output:  Truly visible clusters → rasterize → merge into depth buffer
+
+Result:   Near-perfect occlusion with 2 GPU passes, zero CPU stalls</div>
+
+  <p lang="en">The culling is performed by a Compute shader dispatched with persistent threads. Each thread processes one BVH node, testing it against frustum planes and the HZB. If a node passes, its children are pushed into a GPU-side work queue for further processing. This fully GPU-resident traversal avoids the CPU-GPU readback that was necessary with traditional occlusion queries.</p>
+  <p lang="zh">剔除由持久线程分发的 Compute 着色器执行。每个线程处理一个 BVH 节点，针对视锥面和 HZB 进行测试。如果节点通过，其子节点被推送到 GPU 侧工作队列以进一步处理。这种完全 GPU 驻留的遍历避免了传统遮挡查询所需的 CPU-GPU 回读。</p>
+
+  <h2 id="s5"><span lang="en">Software vs Hardware Rasterizer</span><span lang="zh">软件 vs 硬件光栅器</span></h2>
+  <p lang="en">Nanite uses a <span class="def">dual rasterizer</span> strategy. Hardware rasterization (the fixed-function GPU pipeline) is efficient for large triangles but has significant overhead for small (sub-pixel or sub-4x4 quad) triangles due to quad overshading. Nanite's software rasterizer is a Compute shader that avoids this overhead entirely:</p>
+  <p lang="zh">Nanite 使用<span class="def">双路光栅器</span>策略。硬件光栅化（固定功能 GPU 管线）对大三角形高效，但由于四边形过度着色，对小（亚像素或亚 4x4 四边形）三角形有显著开销。Nanite 的软件光栅器是一个完全避免这种开销的 Compute 着色器：</p>
+
+  <div class="table-wrap"><table>
+    <thead><tr><th></th><th><span lang="en">Hardware Raster</span><span lang="zh">硬件光栅</span></th><th><span lang="en">Software Raster (Compute)</span><span lang="zh">软件光栅（Compute）</span></th></tr></thead>
+    <tbody>
+      <tr><td><span lang="en">Best for</span><span lang="zh">适用于</span></td><td><span lang="en">Triangles &gt; ~8px (fills hardware pipeline well)</span><span lang="zh">三角形 &gt; ~8px（充分利用硬件管线）</span></td><td><span lang="en">Triangles &lt; ~8px (avoids quad overshading waste)</span><span lang="zh">三角形 &lt; ~8px（避免四边形过着色浪费）</span></td></tr>
+      <tr><td><span lang="en">Output</span><span lang="zh">输出</span></td><td><span lang="en">Depth + Visibility Buffer via traditional RT</span><span lang="zh">通过传统 RT 输出深度 + 可见性缓冲</span></td><td><span lang="en">Atomic writes to Visibility Buffer (64-bit: depth | cluster_id | tri_id)</span><span lang="zh">原子写入可见性缓冲（64 位：深度 | cluster_id | tri_id）</span></td></tr>
+      <tr><td><span lang="en">Materials</span><span lang="zh">材质</span></td><td><span lang="en">Supports all material features</span><span lang="zh">支持所有材质特性</span></td><td><span lang="en">Only position/depth; material shading done separately via shading bins</span><span lang="zh">仅位置/深度；材质着色通过着色 Bin 单独完成</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <h2 id="s6"><span lang="en">Visibility Buffer &amp; Shading Bins — Deferred Material Evaluation</span><span lang="zh">可见性缓冲与着色 Bin — 延迟材质评估</span></h2>
+  <p lang="en">After rasterization, Nanite has a <span class="def">Visibility Buffer</span>: a 64-bit per-pixel texture encoding <code>(depth, cluster_id, triangle_id)</code>. Material shading is completely decoupled from rasterization. Instead of running a pixel shader per triangle as it rasterizes, Nanite groups visible pixels by material (into <span class="def">shading bins</span>) and dispatches one Compute shader per material type, processing only the pixels that use that material. This is fundamentally more efficient than traditional mesh shading because it avoids material shader launch overhead for occluded geometry.</p>
+  <p lang="zh">光栅化后，Nanite 拥有一个<span class="def">可见性缓冲</span>：每像素 64 位纹理，编码 <code>(depth, cluster_id, triangle_id)</code>。材质着色与光栅化完全解耦。Nanite 不是在光栅化时为每个三角形运行像素着色器，而是按材质将可见像素分组（进入<span class="def">着色 Bin</span>），并为每种材质类型分发一个 Compute 着色器，只处理使用该材质的像素。这从根本上比传统网格着色更高效，因为它避免了为被遮挡几何体启动材质着色器的开销。</p>
+
+  <h2 id="s7"><span lang="en">BuildShadingCommands() — CPU-Side Bin Preparation</span><span lang="zh">BuildShadingCommands() — CPU 侧着色 Bin 准备</span></h2>
+  <pre><span class="cm">// NaniteShading.cpp:445 — called early in the frame to prepare shading commands</span>
+<span class="kw">void</span> <span class="fn">BuildShadingCommands</span>(FRDGBuilder& GraphBuilder, FScene& Scene,
+                          ENaniteMeshPass::Type MeshPass, FNaniteShadingCommands& ShadingCommands)
+{
+    <span class="cm">// Launch a setup task (runs in parallel with other CPU work)</span>
+    ShadingCommands.SetupTask = GraphBuilder.<span class="fn">AddSetupTask</span>([&ShadingCommands, &Pipelines, ...]
+    {
+        <span class="cm">// Iterate all shading pipelines (one per unique material × render pass)</span>
+        <span class="kw">for</span> (<span class="kw">const auto</span>& Iter : Pipelines)
+        {
+            <span class="cm">// Each shading bin gets an entry in MetaBufferData</span>
+            <span class="cm">// GPU fills .XYZ (dispatch args) during shade binning pass</span>
+            <span class="cm">// CPU sets .W = MaterialBitFlags</span>
+            ShadingCommands.MetaBufferData[Entry.BinIndex].W = Entry.ShadingPipeline->MaterialBitFlags;
+        }
+
+        <span class="cm">// Build shader bundle for bindless dispatch (if platform supports)</span>
+        <span class="kw">if</span> (<span class="fn">UseShadingShaderBundle</span>(ShaderPlatform) && ShadingCommands.NumCommands > <span class="num">0</span>)
+        {
+            ShadingCommands.ShaderBundle = <span class="fn">RHICreateShaderBundle</span>(CreateInfo);
+        }
+    });
+
+    <span class="cm">// Sort commands: by BoundTargetMask → by shader → by ShadingBin</span>
+    <span class="cm">// This improves GPU cache coherency during material dispatch</span>
+}</pre>
+
+  <h2 id="s8"><span lang="en">Nanite Limitations — What It Cannot Render</span><span lang="zh">Nanite 的限制 — 它不能渲染什么</span></h2>
+  <div class="warning">
+    <span lang="en"><strong>Hard limitations:</strong> Nanite cannot handle geometry with <strong>World Position Offset (WPO)</strong> efficiently — WPO vertex animations invalidate the pre-computed LOD hierarchy and require special handling (r.Nanite.AllowWPO=1 re-rasterizes WPO meshes with the hardware path, at a cost). <strong>Translucent materials</strong> are not supported (visibility buffer is opaque-only). <strong>Two-sided foliage</strong> and masked materials work but require the hardware rasterizer fallback. <strong>Deformable/skinned meshes</strong> require special Nanite skin cache integration.</span>
+    <span lang="zh"><strong>硬性限制：</strong>Nanite 无法高效处理带有<strong>世界位置偏移（WPO）</strong>的几何体——WPO 顶点动画使预计算的 LOD 层级无效，需要特殊处理（<code>r.Nanite.AllowWPO=1</code> 使用硬件路径重新光栅化 WPO 网格，有性能代价）。<strong>半透明材质</strong>不支持（可见性缓冲仅用于不透明）。<strong>双面植被</strong>和遮罩材质可用，但需要硬件光栅器回退。<strong>可变形/蒙皮网格</strong>需要特殊的 Nanite 皮肤缓存集成。</span>
+  </div>
+
+  <h2 id="s9"><span lang="en">Art Guidelines for Nanite</span><span lang="zh">面向 Nanite 的美术规范</span></h2>
+  <ul>
+    <li lang="en"><strong>No polygon budget:</strong> Import source meshes at full resolution (ZBrush, CAD). Nanite handles LOD automatically. However, keep mesh count reasonable — each instance still has a draw call even if Nanite removes triangles.</li>
+    <li lang="zh"><strong>无多边形预算：</strong>以完整分辨率导入源网格（ZBrush、CAD）。Nanite 自动处理 LOD。但请保持合理的网格数量——即使 Nanite 移除了三角形，每个实例仍有绘制调用。</li>
+    <li lang="en"><strong>Texture density over triangles:</strong> With Nanite, the bottleneck shifts from polygons to texture sample count. Optimize texel density ratios, not polygon counts.</li>
+    <li lang="zh"><strong>纹理密度优于三角形：</strong>有了 Nanite，瓶颈从多边形转移到纹理采样数量。优化纹素密度比，而不是多边形数量。</li>
+    <li lang="en"><strong>Avoid WPO on large geometry:</strong> WPO forces hardware rasterization fallback. For vegetation, use Nanite + World Position Offset only on close-up foliage, and disable Nanite for wind-affected large trees.</li>
+    <li lang="zh"><strong>避免在大型几何体上使用 WPO：</strong>WPO 强制回退到硬件光栅化。对于植被，仅在近景植被上使用 Nanite + WPO，并为受风影响的大树禁用 Nanite。</li>
+    <li lang="en"><strong>Fallback meshes:</strong> Always provide a non-Nanite fallback LOD for platforms that don't support Nanite (mobile, older consoles).</li>
+    <li lang="zh"><strong>回退网格：</strong>始终为不支持 Nanite 的平台（移动端、旧主机）提供非 Nanite 回退 LOD。</li>
+  </ul>
+
+  <h2 id="s10"><span lang="en">Source Navigation</span><span lang="zh">源码导航</span></h2>
+  <ul class="file-list">
+    <li><span class="fp">Nanite/NaniteCullRaster.cpp:3164</span><span class="fd"><span lang="en"><span class="fun">FRenderer</span> — main Nanite renderer class, DrawGeometry, two-pass culling</span><span lang="zh"><span class="fun">FRenderer</span> — Nanite 主渲染器类，DrawGeometry，两阶段剔除</span></span></li>
+    <li><span class="fp">Nanite/NaniteCullRaster.cpp:37</span><span class="fd"><span lang="en"><code>CULLING_PASS_*</code> defines — pass type enum values</span><span lang="zh"><code>CULLING_PASS_*</code> 定义 — 通道类型枚举值</span></span></li>
+    <li><span class="fp">Nanite/NaniteShading.cpp:445</span><span class="fd"><span lang="en"><span class="fun">BuildShadingCommands()</span> — prepares per-material Compute dispatch</span><span lang="zh"><span class="fun">BuildShadingCommands()</span> — 准备每材质的 Compute 分发</span></span></li>
+    <li><span class="fp">Engine/Public/Rendering/NaniteResources.h:50</span><span class="fd"><span lang="en"><span class="fun">FPackedHierarchyNode</span> — BVH node for GPU traversal</span><span lang="zh"><span class="fun">FPackedHierarchyNode</span> — GPU 遍历的 BVH 节点</span></span></li>
+    <li><span class="fp">Engine/Public/Rendering/NaniteResources.h:94</span><span class="fd"><span lang="en"><span class="fun">FPackedCluster</span> — tightly packed GPU cluster layout</span><span lang="zh"><span class="fun">FPackedCluster</span> — 紧密打包的 GPU Cluster 布局</span></span></li>
+    <li><span class="fp">Shaders/Private/Nanite/NaniteCulling.usf</span><span class="fd"><span lang="en">GPU culling compute shader — persistent threads, HZB test</span><span lang="zh">GPU 剔除计算着色器 — 持久线程、HZB 测试</span></span></li>
+  </ul>
+  <footer>Unreal Engine 5.6 &middot; Engine/Source/Runtime/Renderer/Private/Nanite/<br>Source analysis &middot; For learning purposes</footer>
+</main>
+</div>
+<script>
+function toggleLang(){var h=document.documentElement;if(h.classList.contains('lang-zh')){h.classList.remove('lang-zh');h.lang='en';document.title='Nanite — Virtual Geometry';localStorage.setItem('ue-doc-lang','en');}else{h.classList.add('lang-zh');h.lang='zh-CN';document.title='Nanite — 虚拟几何体';localStorage.setItem('ue-doc-lang','zh');}}
+if(document.documentElement.classList.contains('lang-zh'))document.title='Nanite — 虚拟几何体';
+</script>
+</body>
+</html>

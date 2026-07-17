@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Deferred Rendering Pipeline</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Gudea">
+  <script>
+    (function () {
+      if (localStorage.getItem('ue-doc-lang') === 'zh') {
+        document.documentElement.classList.add('lang-zh');
+        document.documentElement.lang = 'zh-CN';
+      }
+    })();
+  </script>
+  <style>
+    /* == Language Toggle == */
+    html:not(.lang-zh) [lang="zh"] { display: none; }
+    html.lang-zh       [lang="en"] { display: none; }
+
+    #lang-btn {
+      position: fixed; top: 16px; right: 20px; z-index: 999;
+      background: #37425d; color: #fff; border: none; border-radius: 4px;
+      padding: 5px 14px; font-size: 13px; font-weight: 700; cursor: pointer;
+      font-family: Gudea, sans-serif; box-shadow: 0 2px 6px rgba(0,0,0,.2);
+      transition: background .15s;
+    }
+    #lang-btn:hover { background: #4a5a7a; }
+
+    /* == Base == */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Gudea, sans-serif;
+      font-size: 16px; line-height: 1.8; color: #111;
+      background: #eee;
+    }
+
+    /* == Layout: left nav + right content == */
+    #wrapper {
+      max-width: 1100px; margin: 0 auto;
+      display: flex; align-items: flex-start;
+      padding: 40px 24px;
+      gap: 36px;
+    }
+
+    /* == Left Sidebar (TOC) == */
+    #sidebar {
+      width: 240px; flex-shrink: 0;
+      position: sticky; top: 24px;
+      max-height: calc(100vh - 48px);
+      overflow-y: auto;
+      font-size: 13px;
+    }
+    #sidebar h2 {
+      font-size: 12px; font-weight: 700; color: #888;
+      text-transform: uppercase; letter-spacing: .08em;
+      margin-bottom: 12px; border: none; padding: 0;
+    }
+    #sidebar ol {
+      list-style: none; padding: 0; counter-reset: toc;
+    }
+    #sidebar ol li {
+      counter-increment: toc; margin-bottom: 4px;
+    }
+    #sidebar ol li a {
+      color: #555; text-decoration: none; display: block;
+      padding: 2px 0; transition: color .12s;
+    }
+    #sidebar ol li a:hover { color: #58A; }
+    #sidebar ol li a::before {
+      content: counter(toc, decimal-leading-zero) '. ';
+      color: #bbb; font-size: 11px;
+      font-family: 'Courier New', monospace;
+    }
+
+    /* == Main Content == */
+    #content { flex: 1; min-width: 0; }
+
+    /* == Page Header == */
+    .page-header {
+      margin-bottom: 32px; padding-bottom: 20px;
+      border-bottom: 1px solid #ddd;
+    }
+    .page-header .crumb {
+      font-size: 11px; color: #999; text-transform: uppercase;
+      letter-spacing: .06em; margin-bottom: 8px;
+    }
+    .page-header h1 {
+      font-size: 1.8rem; font-weight: 900; color: #303236;
+      margin-bottom: 8px; line-height: 1.25;
+    }
+    .page-header .subtitle {
+      font-family: 'Courier New', monospace; font-size: 13px; color: #777;
+    }
+
+    /* == Headings (LearnOpenGL style) == */
+    h2 { color: #37425d; font-size: 22px; margin: 36px 0 10px; }
+    h3 { color: #633739; font-size: 17px; margin: 24px 0 8px; }
+
+    /* == Body text == */
+    p { margin-bottom: 14px; }
+    a { color: #58A; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    strong { color: #222; }
+
+    /* == Semantic colors (LearnOpenGL) == */
+    .fun { font-family: 'Courier New', monospace; color: #2a6496; }
+    .var { font-family: 'Courier New', monospace; color: #227; }
+    .def { color: green; font-weight: 600; }
+
+    /* == Inline code == */
+    code {
+      font-family: 'Courier New', monospace; font-size: 14px;
+      background: #eee; border-radius: 3px; padding: 1px 5px;
+    }
+
+    /* == Code blocks (dark obsidian) == */
+    pre {
+      background: #282c34; color: #abb2bf; border-radius: 5px;
+      padding: 16px 18px; overflow-x: auto; margin: 14px 0 18px;
+      font-family: 'Courier New', monospace; font-size: 14px; line-height: 1.6;
+    }
+    pre code { background: none; padding: 0; color: inherit; }
+    .kw { color: #c678dd; } .fn { color: #61afef; }
+    .cm { color: #5c6370; font-style: italic; } .str { color: #98c379; }
+    .num { color: #d19a66; } .type { color: #e5c07b; }
+
+    /* == Note / Warning (LearnOpenGL style) == */
+    .note {
+      display: block; margin: 18px 0; padding: 15px;
+      background: #D8F5D8; color: #444; border-radius: 5px;
+      border: 2px solid #AFDFAF; font-size: 15px; line-height: 1.7;
+    }
+    .warning {
+      display: block; margin: 18px 0; padding: 15px;
+      background: #FFD2D2; color: #444; border-radius: 5px;
+      border: 2px solid #E0B3B3; font-size: 15px; line-height: 1.7;
+    }
+
+    /* == Lists == */
+    ul, ol { padding-left: 22px; margin-bottom: 14px; }
+    li { margin-bottom: 5px; }
+
+    /* == Step badge (unified color) == */
+    .step {
+      display: inline-block; font-size: 11px; font-weight: 700;
+      font-family: 'Courier New', monospace;
+      color: #fff; background: #37425d; padding: 2px 7px;
+      border-radius: 3px; margin-right: 8px; vertical-align: middle;
+    }
+
+    /* == Phase meta line == */
+    .phase-meta {
+      font-size: 13px; color: #888; margin: -2px 0 10px;
+      font-family: 'Courier New', monospace;
+    }
+    .phase-meta .tag {
+      display: inline-block; font-size: 11px; font-weight: 700;
+      border-radius: 3px; padding: 1px 6px; margin-left: 6px;
+    }
+    .tag-cpu   { background: #fff0d8; color: #8a4a00; border: 1px solid #e8cc88; }
+    .tag-gpu   { background: #d8f0e8; color: #1a6040; border: 1px solid #8ad4b0; }
+    .tag-async { background: #ede8fe; color: #4a38a0; border: 1px solid #c0b4f0; }
+    .tag-opt   { background: #f0e8d8; color: #6a4820; border: 1px solid #d4b888; }
+
+    /* == Tables == */
+    .table-wrap { overflow-x: auto; margin: 14px 0; }
+    table { border-collapse: collapse; font-size: 14px; width: 100%; }
+    th, td { padding: 8px 12px; border-bottom: 1px solid #aaa; text-align: left; }
+    th { border-bottom: 2px solid #888; font-weight: 700; background: #eee; }
+    tr:nth-child(even) td { background: #f0edee; }
+    td:first-child { font-family: 'Courier New', monospace; font-size: 13px; color: #2a6496; white-space: nowrap; }
+
+    /* == File list == */
+    .file-list { list-style: none; padding: 0; margin: 12px 0; }
+    .file-list li {
+      padding: 6px 0; border-bottom: 1px solid #e0dcdd;
+      display: flex; align-items: baseline; gap: 10px; font-size: 14px;
+    }
+    .file-list li:last-child { border-bottom: none; }
+    .file-list .fp { font-family: 'Courier New', monospace; font-size: 13px; color: #58A; min-width: 260px; }
+    .file-list .fd { color: #555; }
+
+    /* == Footer == */
+    footer {
+      margin-top: 48px; padding-top: 16px; border-top: 1px solid #ddd;
+      font-size: 12px; color: #aaa; text-align: center;
+    }
+
+    /* == Responsive == */
+    @media (max-width: 800px) {
+      #wrapper { flex-direction: column; padding: 20px 16px; }
+      #sidebar { width: 100%; position: static; max-height: none; margin-bottom: 24px; }
+    }
+  </style>
+</head>
+<body>
+
+<button id="lang-btn" onclick="toggleLang()" title="Switch Language">
+  <span lang="en">中文</span><span lang="zh">English</span>
+</button>
+
+<div id="wrapper">
+
+<!-- ════════ LEFT SIDEBAR (TOC) ════════ -->
+<nav id="sidebar">
+  <h2><span lang="en">Contents</span><span lang="zh">目录</span></h2>
+  <ol>
+    <li><a href="#s1"><span lang="en">Core Class Structure</span><span lang="zh">核心类结构</span></a></li>
+    <li><a href="#s2"><span lang="en">Pipeline State Decisions</span><span lang="zh">管线状态决策</span></a></li>
+    <li><a href="#s3"><span lang="en">Render() Overview</span><span lang="zh">Render() 主循环概览</span></a></li>
+    <li><a href="#p0"><span lang="en">00 Frame Init</span><span lang="zh">00 帧初始化</span></a></li>
+    <li><a href="#p1"><span lang="en">01 Visibility</span><span lang="zh">01 可见性计算</span></a></li>
+    <li><a href="#p2"><span lang="en">02 Early Z &amp; Nanite</span><span lang="zh">02 Early Z &amp; Nanite</span></a></li>
+    <li><a href="#p3"><span lang="en">03 Base Pass</span><span lang="zh">03 Base Pass</span></a></li>
+    <li><a href="#p4"><span lang="en">04 Shadow Maps</span><span lang="zh">04 阴影贴图</span></a></li>
+    <li><a href="#p5"><span lang="en">05 Lumen GI</span><span lang="zh">05 Lumen GI</span></a></li>
+    <li><a href="#p6"><span lang="en">06 Composition</span><span lang="zh">06 合成/贴花/AO</span></a></li>
+    <li><a href="#p7"><span lang="en">07 Deferred Lighting</span><span lang="zh">07 延迟光照</span></a></li>
+    <li><a href="#p8"><span lang="en">08 Atmosphere/Fog</span><span lang="zh">08 大气/雾/云</span></a></li>
+    <li><a href="#p9"><span lang="en">09 Translucency</span><span lang="zh">09 半透明渲染</span></a></li>
+    <li><a href="#p10"><span lang="en">10 Path Tracing</span><span lang="zh">10 路径追踪</span></a></li>
+    <li><a href="#p11"><span lang="en">11 Post Processing</span><span lang="zh">11 后处理</span></a></li>
+    <li><a href="#s4"><span lang="en">Key Technologies</span><span lang="zh">关键技术</span></a></li>
+    <li><a href="#s5"><span lang="en">Source Navigation</span><span lang="zh">源码导航</span></a></li>
+  </ol>
+</nav>
+
+<!-- ════════ MAIN CONTENT ════════ -->
+<main id="content">
+
+  <div class="page-header">
+    <div class="crumb">Unreal Engine 5.6 &middot; Source Analysis</div>
+    <h1>
+      <span lang="en">Deferred Rendering Pipeline</span>
+      <span lang="zh">延迟渲染管线全景解析</span>
+    </h1>
+    <div class="subtitle">Engine/Source/Runtime/Renderer/Private/DeferredShadingRenderer.cpp</div>
+  </div>
+
+  <!-- ══ Section 1 ══ -->
+  <h2 id="s1"><span lang="en">Core Class Structure</span><span lang="zh">核心类结构</span></h2>
+
+  <p lang="en">The deferred renderer is implemented by <span class="fun">FDeferredShadingSceneRenderer</span>, which inherits from <span class="fun">FSceneRenderer</span> (defined in <code>SceneRendering.h</code>). This class orchestrates the entire frame rendering pipeline.</p>
+  <p lang="zh">延迟渲染器由 <span class="fun">FDeferredShadingSceneRenderer</span> 实现，继承自 <span class="fun">FSceneRenderer</span>（定义于 <code>SceneRendering.h</code>）。该类负责编排整个帧的渲染管线。</p>
+
+  <pre><span class="type">FSceneRenderer</span>                      <span class="cm">// Base class</span>
+  &boxur;&boxh;&boxh; <span class="type">FDeferredShadingSceneRenderer</span>   <span class="cm">// DeferredShadingRenderer.h/.cpp</span></pre>
+
+  <p lang="en">The per-frame top-level entry point is <span class="fun">Render(FRDGBuilder&amp;, const FSceneRenderUpdateInputs*)</span> at <code>DeferredShadingRenderer.cpp:1442</code>, invoked from the render thread. The function is approximately 2300 lines long and registers all rendering passes into the <span class="def">Render Dependency Graph</span> (RDG).</p>
+  <p lang="zh">每帧顶层入口是 <span class="fun">Render(FRDGBuilder&amp;, const FSceneRenderUpdateInputs*)</span>，位于 <code>DeferredShadingRenderer.cpp:1442</code>，由渲染线程调用。该函数约 2300 行，将所有渲染 Pass 注册到 <span class="def">Render Dependency Graph</span>（RDG）中。</p>
+
+  <div class="note">
+    <span lang="en"><strong>What is RDG?</strong> The Render Dependency Graph is UE's frame-level task graph for GPU work. Instead of issuing draw calls immediately, code registers "passes" that declare their resource inputs/outputs. At the end, the RDG compiler sorts passes by dependency, inserts barriers, manages resource lifetimes, and can overlap async compute work automatically. This means the C++ call order you see in <code>Render()</code> is the <em>registration</em> order, not necessarily the GPU execution order.</span>
+    <span lang="zh"><strong>什么是 RDG？</strong> Render Dependency Graph 是 UE 的帧级 GPU 任务图。代码不立即发出绘制命令，而是注册声明输入/输出资源的"Pass"。最后由 RDG 编译器根据依赖排序、插入屏障、管理资源生命周期，并自动重叠异步计算工作。因此 <code>Render()</code> 中的 C++ 调用顺序是<em>注册</em>顺序，不一定是 GPU 执行顺序。</span>
+  </div>
+
+  <!-- ══ Section 2 ══ -->
+  <h2 id="s2"><span lang="en">Pipeline State Decisions &mdash; CommitFinalPipelineState()</span><span lang="zh">管线状态决策 &mdash; CommitFinalPipelineState()</span></h2>
+
+  <p lang="en">Before any rendering work begins, <span class="fun">CommitFinalPipelineState()</span> (line 1125) locks every pipeline dimension into an immutable final value. Internally it uses the <span class="fun">TPipelineState</span> template which enforces that each dimension is written exactly once, in memory-offset order. This prevents circular dependencies between pipeline stages &mdash; once committed, any further write triggers a runtime assertion failure.</p>
+  <p lang="zh">在任何渲染工作开始前，<span class="fun">CommitFinalPipelineState()</span>（line 1125）将每个管线维度锁定为不可变的最终值。内部通过 <span class="fun">TPipelineState</span> 模板按内存偏移顺序强制每个维度只写入一次，防止管线阶段间产生循环依赖——提交后任何写操作都会触发运行时断言失败。</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th><span lang="en">Dimension</span><span lang="zh">状态维度</span></th>
+          <th><span lang="en">Options</span><span lang="zh">可选值</span></th>
+          <th><span lang="en">Description</span><span lang="zh">说明</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>DiffuseIndirectMethod</td><td><code>Disabled / SSGI / Lumen / Plugin</code></td><td><span lang="en">Diffuse indirect lighting approach</span><span lang="zh">漫反射间接光照方案</span></td></tr>
+        <tr><td>AmbientOcclusionMethod</td><td><code>Disabled / SSAO / SSGI / RTAO</code></td><td><span lang="en">Ambient occlusion technique</span><span lang="zh">环境遮蔽方案</span></td></tr>
+        <tr><td>ReflectionsMethod</td><td><code>Disabled / SSR / Lumen</code></td><td><span lang="en">Reflections (water has its own setting)</span><span lang="zh">反射方案（水面有独立配置）</span></td></tr>
+        <tr><td>bNanite</td><td><code>true / false</code></td><td><span lang="en">Whether Nanite virtual geometry is active</span><span lang="zh">是否启用 Nanite 虚拟几何</span></td></tr>
+        <tr><td>bFurthestHZB / bClosestHZB</td><td><code>true / false</code></td><td><span lang="en">Generate Hierarchical Z-Buffer (needed by SSAO, SSR, Nanite, Lumen)</span><span lang="zh">是否生成层次 Z 缓冲（SSAO/SSR/Nanite/Lumen 均需要）</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <pre><span class="cm">// CommitFinalPipelineState() &mdash; line 1125</span>
+FamilyPipelineState.<span class="fn">Set</span>(&amp;FFamilyPipelineState::bNanite, <span class="fn">UseNanite</span>(ShaderPlatform));
+FamilyPipelineState.<span class="fn">Set</span>(&amp;FFamilyPipelineState::bHZBOcclusion, ICVarHZBOcc-&gt;<span class="fn">GetInt</span>() != <span class="num">0</span>);
+
+<span class="fn">CommitIndirectLightingState</span>();  <span class="cm">// Sets DiffuseIndirect / AO / Reflections</span>
+
+<span class="cm">// After Commit(), any write triggers check() failure</span>
+GetViewPipelineStateWritable(View).<span class="fn">Commit</span>();
+FamilyPipelineState.<span class="fn">Commit</span>();</pre>
+
+  <!-- ══ Section 3 ══ -->
+  <h2 id="s3"><span lang="en">Render() Main Loop Overview</span><span lang="zh">Render() 主循环概览</span></h2>
+
+  <p lang="en">The <span class="fun">Render()</span> function unfolds across 12 sequential stages. Resource access ordering between stages is enforced via RDG pass dependencies and <code>ExternalAccessQueue</code>. Stages like Lumen GI and volumetric cloud can run on the Async Compute queue, overlapping with subsequent Graphics queue work.</p>
+  <p lang="zh"><span class="fun">Render()</span> 函数按 12 个阶段顺序展开。阶段间的资源访问顺序通过 RDG Pass 依赖和 <code>ExternalAccessQueue</code> 保证。Lumen GI 和体积云等阶段可运行在异步计算队列上，与后续图形队列工作重叠。</p>
+
+  <!-- ══ Phase 00 ══ -->
+  <h3 id="p0"><span class="step">00</span><span lang="en">Frame Initialization</span><span lang="zh">帧初始化</span></h3>
+  <p class="phase-meta">line 1442&ndash;1600 <span class="tag tag-cpu">CPU</span></p>
+  <p lang="en">Sets up the frame: processes pending ray tracing geometry builds, commits pipeline state, initializes system textures, prepares sun light proxy for atmosphere, kicks off Lumen scene update and light gathering tasks asynchronously, begins Nanite visibility, and starts virtual texture streaming.</p>
+  <p lang="zh">帧准备工作：处理待定光追几何构建请求、提交管线状态、初始化系统贴图、为大气准备太阳光代理、异步启动 Lumen 场景更新与灯光收集任务、开始 Nanite 可见性帧、启动虚拟贴图流送。</p>
+
+  <!-- ══ Phase 01 ══ -->
+  <h3 id="p1"><span class="step">01</span><span lang="en">Visibility Computation</span><span lang="zh">可见性计算</span></h3>
+  <p class="phase-meta">line 1729&ndash;1837 <span class="tag tag-async">Async CPU</span></p>
+  <p lang="en">Determines which objects are visible. <code>BeginInitViews()</code> dispatches parallel CPU tasks for frustum culling, relevance computation, and dynamic shadow setup. <code>GPUScene</code> uploads per-primitive shader data. <code>EndInitViews()</code> waits for all tasks and generates <span class="def">MeshDrawCommands</span> &mdash; the pre-built GPU command packets that avoid per-draw CPU overhead.</p>
+  <p lang="zh">确定哪些物体可见。<code>BeginInitViews()</code> 派发并行 CPU 任务进行视锥裁剪、相关性计算和动态阴影设置。<code>GPUScene</code> 上传每图元着色器数据。<code>EndInitViews()</code> 等待所有任务并生成 <span class="def">MeshDrawCommands</span>——预构建的 GPU 命令包，避免逐绘制的 CPU 开销。</p>
+
+  <!-- ══ Phase 02 ══ -->
+  <h3 id="p2"><span class="step">02</span><span lang="en">Early Z PrePass + Nanite Rasterization</span><span lang="zh">Early Z 预通道 + Nanite 光栅化</span></h3>
+  <p class="phase-meta">line 2069&ndash;2128 <span class="tag tag-gpu">GPU</span></p>
+  <p lang="en">Populates the depth buffer before the expensive base pass. The early Z pass writes depth for all opaque geometry, enabling the GPU to reject occluded pixels early (Hi-Z rejection). <code>RenderNanite()</code> then runs Nanite's cluster-based rasterizer (both a software and hardware path) to handle millions of triangles efficiently. After this, a Hierarchical Z-Buffer (HZB) is built for later occlusion queries, SSAO, and SSR.</p>
+  <p lang="zh">在昂贵的 Base Pass 前填充深度缓冲。Early Z 通道写入所有不透明几何的深度，让 GPU 能提前拒绝被遮挡像素（Hi-Z 拒绝）。随后 <code>RenderNanite()</code> 运行 Nanite 基于 Cluster 的光栅器（软件和硬件双路径），高效处理数百万三角形。之后构建层次 Z 缓冲（HZB）供后续遮挡查询、SSAO 和 SSR 使用。</p>
+
+  <div class="note">
+    <span lang="en"><strong>Read-only depth optimization:</strong> When the early Z pass is complete (<code>bAllowReadOnlyDepthBasePass == true</code>), the base pass binds depth as read-only (<code>DepthRead_StencilWrite</code>). This avoids redundant depth writes and reduces memory bandwidth pressure.</span>
+    <span lang="zh"><strong>只读深度优化：</strong>当 Early Z 完成后（<code>bAllowReadOnlyDepthBasePass == true</code>），Base Pass 以只读方式绑定深度（<code>DepthRead_StencilWrite</code>），避免冗余深度写入，降低内存带宽压力。</span>
+  </div>
+
+  <!-- ══ Phase 03 ══ -->
+  <h3 id="p3"><span class="step">03</span><span lang="en">Base Pass &mdash; GBuffer Write</span><span lang="zh">Base Pass &mdash; GBuffer 写入</span></h3>
+  <p class="phase-meta">line 2599&ndash;2635 <span class="tag tag-gpu">GPU</span></p>
+  <p lang="en">The base pass is the heart of deferred shading. Every visible opaque surface runs its material shader and writes results into multiple render targets collectively called the <span class="def">GBuffer</span>. This decouples geometry/material evaluation from lighting &mdash; lighting can then be computed in screen-space without re-running material shaders.</p>
+  <p lang="zh">Base Pass 是延迟着色的核心。每个可见不透明表面运行其材质着色器，将结果写入统称为 <span class="def">GBuffer</span> 的多个渲染目标。这将几何/材质计算与光照解耦——光照随后可在屏幕空间中计算，无需重新运行材质着色器。</p>
+  <ul>
+    <li><strong>GBufferA</strong>: WorldNormal + ShadingModelID</li>
+    <li><strong>GBufferB</strong>: Metallic, Specular, Roughness</li>
+    <li><strong>GBufferC</strong>: BaseColor (RGB) + Indirect Irradiance</li>
+    <li><strong>GBufferD</strong>: <span lang="en">Custom data (SubsurfaceColor, etc.)</span><span lang="zh">自定义数据（次表面颜色等）</span></li>
+  </ul>
+
+  <!-- ══ Phase 04 ══ -->
+  <h3 id="p4"><span class="step">04</span><span lang="en">Shadow Map Rendering</span><span lang="zh">阴影贴图渲染</span></h3>
+  <p class="phase-meta">line 2516&ndash;2793 <span class="tag tag-gpu">GPU</span> <span class="tag tag-opt"><span lang="en">Conditional</span><span lang="zh">条件执行</span></span></p>
+  <p lang="en">Renders depth from each light's perspective to produce shadow maps. In the deferred path (default), this runs <em>after</em> the base pass so Lumen can begin async work earlier. UE 5.x introduces <span class="def">Virtual Shadow Maps</span> (VSM): a single 128K&times;128K virtual texture atlas where pages are allocated on demand per-light, giving uniformly high shadow resolution regardless of distance.</p>
+  <p lang="zh">从每个光源视角渲染深度以生成阴影贴图。延迟路径（默认）中在 Base Pass <em>之后</em>执行，以便 Lumen 能更早开始异步工作。UE 5.x 引入了<span class="def">虚拟阴影贴图</span>（VSM）：一张 128K&times;128K 的虚拟纹理图集，按需为每个光源分配页面，无论距离远近均提供均匀高精度阴影。</p>
+
+  <!-- ══ Phase 05 ══ -->
+  <h3 id="p5"><span class="step">05</span><span lang="en">Lumen GI &mdash; Fully Dynamic Global Illumination</span><span lang="zh">Lumen GI &mdash; 全动态全局光照</span></h3>
+  <p class="phase-meta">line 2583&ndash;2763 <span class="tag tag-async">Async Compute</span></p>
+  <p lang="en">Lumen provides real-time indirect lighting without baking. It maintains a <span class="def">Surface Cache</span> &mdash; a low-res atlas capturing direct lighting on scene surfaces. From this, it traces rays (via Mesh Distance Fields or hardware RT) to gather indirect illumination. <code>DispatchAsyncLumenIndirectLightingWork()</code> launches:</p>
+  <p lang="zh">Lumen 提供无需烘焙的实时间接光照。它维护一个<span class="def">表面缓存</span>（Surface Cache）——捕捉场景表面直接光照的低分辨率图集。基于此通过网格距离场或硬件光追进行光线追踪来收集间接照明。<code>DispatchAsyncLumenIndirectLightingWork()</code> 启动：</p>
+  <ul>
+    <li><code>RenderLumenScreenProbeGather()</code> &mdash; <span lang="en">Screen-space probes gather diffuse indirect lighting into a Radiance Cache</span><span lang="zh">屏幕空间探针收集漫反射间接光到辐射缓存</span></li>
+    <li><code>RenderLumenReflections()</code> &mdash; <span lang="en">Traces rays for specular reflections with temporal denoising</span><span lang="zh">为镜面反射追踪光线并进行时间降噪</span></li>
+    <li><code>RenderLumenReSTIRGather()</code> &mdash; <span lang="en">Optional ReSTIR-based stochastic resampling for higher quality</span><span lang="zh">可选的基于 ReSTIR 的随机重采样以提高质量</span></li>
+  </ul>
+  <p lang="en">These dispatches run on the Async Compute queue, overlapping with shadow map rendering on the Graphics queue.</p>
+  <p lang="zh">这些调度在异步计算队列上运行，与图形队列上的阴影贴图渲染重叠执行。</p>
+
+  <!-- ══ Phase 06 ══ -->
+  <h3 id="p6"><span class="step">06</span><span lang="en">Composition / Decals / SSAO</span><span lang="zh">合成 / 贴花 / SSAO</span></h3>
+  <p class="phase-meta">line 2553&ndash;2876 <span class="tag tag-gpu">GPU</span></p>
+  <p lang="en">Applies deferred decals (projected onto the GBuffer), computes screen-space ambient occlusion (SSAO), renders opaque velocity for motion vectors (needed by TAA/TSR), copies stencil to a lighting channels texture, and runs Substrate material classification. After this stage the SceneTexture uniform buffer is rebuilt with all available data.</p>
+  <p lang="zh">应用延迟贴花（投影到 GBuffer 上）、计算屏幕空间环境遮蔽（SSAO）、渲染不透明速度缓冲用于运动向量（TAA/TSR 需要）、将模板复制到光照通道纹理、运行 Substrate 材质分类。此阶段后 SceneTexture 统一缓冲区用所有可用数据重建。</p>
+
+  <!-- ══ Phase 07 ══ -->
+  <h3 id="p7"><span class="step">07</span><span lang="en">Deferred Lighting</span><span lang="zh">延迟光照</span></h3>
+  <p class="phase-meta">line 2899&ndash;3019 <span class="tag tag-gpu">GPU</span></p>
+  <p lang="en">This is where all dynamic lighting is evaluated in screen space using the GBuffer. The key advantage of deferred shading: lighting cost is proportional to screen pixels lit, not to object count &times; light count.</p>
+  <p lang="zh">所有动态光照在此通过 GBuffer 在屏幕空间中计算。延迟着色的关键优势：光照开销与被照亮的屏幕像素数成正比，而非物体数量 &times; 光源数量。</p>
+  <ul>
+    <li><code>RenderLights()</code> &mdash; <span lang="en">Per-light loop: shadow projection, light function, direct illumination</span><span lang="zh">逐光源循环：阴影投影、光照函数、直接照明</span></li>
+    <li><code>AddClusteredDeferredShadingPass()</code> &mdash; <span lang="en">Clustered shading: uses a 3D froxel grid to batch hundreds of lights in one Compute pass</span><span lang="zh">聚簇着色：使用 3D Froxel 网格在一次 Compute Pass 中批处理数百光源</span></li>
+    <li><code>RenderMegaLights()</code> &mdash; <span lang="en">UE 5.4+ system for thousands of lights via stochastic sampling + temporal denoising</span><span lang="zh">UE 5.4+ 系统，通过随机采样 + 时间降噪处理数千光源</span></li>
+    <li><code>RenderDeferredReflectionsAndSkyLighting()</code> &mdash; <span lang="en">SSR, environment reflections, sky lighting</span><span lang="zh">SSR、环境反射、天空光</span></li>
+    <li><code>AddSubsurfacePass()</code> &mdash; <span lang="en">Subsurface scattering (skin, foliage)</span><span lang="zh">次表面散射（皮肤、植被）</span></li>
+  </ul>
+
+  <!-- ══ Phase 08 ══ -->
+  <h3 id="p8"><span class="step">08</span><span lang="en">Atmosphere / Fog / Volumetric Cloud</span><span lang="zh">大气 / 雾 / 体积云</span></h3>
+  <p class="phase-meta">line 3089&ndash;3153 <span class="tag tag-gpu">GPU</span></p>
+  <p lang="en">Renders atmospheric scattering using precomputed LUTs (transmittance, sky-view), exponential height fog with local fog volumes, volumetric fog via a 3D froxel texture with temporal accumulation, and volumetric clouds via ray marching at reduced resolution then upscaling.</p>
+  <p lang="zh">使用预计算 LUT（透射率、天空视图）渲染大气散射，指数高度雾与局部雾体积，通过 3D Froxel 纹理加时间累积计算体积雾，以及通过降低分辨率的光线步进再上采样渲染体积云。</p>
+
+  <!-- ══ Phase 09 ══ -->
+  <h3 id="p9"><span class="step">09</span><span lang="en">Translucency Rendering</span><span lang="zh">半透明渲染</span></h3>
+  <p class="phase-meta">line 3254&ndash;3332 <span class="tag tag-gpu">GPU</span></p>
+  <p lang="en">Translucent objects cannot use the deferred path (they don't write to the GBuffer) and must be rendered with forward shading, sorted back-to-front. This stage handles standard translucency, ray-traced translucency, refraction distortion, OIT triangle sorting, hair strand composition, and light shaft bloom. Separate translucency can render at reduced resolution and be upscaled to save cost.</p>
+  <p lang="zh">半透明物体无法使用延迟路径（它们不写入 GBuffer），必须用前向着色从后到前排序渲染。此阶段处理标准半透明、光追半透明、折射扭曲、OIT 三角形排序、头发合成和光轴 Bloom。独立半透明可以降低分辨率渲染后上采样以节省开销。</p>
+
+  <!-- ══ Phase 10 ══ -->
+  <h3 id="p10"><span class="step">10</span><span lang="en">Path Tracing (Optional)</span><span lang="zh">路径追踪（可选）</span></h3>
+  <p class="phase-meta">line 3394&ndash;3422 <span class="tag tag-opt">RHI_RAYTRACING</span></p>
+  <p lang="en">When enabled, <code>RenderPathTracing()</code> replaces the entire rasterization-based lighting pipeline with a reference-quality unbiased path tracer. It accumulates samples across frames until convergence, supporting full participation of atmosphere, volumetric clouds, and decals. Primarily used for offline cinematics and validation.</p>
+  <p lang="zh">启用时，<code>RenderPathTracing()</code> 用参考品质的无偏路径追踪器替代整个光栅化光照管线。跨帧累积样本直到收敛，支持大气、体积云和贴花的完整参与。主要用于离线动画和验证。</p>
+
+  <!-- ══ Phase 11 ══ -->
+  <h3 id="p11"><span class="step">11</span>Post Processing</h3>
+  <p class="phase-meta">line 3507&ndash;3596 <span class="tag tag-gpu">GPU</span></p>
+  <p lang="en">The final stage applies the full post-processing chain: <strong>TSR</strong> (Temporal Super Resolution &mdash; UE's in-house temporal upscaler that reconstructs a high-res image from lower-res input using motion vectors and history), Bloom, Lens Flare, Depth of Field, Motion Blur, Tonemapping with Color Grading LUT, and final output. TSR is distinct from TAA in that it explicitly targets super-resolution (e.g., rendering at 50% and reconstructing to 100%).</p>
+  <p lang="zh">最后阶段应用完整后处理链：<strong>TSR</strong>（Temporal Super Resolution——UE 自研时间超分辨率，利用运动向量和历史帧从低分辨率输入重建高分辨率图像）、Bloom、镜头光晕、景深、运动模糊、色调映射 + Color Grading LUT，以及最终输出。TSR 与 TAA 的区别在于它明确以超分辨率为目标（如以 50% 渲染重建到 100%）。</p>
+
+  <div class="warning">
+    <span lang="en"><strong>Important:</strong> Stages 00&ndash;11 describe the CPU-side RDG pass <em>registration</em> order, not actual GPU execution. The RDG compiler reorders, merges, and culls passes based on dependency analysis, and inserts Async Compute work into idle Graphics queue slots on supported hardware.</span>
+    <span lang="zh"><strong>重要：</strong>阶段 00&ndash;11 描述的是 CPU 端 RDG Pass 的<em>注册</em>顺序，而非实际 GPU 执行顺序。RDG 编译器根据依赖分析重排、合并和裁剪 Pass，并在支持的硬件上将异步计算工作插入图形队列的空闲槽位。</span>
+  </div>
+
+  <!-- ══ Section 4 ══ -->
+  <h2 id="s4"><span lang="en">Key Technologies</span><span lang="zh">关键技术一览</span></h2>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th><span lang="en">Technology</span><span lang="zh">技术</span></th>
+        <th><span lang="en">Files</span><span lang="zh">文件</span></th>
+        <th><span lang="en">Description</span><span lang="zh">说明</span></th>
+      </tr></thead>
+      <tbody>
+        <tr><td>Nanite</td><td><code>Nanite/</code></td><td><span lang="en">Virtual geometry; software+hardware rasterizer with cluster-level LOD</span><span lang="zh">虚拟几何；软硬件双路光栅器，Cluster 级 LOD</span></td></tr>
+        <tr><td>Virtual Shadow Maps</td><td><code>VirtualShadowMaps/</code></td><td><span lang="en">128K&sup2; virtual atlas with on-demand page allocation</span><span lang="zh">128K&sup2; 虚拟图集，按需页面分配</span></td></tr>
+        <tr><td>Lumen</td><td><code>Lumen/</code></td><td><span lang="en">Dynamic GI via Mesh SDF + Screen Probes + Radiance Cache</span><span lang="zh">动态 GI：Mesh SDF + Screen Probe + Radiance Cache</span></td></tr>
+        <tr><td>Substrate</td><td><code>Substrate/</code></td><td><span lang="en">Layered material system replacing ShadingModel enum</span><span lang="zh">分层材质系统，替代 ShadingModel 枚举</span></td></tr>
+        <tr><td>Clustered Deferred</td><td><code>ClusteredDeferredShadingPass.cpp</code></td><td><span lang="en">Froxel-based batched multi-light shading</span><span lang="zh">基于 Froxel 的批量多光源着色</span></td></tr>
+        <tr><td>MegaLights</td><td><code>MegaLights/</code></td><td><span lang="en">Stochastic sampling + temporal denoising for 10K+ lights</span><span lang="zh">随机采样 + 时间降噪，处理万级光源</span></td></tr>
+        <tr><td>RDG</td><td><code>RenderGraphUtils.h</code></td><td><span lang="en">Lazy pass registration; auto barriers and resource lifetimes</span><span lang="zh">惰性 Pass 注册；自动屏障与资源生命周期</span></td></tr>
+        <tr><td>GPUScene</td><td><code>GPUScene.cpp/h</code></td><td><span lang="en">GPU-side structured buffer for GPU-driven instance culling</span><span lang="zh">GPU 端结构化缓冲，支持 GPU 驱动实例裁剪</span></td></tr>
+        <tr><td>TSR</td><td><code>PostProcess/TemporalAA.cpp</code></td><td><span lang="en">UE's temporal super-resolution upscaler</span><span lang="zh">UE 自研时间超分辨率</span></td></tr>
+        <tr><td>HairStrands</td><td><code>HairStrands/</code></td><td><span lang="en">Strand-based hair with Visibility Buffer</span><span lang="zh">基于发丝的毛发渲染，Visibility Buffer</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ══ Section 5 ══ -->
+  <h2 id="s5"><span lang="en">Source Navigation</span><span lang="zh">源码导航</span></h2>
+
+  <p lang="en">Key entry points relative to <code>Engine/Source/Runtime/Renderer/Private/</code>. Use Ctrl+Shift+T in Visual Studio or Rider to jump directly.</p>
+  <p lang="zh">关键入口，路径相对于 <code>Engine/Source/Runtime/Renderer/Private/</code>。在 Visual Studio 或 Rider 中用 Ctrl+Shift+T 直接跳转。</p>
+
+  <ul class="file-list">
+    <li><span class="fp">DeferredShadingRenderer.cpp:1442</span><span class="fd"><span lang="en">Render() &mdash; per-frame entry</span><span lang="zh">Render() &mdash; 每帧入口</span></span></li>
+    <li><span class="fp">DeferredShadingRenderer.cpp:1125</span><span class="fd"><span lang="en">CommitFinalPipelineState()</span><span lang="zh">CommitFinalPipelineState()</span></span></li>
+    <li><span class="fp">DeferredShadingRenderer.cpp:2599</span><span class="fd"><span lang="en">RenderBasePass() call site</span><span lang="zh">RenderBasePass() 调用点</span></span></li>
+    <li><span class="fp">DeferredShadingRenderer.cpp:2899</span><span class="fd"><span lang="en">Deferred lighting block</span><span lang="zh">延迟光照块</span></span></li>
+    <li><span class="fp">DeferredShadingRenderer.cpp:3507</span><span class="fd"><span lang="en">Post processing entry</span><span lang="zh">后处理入口</span></span></li>
+    <li><span class="fp">BasePassRendering.cpp</span><span class="fd"><span lang="en">GBuffer write / material binding</span><span lang="zh">GBuffer 写入 / 材质绑定</span></span></li>
+    <li><span class="fp">LightRendering.cpp</span><span class="fd"><span lang="en">Per-light rendering + shadow projection</span><span lang="zh">逐灯渲染 + 阴影投影</span></span></li>
+    <li><span class="fp">Lumen/LumenScreenProbeGather.cpp</span><span class="fd"><span lang="en">Lumen GI core</span><span lang="zh">Lumen GI 核心</span></span></li>
+    <li><span class="fp">Nanite/NaniteRasterizer.cpp</span><span class="fd"><span lang="en">Nanite rasterization</span><span lang="zh">Nanite 光栅化</span></span></li>
+    <li><span class="fp">VolumetricFog.cpp</span><span class="fd"><span lang="en">Froxel volumetric fog</span><span lang="zh">Froxel 体积雾</span></span></li>
+    <li><span class="fp">MegaLights/MegaLights.cpp</span><span class="fd"><span lang="en">MegaLights stochastic sampling</span><span lang="zh">MegaLights 随机采样</span></span></li>
+    <li><span class="fp">GPUScene.cpp</span><span class="fd"><span lang="en">GPU-driven instance culling</span><span lang="zh">GPU 驱动实例裁剪</span></span></li>
+  </ul>
+
+  <footer>
+    Unreal Engine 5.6 &middot; Engine/Source/Runtime/Renderer/Private/DeferredShadingRenderer.cpp<br>
+    Source analysis &middot; For learning purposes
+  </footer>
+
+</main>
+</div><!-- /#wrapper -->
+
+<script>
+function toggleLang() {
+  var html = document.documentElement;
+  if (html.classList.contains('lang-zh')) {
+    html.classList.remove('lang-zh');
+    html.lang = 'en';
+    document.title = 'Deferred Rendering Pipeline';
+    localStorage.setItem('ue-doc-lang', 'en');
+  } else {
+    html.classList.add('lang-zh');
+    html.lang = 'zh-CN';
+    document.title = 'UE 5.6 延迟渲染管线全景解析';
+    localStorage.setItem('ue-doc-lang', 'zh');
+  }
+}
+if (document.documentElement.classList.contains('lang-zh')) {
+  document.title = 'UE 5.6 延迟渲染管线全景解析';
+}
+</script>
+</body>
+</html>

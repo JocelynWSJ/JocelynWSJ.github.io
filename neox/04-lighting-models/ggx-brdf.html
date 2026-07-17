@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GGX BRDF — NeoX Engine</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Gudea">
+  <script>(function(){if(localStorage.getItem('neox-doc-lang')==='zh'){document.documentElement.classList.add('lang-zh');document.documentElement.lang='zh-CN';}})();</script>
+  <style>
+    html:not(.lang-zh) [lang="zh"]{display:none;} html.lang-zh [lang="en"]{display:none;}
+    #lang-btn{position:fixed;top:16px;right:20px;z-index:999;background:#37425d;color:#fff;border:none;border-radius:4px;padding:5px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:Gudea,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.2);transition:background .15s;} #lang-btn:hover{background:#4a5a7a;}
+    *{box-sizing:border-box;margin:0;padding:0;} body{font-family:Gudea,sans-serif;font-size:16px;line-height:1.8;color:#111;background:#eee;}
+    #wrapper{max-width:1100px;margin:0 auto;display:flex;align-items:flex-start;padding:40px 24px;gap:36px;}
+    #sidebar{width:240px;flex-shrink:0;font-size:13px;} #content{flex:1;min-width:0;}
+    #series-nav{margin-bottom:24px;} #series-nav ol,#series-nav li{list-style:none;padding-left:0;}
+    .snav-label{font-size:11px;font-weight:800;color:#2d6a5a;text-transform:uppercase;letter-spacing:.14em;display:block;margin-bottom:10px;padding-bottom:4px;border-bottom:2px solid #2d6a5a;}
+    #series-nav > ol{list-style:none;padding:0;margin:0;} .snav-ch{margin-bottom:10px;}
+    .snav-ch > span{font-size:11px;font-weight:800;letter-spacing:.06em;color:#fff;background:#3d8070;display:block;padding:3px 7px 3px 6px;border-radius:3px;margin-bottom:3px;text-transform:uppercase;}
+    .snav-ch > ol{padding-left:0;margin-top:0;} .snav-item{margin-bottom:1px;}
+    .snav-item a{font-size:13.5px;color:#666;text-decoration:none;display:block;padding:3px 6px;border-left:3px solid transparent;border-radius:0 3px 3px 0;transition:color .12s,background .12s,border-color .12s;}
+    .snav-item a:hover{color:#2d6a5a;background:#edf5f3;border-left-color:#a8d4c8;}
+    .snav-item.active a{color:#2d6a5a;font-weight:700;background:#e2f0ec;border-left-color:#2d6a5a;}
+    #sidebar > h2{font-size:10.5px;font-style:italic;font-weight:400;color:#b0b0b0;margin-bottom:8px;border:none;padding:0;margin-top:20px;padding-top:16px;border-top:1px dashed #ddd;}
+    #sidebar > ol{list-style:none !important;padding:0;margin:0;} #sidebar > ol > li{list-style:none !important;margin-bottom:5px;}
+    #sidebar > ol > li a{color:#666;text-decoration:none;display:block;padding:1px 0;font-size:12px;transition:color .12s;} #sidebar > ol > li a:hover{color:#58A;}
+    .page-header{margin-bottom:32px;padding-bottom:20px;border-bottom:1px solid #ddd;}
+    .page-header .crumb{font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
+    .page-header h1{font-size:1.8rem;font-weight:900;color:#303236;margin-bottom:8px;line-height:1.25;}
+    .page-header .subtitle{font-family:'Courier New',monospace;font-size:13px;color:#777;}
+    h2{color:#37425d;font-size:22px;margin:36px 0 10px;} h3{color:#633739;font-size:17px;margin:24px 0 8px;}
+    p{margin-bottom:14px;} a{color:#58A;text-decoration:none;} a:hover{text-decoration:underline;} strong{color:#222;}
+    .fun{font-family:'Courier New',monospace;color:#2a6496;} .def{color:green;font-weight:600;}
+    code{font-family:'Courier New',monospace;font-size:14px;background:#ddd;border-radius:3px;padding:1px 5px;}
+    pre{background:#282c34;color:#abb2bf;border-radius:5px;padding:16px 18px;overflow-x:auto;margin:14px 0 18px;font-family:'Courier New',monospace;font-size:14px;line-height:1.6;}
+    pre code{background:none;padding:0;color:inherit;}
+    .kw{color:#c678dd;} .fn{color:#61afef;} .cm{color:#5c6370;font-style:italic;} .str{color:#98c379;} .num{color:#d19a66;} .type{color:#e5c07b;}
+    .note{display:block;margin:18px 0;padding:15px;background:#D8F5D8;color:#444;border-radius:5px;border:2px solid #AFDFAF;font-size:15px;line-height:1.7;}
+    .warning{display:block;margin:18px 0;padding:15px;background:#FFD2D2;color:#444;border-radius:5px;border:2px solid #E0B3B3;font-size:15px;line-height:1.7;}
+    ul,ol{padding-left:22px;margin-bottom:14px;} li{margin-bottom:5px;}
+    .table-wrap{overflow-x:auto;margin:14px 0;} table{border-collapse:collapse;font-size:14px;width:100%;}
+    th,td{padding:8px 12px;border-bottom:1px solid #aaa;text-align:left;} th{border-bottom:2px solid #888;font-weight:700;background:#ddd;} tr:nth-child(even) td{background:#e8e8e8;}
+    td:first-child{font-family:'Courier New',monospace;font-size:13px;color:#2a6496;white-space:nowrap;}
+    .arch-diagram{background:#fff;border:1px solid #ccc;border-radius:5px;padding:22px;margin:16px 0;font-family:'Courier New',monospace;font-size:13px;line-height:1.9;overflow-x:auto;}
+    .page-nav{display:flex;justify-content:space-between;margin:36px 0 0;padding-top:16px;border-top:1px solid #ddd;font-size:14px;}
+    .page-nav a{color:#58A;text-decoration:none;display:flex;align-items:center;gap:6px;} .page-nav a:hover{text-decoration:underline;}
+    .page-nav .pn-label{font-size:11px;color:#aaa;text-transform:uppercase;display:block;} .page-nav .pn-title{display:block;} .page-nav .prev{text-align:left;} .page-nav .next{text-align:right;}
+    footer{margin-top:48px;padding-top:16px;border-top:1px solid #ccc;font-size:12px;color:#aaa;text-align:center;}
+    @media(max-width:800px){#wrapper{flex-direction:column;padding:20px 16px;}#sidebar{width:100%;}}
+  </style>
+</head>
+<body>
+<button id="lang-btn" onclick="toggleLang()"><span lang="en">中文</span><span lang="zh">English</span></button>
+<div id="wrapper">
+<nav id="sidebar">
+  <div id="series-nav">
+    <span class="snav-label"><span lang="en">Series</span><span lang="zh">系列</span></span>
+    <ol>
+      <li class="snav-ch"><span lang="en">00 Introduction</span><span lang="zh">00 简介</span><ol><li class="snav-item"><a href="../00-introduction/introduction.html"><span lang="en">Introduction</span><span lang="zh">简介</span></a></li></ol></li>
+      <li class="snav-ch"><span lang="en">01 Shader System</span><span lang="zh">01 Shader 系统</span><ol><li class="snav-item"><a href="../01-shader-system/nfx-surf.html"><span lang="en">NFX & SURF Format</span><span lang="zh">NFX & SURF 格式</span></a></li><li class="snav-item"><a href="../01-shader-system/hlsl-dialect.html"><span lang="en">NeoX HLSL Dialect</span><span lang="zh">NeoX HLSL 方言</span></a></li></ol></li>
+      <li class="snav-ch"><span lang="en">02 Rendering Pipeline</span><span lang="zh">02 渲染管线</span><ol><li class="snav-item"><a href="../02-rendering-pipeline/forward-shading.html"><span lang="en">Forward Shading</span><span lang="zh">前向渲染</span></a></li><li class="snav-item"><a href="../02-rendering-pipeline/deferred-shading.html"><span lang="en">Deferred Shading</span><span lang="zh">延迟渲染</span></a></li></ol></li>
+      <li class="snav-ch"><span lang="en">03 Material System</span><span lang="zh">03 材质系统</span><ol><li class="snav-item"><a href="../03-material-system/pbr-material.html"><span lang="en">PBR Material</span><span lang="zh">PBR 材质</span></a></li><li class="snav-item"><a href="../03-material-system/multi-layered-pbr.html"><span lang="en">Multi-Layered PBR</span><span lang="zh">多层 PBR</span></a></li></ol></li>
+      <li class="snav-ch"><span lang="en">04 Lighting Models</span><span lang="zh">04 光照模型</span><ol><li class="snav-item active"><a href="../04-lighting-models/ggx-brdf.html"><span lang="en">GGX BRDF</span><span lang="zh">GGX BRDF</span></a></li><li class="snav-item"><a href="../04-lighting-models/shading-models.html"><span lang="en">13 Shading Models</span><span lang="zh">13 种光照模型</span></a></li></ol></li>
+      <li class="snav-ch"><span lang="en">05 Post Processing</span><span lang="zh">05 后处理</span><ol><li class="snav-item"><a href="../05-post-processing/post-effects.html"><span lang="en">Post Effects Overview</span><span lang="zh">后处理全景</span></a></li></ol></li>
+    </ol>
+  </div>
+  <h2><span lang="en">Contents</span><span lang="zh">目录</span></h2>
+  <ol>
+    <li><a href="#s1"><span lang="en">Microfacet Theory</span><span lang="zh">微表面理论</span></a></li>
+    <li><a href="#s2"><span lang="en">D: Normal Distribution</span><span lang="zh">D: 法线分布函数</span></a></li>
+    <li><a href="#s3"><span lang="en">F: Fresnel</span><span lang="zh">F: 菲涅尔</span></a></li>
+    <li><a href="#s4"><span lang="en">G: Geometry / Visibility</span><span lang="zh">G: 几何/可见性</span></a></li>
+    <li><a href="#s5"><span lang="en">Anisotropic GGX</span><span lang="zh">各向异性 GGX</span></a></li>
+    <li><a href="#s6"><span lang="en">Environment BRDF</span><span lang="zh">环境 BRDF</span></a></li>
+    <li><a href="#s7"><span lang="en">Full Specular Assembly</span><span lang="zh">完整高光组装</span></a></li>
+  </ol>
+</nav>
+
+<main id="content">
+  <div class="page-header">
+    <div class="crumb">NeoX Engine &middot; Lighting Models &middot; GGX BRDF</div>
+    <h1><span lang="en">GGX BRDF Implementation</span><span lang="zh">GGX BRDF 实现</span></h1>
+    <div class="subtitle">res/shader/built_in/brdf/ggx/brdf.hlsl &middot; 122 lines</div>
+  </div>
+
+  <!-- s1 -->
+  <h2 id="s1"><span lang="en">Microfacet Theory — The Cook-Torrance Model</span><span lang="zh">微表面理论 — Cook-Torrance 模型</span></h2>
+
+  <p lang="en">NeoX uses the standard <span class="def">Cook-Torrance microfacet specular BRDF</span>, the same family used by UE5, Frostbite, and most modern PBR engines. The specular term is:</p>
+  <p lang="zh">NeoX 使用标准的 <span class="def">Cook-Torrance 微表面镜面 BRDF</span>，与 UE5、Frostbite 和大多数现代 PBR 引擎同族。高光项为：</p>
+
+  <div class="arch-diagram">
+                    D(h) * F(v,h) * G(l,v,h)
+  f_specular = ─────────────────────────────────
+                    4 * (N·L) * (N·V)
+
+  Where:
+    D(h) = Normal Distribution Function   → how many microfacets align with H
+    F    = Fresnel reflectance             → angle-dependent reflectivity
+    G    = Geometry / Visibility term      → self-shadowing between microfacets
+    H    = half-vector = normalize(L + V)
+    N·L  = clamped dot(normal, light_dir)
+    N·V  = clamped dot(normal, view_dir)</div>
+
+  <!-- s2 -->
+  <h2 id="s2"><span lang="en">D: GGX Normal Distribution Function</span><span lang="zh">D: GGX 法线分布函数</span></h2>
+
+  <p lang="en">The <span class="fun">D_GGX</span> function (Trowbridge-Reitz distribution) determines what fraction of microfacets are oriented to reflect light toward the viewer. Higher roughness = wider distribution = blurrier highlights.</p>
+  <p lang="zh"><span class="fun">D_GGX</span> 函数（Trowbridge-Reitz 分布）决定有多少微表面朝向将光线反射到观察者的方向。粗糙度越高 = 分布越宽 = 高光越模糊。</p>
+
+  <pre><span class="cm">// [Walter et al. 2007, "Microfacet models for refraction through rough surfaces"]</span>
+<span class="kw">float</span> <span class="fn">D_GGX</span>(<span class="kw">float</span> a2, <span class="kw">float</span> NoH) {
+  NoH = <span class="fn">min</span>(<span class="num">0.999</span>, NoH);                      <span class="cm">// prevent singularity at NoH=1</span>
+  <span class="kw">float</span> d = (NoH * a2 - NoH) * NoH + <span class="num">1</span>;       <span class="cm">// 2 mad</span>
+  <span class="kw">return</span> a2 / (PI * d * d);                    <span class="cm">// 4 mul, 1 rcp</span>
+}
+
+<span class="cm">// Optimized version with pre-squared roughness (used in isotropy.hlsl)</span>
+<span class="kw">float</span> <span class="fn">GGXTerm_ApproxWithPrecomputedVar</span>(<span class="kw">float</span> NdotH, <span class="kw">float</span> roughness_pow2) {
+  <span class="kw">float</span> a = roughness_pow2 * roughness_pow2;   <span class="cm">// a = roughness^4</span>
+  NdotH = <span class="fn">min</span>(<span class="num">0.9999</span>, NdotH);
+  <span class="kw">float</span> d = (NdotH * a - NdotH) * NdotH + <span class="num">1.0</span>;
+  <span class="kw">return</span> a * <span class="fn">rcp</span>(<span class="fn">max</span>(PI * d * d, FLT_MIN));
+}</pre>
+
+  <div class="warning">
+    <span lang="en"><strong>Precision note:</strong> The source code comments warn that when roughness is very small and NoH approaches 1, consecutive squaring can produce precision loss leading to division by near-zero. The <code>min(0.9999, NdotH)</code> clamp prevents this.</span>
+    <span lang="zh"><strong>精度注意：</strong>源码注释警告当粗糙度很小且 NoH 接近 1 时，连续平方可能产生精度损失导致接近零除法。<code>min(0.9999, NdotH)</code> 截断防止了这个问题。</span>
+  </div>
+
+  <!-- s3 -->
+  <h2 id="s3"><span lang="en">F: Schlick Fresnel Approximation</span><span lang="zh">F: Schlick 菲涅尔近似</span></h2>
+
+  <p lang="en">The Fresnel term determines how much light is reflected vs transmitted at different viewing angles. At grazing angles, all surfaces become highly reflective.</p>
+  <p lang="zh">菲涅尔项决定在不同观察角度下有多少光被反射而非透射。在掠射角度，所有表面都会变得高度反射。</p>
+
+  <pre><span class="kw">float3</span> <span class="fn">F_Schlick</span>(<span class="kw">float3</span> SpecularColor, <span class="kw">float</span> VoH) {
+  <span class="kw">float</span> Fc = <span class="fn">Pow5</span>(<span class="num">1</span> - VoH);                    <span class="cm">// (1-cosθ)^5</span>
+  <span class="cm">// 2% minimum: anything below is physically impossible (shadowing)</span>
+  <span class="kw">return</span> <span class="fn">saturate</span>(<span class="num">50.0</span> * SpecularColor.g) * Fc
+       + (<span class="num">1</span> - Fc) * SpecularColor;
+}</pre>
+
+  <div class="note">
+    <span lang="en"><strong>The "50x green" trick:</strong> The <code>saturate(50.0 * SpecularColor.g)</code> factor ensures that even very dark specular colors (e.g. 0.02 F0 for dielectrics) still produce visible Fresnel at grazing angles. This is the same technique used by UE4/5, taken from Lazarov 2013.</span>
+    <span lang="zh"><strong>"50 倍绿色"技巧：</strong><code>saturate(50.0 * SpecularColor.g)</code> 因子确保即使非常暗的高光颜色（如电介质 0.02 F0）在掠射角度仍能产生可见菲涅尔。这与 UE4/5 使用的技术相同，来自 Lazarov 2013。</span>
+  </div>
+
+  <!-- s4 -->
+  <h2 id="s4"><span lang="en">G: Smith Joint GGX Visibility</span><span lang="zh">G: Smith 联合 GGX 可见性</span></h2>
+
+  <p lang="en">The geometry/visibility term accounts for microfacets blocking each other (masking and shadowing). NeoX implements the height-correlated Smith approximation:</p>
+  <p lang="zh">几何/可见性项考虑微表面相互遮挡（遮蔽和阴影）。NeoX 实现了高度相关 Smith 近似：</p>
+
+  <pre><span class="kw">float</span> <span class="fn">SmithJointGGXVisibilityTerm</span>(<span class="kw">float</span> NdotL, <span class="kw">float</span> NdotV, <span class="kw">float</span> roughness_pow2) {
+  <span class="kw">float</span> a = roughness_pow2;
+  <span class="kw">float</span> lambdaV = NdotL * (NdotV * (<span class="num">1</span> - a) + a);
+  <span class="kw">float</span> lambdaL = NdotV * (NdotL * (<span class="num">1</span> - a) + a);
+  <span class="kw">return</span> <span class="num">0.5</span> * <span class="fn">rcp</span>(<span class="fn">max</span>(lambdaV + lambdaL, FLT_MIN));
+}
+
+<span class="cm">// Alternative: Schlick approximation (used for anisotropy)</span>
+<span class="kw">float</span> <span class="fn">Vis_Schlick</span>(<span class="kw">float</span> Roughness_pow2, <span class="kw">float</span> NoV, <span class="kw">float</span> NoL) {
+  <span class="kw">float</span> k = Roughness_pow2 * <span class="num">0.5</span>;
+  <span class="kw">float</span> Vis_SchlickV = NoV * (<span class="num">1</span> - k) + k;
+  <span class="kw">float</span> Vis_SchlickL = NoL * (<span class="num">1</span> - k) + k;
+  <span class="kw">return</span> <span class="num">0.25</span> / (Vis_SchlickV * Vis_SchlickL);
+}</pre>
+
+  <!-- s5 -->
+  <h2 id="s5"><span lang="en">Anisotropic GGX</span><span lang="zh">各向异性 GGX</span></h2>
+
+  <p lang="en">For brushed metal and hair, NeoX supports anisotropic specular via <span class="fun">D_GGXaniso</span> (Disney's Burley 2012 formulation):</p>
+  <p lang="zh">对于拉丝金属和头发，NeoX 通过 <span class="fun">D_GGXaniso</span> 支持各向异性高光（Disney Burley 2012 公式）：</p>
+
+  <pre><span class="cm">// [Burley 2012, "Physically-Based Shading at Disney"]</span>
+<span class="kw">float</span> <span class="fn">D_GGXaniso</span>(<span class="kw">float</span> RoughnessX, <span class="kw">float</span> RoughnessY,
+                 <span class="kw">float</span> NoH, <span class="kw">float3</span> H, <span class="kw">float3</span> X, <span class="kw">float3</span> Y) {
+  <span class="kw">float</span> mx = RoughnessX * RoughnessX;
+  <span class="kw">float</span> my = RoughnessY * RoughnessY;
+  <span class="kw">float</span> XoH = <span class="fn">dot</span>(X, H);
+  <span class="kw">float</span> YoH = <span class="fn">dot</span>(Y, H);
+  <span class="kw">float</span> d = XoH*XoH / (mx*mx) + YoH*YoH / (my*my) + NoH*NoH;
+  <span class="kw">return</span> <span class="num">1</span> / (mx * my * d * d);
+}</pre>
+
+  <!-- s6 -->
+  <h2 id="s6"><span lang="en">Environment BRDF — Split-Sum Approximation</span><span lang="zh">环境 BRDF — 分离求和近似</span></h2>
+
+  <p lang="en">For IBL (Image-Based Lighting), evaluating the full integral is too expensive. NeoX uses the <span class="fun">EnvBRDFApprox</span> from Lazarov 2013 (same as UE4's original implementation):</p>
+  <p lang="zh">对于 IBL（基于图像的光照），计算完整积分太昂贵。NeoX 使用来自 Lazarov 2013 的 <span class="fun">EnvBRDFApprox</span>（与 UE4 原始实现相同）：</p>
+
+  <pre><span class="cm">// [Lazarov 2013, "Getting More Physical in Call of Duty: Black Ops II"]</span>
+<span class="kw">float3</span> <span class="fn">EnvBRDFApprox</span>(<span class="kw">float3</span> SpecularColor, <span class="kw">float</span> Roughness, <span class="kw">float</span> NoV) {
+  <span class="kw">const float4</span> c0 = { -<span class="num">1</span>, -<span class="num">0.0275</span>, -<span class="num">0.572</span>, <span class="num">0.022</span> };
+  <span class="kw">const float4</span> c1 = {  <span class="num">1</span>,  <span class="num">0.0425</span>,  <span class="num">1.04</span>, -<span class="num">0.04</span> };
+  <span class="kw">float4</span> r = Roughness * c0 + c1;
+  <span class="kw">float</span> a004 = <span class="fn">min</span>(r.x * r.x, <span class="fn">exp2</span>(-<span class="num">9.28</span> * NoV)) * r.x + r.y;
+  <span class="kw">float2</span> AB = <span class="kw">float2</span>(-<span class="num">1.04</span>, <span class="num">1.04</span>) * a004 + r.zw;
+  <span class="kw">return</span> SpecularColor * AB.x + AB.y;
+}</pre>
+
+  <!-- s7 -->
+  <h2 id="s7"><span lang="en">Full Specular Assembly — How It All Connects</span><span lang="zh">完整高光组装 — 如何组合</span></h2>
+
+  <p lang="en">In the <code>isotropy.hlsl</code> shading model, the final specular term is assembled from D, G, and the Fresnel applied outside:</p>
+  <p lang="zh">在 <code>isotropy.hlsl</code> 着色模型中，最终高光项由 D、G 和外部应用的菲涅尔组装：</p>
+
+  <pre><span class="cm">// From isotropy.hlsl → LightingSpecular()</span>
+<span class="kw">float3</span> <span class="fn">LightingSpecular</span>(...) {
+  <span class="kw">return</span> <span class="fn">max</span>(<span class="num">0.0</span>,
+    <span class="fn">SmithJointGGXVisibilityTerm</span>(n_dot_l, n_dot_v_abs, roughness_pow2)  <span class="cm">// G term</span>
+    * <span class="fn">GGXTerm_ApproxWithPrecomputedVar</span>(n_dot_h, roughness_pow2)        <span class="cm">// D term</span>
+    * n_dot_l                                                          <span class="cm">// N·L</span>
+  );
+}
+
+<span class="cm">// Called from DirectLighting():</span>
+light_specular = <span class="fn">LightingSpecular</span>(...) * data_rw.fresnel * data_rw.atten;
+<span class="cm">//                                       ↑ F_Schlick      ↑ shadow*light</span></pre>
+
+  <div class="arch-diagram">
+Final Specular Per Light = D * G * N·L * F * attenuation * light_color
+
+  D = GGXTerm_ApproxWithPrecomputedVar(NdotH, roughness²)
+  G = SmithJointGGXVisibilityTerm(NdotL, NdotV, roughness²)
+  F = F_Schlick(specularColor, VdotH)
+
+  Note: The "/ 4*NdotL*NdotV" denominator from Cook-Torrance
+  is already folded into the SmithJoint visibility term (the 0.5/rcp).
+  The extra NdotL in LightingSpecular cancels with the one in the denominator.</div>
+
+  <div class="page-nav">
+    <a href="../02-rendering-pipeline/deferred-shading.html" class="prev"><span class="pn-label">&larr; Prev</span><span class="pn-title"><span lang="en">Deferred Shading</span><span lang="zh">延迟渲染</span></span></a>
+    <a href="../04-lighting-models/shading-models.html" class="next"><span class="pn-label">Next &rarr;</span><span class="pn-title"><span lang="en">13 Shading Models</span><span lang="zh">13 种光照模型</span></span></a>
+  </div>
+  <footer>NeoX Engine &middot; GGX BRDF<br>Source: built_in/brdf/ggx/brdf.hlsl (122 lines)</footer>
+</main>
+</div>
+<script>
+function toggleLang(){var h=document.documentElement;if(h.classList.contains('lang-zh')){h.classList.remove('lang-zh');h.lang='en';document.title='GGX BRDF — NeoX Engine';localStorage.setItem('neox-doc-lang','en');}else{h.classList.add('lang-zh');h.lang='zh-CN';document.title='GGX BRDF 实现 — NeoX 引擎';localStorage.setItem('neox-doc-lang','zh');}}
+if(document.documentElement.classList.contains('lang-zh'))document.title='GGX BRDF 实现 — NeoX 引擎';
+</script>
+</body>
+</html>

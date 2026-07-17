@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Forward Shading — NeoX Engine</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Gudea">
+  <script>(function(){if(localStorage.getItem('neox-doc-lang')==='zh'){document.documentElement.classList.add('lang-zh');document.documentElement.lang='zh-CN';}})();</script>
+  <style>
+    html:not(.lang-zh) [lang="zh"]{display:none;} html.lang-zh [lang="en"]{display:none;}
+    #lang-btn{position:fixed;top:16px;right:20px;z-index:999;background:#37425d;color:#fff;border:none;border-radius:4px;padding:5px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:Gudea,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.2);transition:background .15s;} #lang-btn:hover{background:#4a5a7a;}
+    *{box-sizing:border-box;margin:0;padding:0;} body{font-family:Gudea,sans-serif;font-size:16px;line-height:1.8;color:#111;background:#eee;}
+    #wrapper{max-width:1100px;margin:0 auto;display:flex;align-items:flex-start;padding:40px 24px;gap:36px;}
+    #sidebar{width:240px;flex-shrink:0;font-size:13px;} #content{flex:1;min-width:0;}
+    #series-nav{margin-bottom:24px;} #series-nav ol,#series-nav li{list-style:none;padding-left:0;}
+    .snav-label{font-size:11px;font-weight:800;color:#2d6a5a;text-transform:uppercase;letter-spacing:.14em;display:block;margin-bottom:10px;padding-bottom:4px;border-bottom:2px solid #2d6a5a;}
+    #series-nav > ol{list-style:none;padding:0;margin:0;} .snav-ch{margin-bottom:10px;}
+    .snav-ch > span{font-size:11px;font-weight:800;letter-spacing:.06em;color:#fff;background:#3d8070;display:block;padding:3px 7px 3px 6px;border-radius:3px;margin-bottom:3px;text-transform:uppercase;}
+    .snav-ch > ol{padding-left:0;margin-top:0;} .snav-item{margin-bottom:1px;}
+    .snav-item a{font-size:13.5px;color:#666;text-decoration:none;display:block;padding:3px 6px;border-left:3px solid transparent;border-radius:0 3px 3px 0;transition:color .12s,background .12s,border-color .12s;}
+    .snav-item a:hover{color:#2d6a5a;background:#edf5f3;border-left-color:#a8d4c8;}
+    .snav-item.active a{color:#2d6a5a;font-weight:700;background:#e2f0ec;border-left-color:#2d6a5a;}
+    #sidebar > h2{font-size:10.5px;font-style:italic;font-weight:400;color:#b0b0b0;margin-bottom:8px;border:none;padding:0;margin-top:20px;padding-top:16px;border-top:1px dashed #ddd;}
+    #sidebar > ol{list-style:none !important;padding:0;margin:0;} #sidebar > ol > li{list-style:none !important;margin-bottom:5px;}
+    #sidebar > ol > li a{color:#666;text-decoration:none;display:block;padding:1px 0;font-size:12px;transition:color .12s;} #sidebar > ol > li a:hover{color:#58A;}
+    .page-header{margin-bottom:32px;padding-bottom:20px;border-bottom:1px solid #ddd;}
+    .page-header .crumb{font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
+    .page-header h1{font-size:1.8rem;font-weight:900;color:#303236;margin-bottom:8px;line-height:1.25;}
+    .page-header .subtitle{font-family:'Courier New',monospace;font-size:13px;color:#777;}
+    h2{color:#37425d;font-size:22px;margin:36px 0 10px;} h3{color:#633739;font-size:17px;margin:24px 0 8px;}
+    p{margin-bottom:14px;} a{color:#58A;text-decoration:none;} a:hover{text-decoration:underline;} strong{color:#222;}
+    .fun{font-family:'Courier New',monospace;color:#2a6496;} .def{color:green;font-weight:600;}
+    code{font-family:'Courier New',monospace;font-size:14px;background:#ddd;border-radius:3px;padding:1px 5px;}
+    pre{background:#282c34;color:#abb2bf;border-radius:5px;padding:16px 18px;overflow-x:auto;margin:14px 0 18px;font-family:'Courier New',monospace;font-size:14px;line-height:1.6;}
+    pre code{background:none;padding:0;color:inherit;}
+    .kw{color:#c678dd;} .fn{color:#61afef;} .cm{color:#5c6370;font-style:italic;} .str{color:#98c379;} .num{color:#d19a66;} .type{color:#e5c07b;}
+    .note{display:block;margin:18px 0;padding:15px;background:#D8F5D8;color:#444;border-radius:5px;border:2px solid #AFDFAF;font-size:15px;line-height:1.7;}
+    .warning{display:block;margin:18px 0;padding:15px;background:#FFD2D2;color:#444;border-radius:5px;border:2px solid #E0B3B3;font-size:15px;line-height:1.7;}
+    ul,ol{padding-left:22px;margin-bottom:14px;} li{margin-bottom:5px;}
+    .step{display:inline-block;font-size:11px;font-weight:700;font-family:'Courier New',monospace;color:#fff;background:#2d6a5a;padding:2px 7px;border-radius:3px;margin-right:8px;vertical-align:middle;}
+    .table-wrap{overflow-x:auto;margin:14px 0;} table{border-collapse:collapse;font-size:14px;width:100%;}
+    th,td{padding:8px 12px;border-bottom:1px solid #aaa;text-align:left;} th{border-bottom:2px solid #888;font-weight:700;background:#ddd;} tr:nth-child(even) td{background:#e8e8e8;}
+    td:first-child{font-family:'Courier New',monospace;font-size:13px;color:#2a6496;white-space:nowrap;}
+    .arch-diagram{background:#fff;border:1px solid #ccc;border-radius:5px;padding:22px;margin:16px 0;font-family:'Courier New',monospace;font-size:13px;line-height:1.9;overflow-x:auto;}
+    .file-list{list-style:none;padding:0;margin:12px 0;} .file-list li{padding:6px 0;border-bottom:1px solid #e0dcdd;display:flex;align-items:baseline;gap:10px;font-size:14px;} .file-list li:last-child{border-bottom:none;}
+    .file-list .fp{font-family:'Courier New',monospace;font-size:13px;color:#58A;min-width:200px;} .file-list .fd{color:#555;}
+    .page-nav{display:flex;justify-content:space-between;margin:36px 0 0;padding-top:16px;border-top:1px solid #ddd;font-size:14px;}
+    .page-nav a{color:#58A;text-decoration:none;display:flex;align-items:center;gap:6px;} .page-nav a:hover{text-decoration:underline;}
+    .page-nav .pn-label{font-size:11px;color:#aaa;text-transform:uppercase;display:block;} .page-nav .pn-title{display:block;} .page-nav .prev{text-align:left;} .page-nav .next{text-align:right;}
+    footer{margin-top:48px;padding-top:16px;border-top:1px solid #ccc;font-size:12px;color:#aaa;text-align:center;}
+    @media(max-width:800px){#wrapper{flex-direction:column;padding:20px 16px;}#sidebar{width:100%;}}
+  </style>
+</head>
+<body>
+<button id="lang-btn" onclick="toggleLang()"><span lang="en">中文</span><span lang="zh">English</span></button>
+<div id="wrapper">
+<nav id="sidebar">
+  <div id="series-nav">
+    <span class="snav-label"><span lang="en">Series</span><span lang="zh">系列</span></span>
+    <ol>
+      <li class="snav-ch"><span lang="en">00 Introduction</span><span lang="zh">00 简介</span><ol><li class="snav-item"><a href="../00-introduction/introduction.html"><span lang="en">Introduction</span><span lang="zh">简介</span></a></li></ol></li>
+      <li class="snav-ch"><span lang="en">01 Shader System</span><span lang="zh">01 Shader 系统</span><ol><li class="snav-item"><a href="../01-shader-system/nfx-surf.html"><span lang="en">NFX & SURF Format</span><span lang="zh">NFX & SURF 格式</span></a></li><li class="snav-item"><a href="../01-shader-system/hlsl-dialect.html"><span lang="en">NeoX HLSL Dialect</span><span lang="zh">NeoX HLSL 方言</span></a></li></ol></li>
+      <li class="snav-ch"><span lang="en">02 Rendering Pipeline</span><span lang="zh">02 渲染管线</span><ol><li class="snav-item active"><a href="../02-rendering-pipeline/forward-shading.html"><span lang="en">Forward Shading</span><span lang="zh">前向渲染</span></a></li><li class="snav-item"><a href="../02-rendering-pipeline/deferred-shading.html"><span lang="en">Deferred Shading</span><span lang="zh">延迟渲染</span></a></li></ol></li>
+      <li class="snav-ch"><span lang="en">03 Material System</span><span lang="zh">03 材质系统</span><ol><li class="snav-item"><a href="../03-material-system/pbr-material.html"><span lang="en">PBR Material</span><span lang="zh">PBR 材质</span></a></li><li class="snav-item"><a href="../03-material-system/multi-layered-pbr.html"><span lang="en">Multi-Layered PBR</span><span lang="zh">多层 PBR</span></a></li></ol></li>
+      <li class="snav-ch"><span lang="en">04 Lighting Models</span><span lang="zh">04 光照模型</span><ol><li class="snav-item"><a href="../04-lighting-models/ggx-brdf.html"><span lang="en">GGX BRDF</span><span lang="zh">GGX BRDF</span></a></li><li class="snav-item"><a href="../04-lighting-models/shading-models.html"><span lang="en">13 Shading Models</span><span lang="zh">13 种光照模型</span></a></li></ol></li>
+      <li class="snav-ch"><span lang="en">05 Post Processing</span><span lang="zh">05 后处理</span><ol><li class="snav-item"><a href="../05-post-processing/post-effects.html"><span lang="en">Post Effects Overview</span><span lang="zh">后处理全景</span></a></li></ol></li>
+    </ol>
+  </div>
+  <h2><span lang="en">Contents</span><span lang="zh">目录</span></h2>
+  <ol>
+    <li><a href="#s1"><span lang="en">Pipeline Overview</span><span lang="zh">管线概览</span></a></li>
+    <li><a href="#s2"><span lang="en">Vertex Shader Stage</span><span lang="zh">顶点着色器阶段</span></a></li>
+    <li><a href="#s3"><span lang="en">Pixel Shader Stage</span><span lang="zh">像素着色器阶段</span></a></li>
+    <li><a href="#s4"><span lang="en">Lighting Loop</span><span lang="zh">光照循环</span></a></li>
+    <li><a href="#s5"><span lang="en">Special Modes</span><span lang="zh">特殊模式</span></a></li>
+    <li><a href="#s6"><span lang="en">Source Files</span><span lang="zh">源码文件</span></a></li>
+  </ol>
+</nav>
+
+<main id="content">
+  <div class="page-header">
+    <div class="crumb">NeoX Engine &middot; Rendering Pipeline &middot; Forward Shading</div>
+    <h1><span lang="en">Forward Shading Pipeline</span><span lang="zh">前向渲染管线</span></h1>
+    <div class="subtitle">res/shader/built_in/forward_shading.hlsl &middot; 285 lines</div>
+  </div>
+
+  <!-- s1 -->
+  <h2 id="s1"><span lang="en">Pipeline Overview</span><span lang="zh">管线概览</span></h2>
+
+  <p lang="en">NeoX's primary rendering path is <span class="def">forward shading</span> — every visible pixel evaluates its material and all affecting lights in a single pass. This is configured by <code>forward_shading.render</code> (the pipeline declaration XML).</p>
+  <p lang="zh">NeoX 的主要渲染路径是<span class="def">前向着色</span>——每个可见像素在单次 Pass 中计算其材质和所有影响光源。这由 <code>forward_shading.render</code>（管线声明 XML）配置。</p>
+
+  <div class="arch-diagram">
++=====================================================================+
+|              NeoX Forward Shading -- Single Pass Flow                |
++=====================================================================+
+|                                                                     |
+|  <span style="color:#61afef">vs_main()</span>                                                          |
+|  +-------------------------------------------------------------+   |
+|  |  01  TransformCommonVertex()     // model-&gt;world            |   |
+|  |  02  ApplyVertexOffsetLocal()    // vertex animation        |   |
+|  |  03  DoSkin()                    // GPU skinning (optional) |   |
+|  |  04  Transform(world_mat)        // world position          |   |
+|  |  05  SetupFragment()             // pack interpolants       |   |
+|  |  06  DepthBias / Skybox / Bake   // special modes           |   |
+|  +-------------------------------------------------------------+   |
+|                            v  rasterize                              |
+|  <span style="color:#61afef">ps_main()</span>                                                          |
+|  +-------------------------------------------------------------+   |
+|  |  07  GetRawData()                // sample all textures     |   |
+|  |  08  SetupMaterial()             // fill Material struct    |   |
+|  |  09  CalcLightingData()          // precompute NdotV etc.   |   |
+|  |  10  for each Light:                                        |   |
+|  |        +-- Shadow sampling                                  |   |
+|  |        +-- DirectLighting() -&gt; diffuse + specular           |   |
+|  |        +-- accumulate                                       |   |
+|  |  11  EnvLighting()               // SH + IBL reflection    |   |
+|  |  12  Apply fog, emissive, AO                                |   |
+|  |  13  Tone mapping (ACES)                                    |   |
+|  |  14  Output SV_Target0                                      |   |
+|  +-------------------------------------------------------------+   |
++=====================================================================+</div>
+
+  <!-- s2 -->
+  <h2 id="s2"><span lang="en">Vertex Shader Stage</span><span lang="zh">顶点着色器阶段</span></h2>
+
+  <p lang="en">The vertex shader performs geometry transformation with support for GPU skinning (up to 90 bones), vertex animation, and special projection modes:</p>
+  <p lang="zh">顶点着色器执行几何变换，支持 GPU 蒙皮（最多 90 根骨骼）、顶点动画和特殊投影模式：</p>
+
+  <h3><span class="step">01</span><span lang="en">Transform Chain</span><span lang="zh">变换链</span></h3>
+  <pre><span class="type">Fragment</span> <span class="fn">vs_main</span>(<span class="type">Vertex</span> input) {
+  <span class="type">CommonVertex</span> vert = <span class="fn">TransformCommonVertex</span>(input, vert_inter);
+  <span class="fn">ApplyVertexOffsetLocal</span>(vert, vert.position);  <span class="cm">// material-driven offset</span>
+
+  <span class="cm">#if GPU_SKIN_ENABLE</span>
+    <span class="fn">DoSkin</span>(vert.blendWeights, vert.blendIndices,
+           vert.position, vert.normal, vert.tangent);
+  <span class="cm">#endif</span>
+
+  <span class="kw">float4</span> world_position = <span class="fn">Transform</span>(vert.world_mat, vert.position);
+  <span class="fn">PresetupFragment</span>(...);
+  <span class="fn">ApplyVertexOffsetWorld</span>(...);  <span class="cm">// world-space WPO</span>
+  <span class="fn">SetupFragment</span>(...);           <span class="cm">// pack all interpolants</span>
+}</pre>
+
+  <h3><span class="step">02</span><span lang="en">Special Projection Modes</span><span lang="zh">特殊投影模式</span></h3>
+
+  <div class="table-wrap"><table>
+    <thead><tr><th><span lang="en">Mode</span><span lang="zh">模式</span></th><th><span lang="en">Macro</span><span lang="zh">宏</span></th><th><span lang="en">Use Case</span><span lang="zh">使用场景</span></th></tr></thead>
+    <tbody>
+      <tr><td>IS_PARABOLOID</td><td><code>#if IS_PARABOLOID</code></td><td><span lang="en">Dual-paraboloid shadow maps for omni lights</span><span lang="zh">全向光源双抛物面阴影贴图</span></td></tr>
+      <tr><td>IS_SKYBOX</td><td><code>#if IS_SKYBOX</code></td><td><span lang="en">Force depth to far plane (z = w*0.9999)</span><span lang="zh">强制深度到远平面</span></td></tr>
+      <tr><td>TEXTURE_BAKE</td><td><code>#if TEXTURE_BAKE</code></td><td><span lang="en">UV-space rendering for lightmap baking</span><span lang="zh">UV 空间渲染用于光照贴图烘焙</span></td></tr>
+      <tr><td>DEPTH_BIAS</td><td><code>#if DEPTH_BIAS</code></td><td><span lang="en">Manual depth offset (shadow bias)</span><span lang="zh">手动深度偏移（阴影偏差）</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <!-- s3 -->
+  <h2 id="s3"><span lang="en">Pixel Shader Stage</span><span lang="zh">像素着色器阶段</span></h2>
+
+  <p lang="en">The pixel shader is where all material evaluation and lighting happens. The flow follows a strict order:</p>
+  <p lang="zh">像素着色器是所有材质计算和光照发生的地方。流程遵循严格顺序：</p>
+
+  <pre><span class="kw">float4</span> <span class="fn">ps_main</span>(<span class="type">Fragment</span> input, <span class="kw">bool</span> is_front_face : SV_IsFrontFace) : SV_Target0 {
+  <span class="cm">// 1. Setup</span>
+  <span class="type">Material</span> mtl = (<span class="type">Material</span>)<span class="num">0</span>;
+  <span class="type">View</span> v;
+  v.position = CameraPosition;
+  v.direction = <span class="fn">normalize</span>(input.position_world - CameraPosition);
+  v.distance = <span class="fn">length</span>(input.position_world - CameraPosition);
+
+  <span class="cm">// 2. Material setup (calls into material_*.hlsl)</span>
+  <span class="type">RawData</span> raw_data = <span class="fn">GetRawData</span>(input);   <span class="cm">// texture sampling</span>
+  <span class="fn">SetupMaterial</span>(input, raw_data, mtl);    <span class="cm">// decode → Material struct</span>
+
+  <span class="cm">// 3. Lighting (calls into lighting.hlsl → shading model)</span>
+  <span class="type">LightingResult</span> result = <span class="fn">Lighting</span>(input, mtl, v);
+
+  <span class="cm">// 4. Compose final color</span>
+  <span class="kw">float3</span> color = result.direct_diff + result.direct_spec
+              + result.env_diff + result.env_spec
+              + mtl.emissive;
+
+  <span class="cm">// 5. Tone mapping</span>
+  color = <span class="fn">get_ACES_tone_mapping</span>(color);
+
+  <span class="kw">return float4</span>(color, opacity);
+}</pre>
+
+  <!-- s4 -->
+  <h2 id="s4"><span lang="en">Lighting Loop — How Lights Are Evaluated</span><span lang="zh">光照循环 — 光源如何计算</span></h2>
+
+  <p lang="en">Inside <code>lighting.hlsl</code> (1982 lines), the main lighting function iterates over all active lights. Each light goes through shadow evaluation, then calls the active shading model's <span class="fun">DirectLighting()</span>:</p>
+  <p lang="zh">在 <code>lighting.hlsl</code>（1982 行）中，主光照函数遍历所有活动光源。每个光源经过阴影计算，然后调用当前着色模型的 <span class="fun">DirectLighting()</span>：</p>
+
+  <div class="arch-diagram">
+Lighting(input, mtl, v)
+  |
+  +-- CalcLightingData(mtl, v, data_r)       // precompute NdotV, spec, diff
+  |
+  +-- for each Light[i]:
+  |     +-- compute n_dot_l
+  |     +-- if LightNotAffect(n_dot_l) --&gt; skip
+  |     +-- CalcLightingData(light, mtl, v, n_dot_l, data_r, data_rw)
+  |     +-- shadow = SampleShadowMap()       // CSM / paraboloid
+  |     +-- data_rw.atten = light.atten * shadow
+  |     +-- DirectLighting(input, mtl, data_r, data_rw,
+  |              --&gt; light_diffuse, light_specular, light_transmission)
+  |              +-- LightingDiffuse()       // model-specific
+  |              +-- LightingSpecular()      // GGX or model-specific
+  |
+  +-- EnvLighting(input, mtl, v, data_r, result)
+  |     +-- SH diffuse                      // spherical harmonics
+  |     +-- EnvironmentSpecular()           // reflection probe + IBL
+  |     +-- EnvBRDFApprox()                 // split-sum approximation
+  |
+  +-- return LightingResult { direct_diff, direct_spec, env_diff, env_spec }</div>
+
+  <div class="note">
+    <span lang="en"><strong>Key difference from UE5:</strong> NeoX evaluates ALL lights in a single shader invocation (classic forward). UE5's forward path uses Clustered Shading — a 3D froxel grid bins lights by tile, reducing per-pixel light iteration cost. NeoX relies on the engine to limit active light count per draw call.</span>
+    <span lang="zh"><strong>与 UE5 的关键差异：</strong>NeoX 在单次着色器调用中计算所有光源（经典前向）。UE5 的前向路径使用聚簇着色——3D Froxel 网格按 Tile 分箱光源，降低逐像素光源迭代开销。NeoX 依赖引擎限制每次绘制调用的活动光源数量。</span>
+  </div>
+
+  <!-- s5 -->
+  <h2 id="s5"><span lang="en">Special Modes</span><span lang="zh">特殊模式</span></h2>
+
+  <div class="table-wrap"><table>
+    <thead><tr><th><span lang="en">Mode</span><span lang="zh">模式</span></th><th><span lang="en">Macro</span><span lang="zh">宏</span></th><th><span lang="en">What it does</span><span lang="zh">功能</span></th></tr></thead>
+    <tbody>
+      <tr><td>SKIN4S_ENABLE</td><td><code>SKIN4S_SPECULARPASS</code></td><td><span lang="en">4-pass subsurface scattering (split diffuse/specular)</span><span lang="zh">4-Pass 次表面散射（分离漫反射/高光）</span></td></tr>
+      <tr><td>TOON_EFFECT</td><td><code>#if TOON_EFFECT</code></td><td><span lang="en">Toon shading via Lerp3 color ramp</span><span lang="zh">通过 Lerp3 色阶实现卡通着色</span></td></tr>
+      <tr><td>IMAGE_DECAL_ENABLE</td><td><code>#if IMAGE_DECAL_ENABLE</code></td><td><span lang="en">Apply projected image decals to GBuffer</span><span lang="zh">应用投影图片贴花到 GBuffer</span></td></tr>
+      <tr><td>DEBUG_DATA</td><td><code>#if DEBUG_DATA</code></td><td><span lang="en">Output material properties as color for debugging</span><span lang="zh">输出材质属性为颜色用于调试</span></td></tr>
+      <tr><td>RECORD_MODE</td><td><code>#if RECORD_MODE</code></td><td><span lang="en">Record rendering data for replay</span><span lang="zh">记录渲染数据用于回放</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <!-- s6 -->
+  <h2 id="s6"><span lang="en">Source Files</span><span lang="zh">源码文件</span></h2>
+
+  <ul class="file-list">
+    <li><span class="fp">built_in/forward_shading.hlsl</span><span class="fd"><span lang="en">Main forward shader (285 lines) — vs_main + ps_main</span><span lang="zh">主前向着色器（285 行）— vs_main + ps_main</span></span></li>
+    <li><span class="fp">built_in/forward_shading.render</span><span class="fd"><span lang="en">Pipeline declaration XML — all compositor definitions</span><span lang="zh">管线声明 XML — 所有合成器定义</span></span></li>
+    <li><span class="fp">built_in/common/lighting.hlsl</span><span class="fd"><span lang="en">Lighting core (1982 lines) — light loop + shading dispatch</span><span lang="zh">光照核心（1982 行）— 光源循环 + 着色分发</span></span></li>
+    <li><span class="fp">built_in/shadow/shadow.hlsl</span><span class="fd"><span lang="en">Shadow map sampling (CSM + paraboloid)</span><span lang="zh">阴影贴图采样（CSM + 抛物面）</span></span></li>
+    <li><span class="fp">built_in/common/decal.hlsl</span><span class="fd"><span lang="en">Deferred decal application</span><span lang="zh">延迟贴花应用</span></span></li>
+  </ul>
+
+  <div class="page-nav">
+    <a href="../01-shader-system/hlsl-dialect.html" class="prev"><span class="pn-label">&larr; Prev</span><span class="pn-title"><span lang="en">NeoX HLSL Dialect</span><span lang="zh">NeoX HLSL 方言</span></span></a>
+    <a href="../02-rendering-pipeline/deferred-shading.html" class="next"><span class="pn-label">Next &rarr;</span><span class="pn-title"><span lang="en">Deferred Shading</span><span lang="zh">延迟渲染</span></span></a>
+  </div>
+  <footer>NeoX Engine &middot; G86 Rendering Pipeline<br>Source: built_in/forward_shading.hlsl (285 lines)</footer>
+</main>
+</div>
+<script>
+function toggleLang(){var h=document.documentElement;if(h.classList.contains('lang-zh')){h.classList.remove('lang-zh');h.lang='en';document.title='Forward Shading — NeoX Engine';localStorage.setItem('neox-doc-lang','en');}else{h.classList.add('lang-zh');h.lang='zh-CN';document.title='前向渲染管线 — NeoX 引擎';localStorage.setItem('neox-doc-lang','zh');}}
+if(document.documentElement.classList.contains('lang-zh'))document.title='前向渲染管线 — NeoX 引擎';
+</script>
+</body>
+</html>

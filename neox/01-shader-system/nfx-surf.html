@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NFX & SURF Format — NeoX Engine</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Gudea">
+  <script>(function(){if(localStorage.getItem('neox-doc-lang')==='zh'){document.documentElement.classList.add('lang-zh');document.documentElement.lang='zh-CN';}})();</script>
+  <style>
+    html:not(.lang-zh) [lang="zh"]{display:none;} html.lang-zh [lang="en"]{display:none;}
+    #lang-btn{position:fixed;top:16px;right:20px;z-index:999;background:#37425d;color:#fff;border:none;border-radius:4px;padding:5px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:Gudea,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.2);transition:background .15s;} #lang-btn:hover{background:#4a5a7a;}
+    *{box-sizing:border-box;margin:0;padding:0;} body{font-family:Gudea,sans-serif;font-size:16px;line-height:1.8;color:#111;background:#eee;}
+    #wrapper{max-width:1100px;margin:0 auto;display:flex;align-items:flex-start;padding:40px 24px;gap:36px;}
+    #sidebar{width:240px;flex-shrink:0;font-size:13px;}
+    #content{flex:1;min-width:0;}
+    #series-nav{margin-bottom:24px;padding-bottom:0;}
+    #series-nav ol,#series-nav li{list-style:none;padding-left:0;}
+    .snav-label{font-size:11px;font-weight:800;color:#2d6a5a;text-transform:uppercase;letter-spacing:.14em;display:block;margin-bottom:10px;padding-bottom:4px;border-bottom:2px solid #2d6a5a;}
+    #series-nav > ol{list-style:none;padding:0;margin:0;}
+    .snav-ch{margin-bottom:10px;}
+    .snav-ch > span{font-size:11px;font-weight:800;letter-spacing:.06em;color:#fff;background:#3d8070;display:block;padding:3px 7px 3px 6px;border-radius:3px;margin-bottom:3px;text-transform:uppercase;}
+    .snav-ch > ol{padding-left:0;margin-top:0;}
+    .snav-item{margin-bottom:1px;}
+    .snav-item a{font-size:13.5px;color:#666;text-decoration:none;display:block;padding:3px 6px;border-left:3px solid transparent;border-radius:0 3px 3px 0;transition:color .12s,background .12s,border-color .12s;}
+    .snav-item a:hover{color:#2d6a5a;background:#edf5f3;border-left-color:#a8d4c8;}
+    .snav-item.active a{color:#2d6a5a;font-weight:700;background:#e2f0ec;border-left-color:#2d6a5a;}
+    #sidebar > h2{font-size:10.5px;font-style:italic;font-weight:400;color:#b0b0b0;letter-spacing:0;text-transform:none;margin-bottom:8px;border:none;padding:0;margin-top:20px;padding-top:16px;border-top:1px dashed #ddd;}
+    #sidebar > ol{list-style:none !important;padding:0;margin:0;}
+    #sidebar > ol > li{list-style:none !important;margin-bottom:5px;}
+    #sidebar > ol > li a{color:#666;text-decoration:none;display:block;padding:1px 0;font-size:12px;transition:color .12s;}
+    #sidebar > ol > li a:hover{color:#58A;}
+    #sidebar > ol > li a::before{content:none;}
+    .page-header{margin-bottom:32px;padding-bottom:20px;border-bottom:1px solid #ddd;}
+    .page-header .crumb{font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
+    .page-header h1{font-size:1.8rem;font-weight:900;color:#303236;margin-bottom:8px;line-height:1.25;}
+    .page-header .subtitle{font-family:'Courier New',monospace;font-size:13px;color:#777;}
+    h2{color:#37425d;font-size:22px;margin:36px 0 10px;} h3{color:#633739;font-size:17px;margin:24px 0 8px;}
+    p{margin-bottom:14px;} a{color:#58A;text-decoration:none;} a:hover{text-decoration:underline;} strong{color:#222;}
+    .fun{font-family:'Courier New',monospace;color:#2a6496;} .def{color:green;font-weight:600;}
+    code{font-family:'Courier New',monospace;font-size:14px;background:#ddd;border-radius:3px;padding:1px 5px;}
+    pre{background:#282c34;color:#abb2bf;border-radius:5px;padding:16px 18px;overflow-x:auto;margin:14px 0 18px;font-family:'Courier New',monospace;font-size:14px;line-height:1.6;}
+    pre code{background:none;padding:0;color:inherit;}
+    .kw{color:#c678dd;} .fn{color:#61afef;} .cm{color:#5c6370;font-style:italic;} .str{color:#98c379;} .num{color:#d19a66;} .type{color:#e5c07b;}
+    .note{display:block;margin:18px 0;padding:15px;background:#D8F5D8;color:#444;border-radius:5px;border:2px solid #AFDFAF;font-size:15px;line-height:1.7;}
+    .warning{display:block;margin:18px 0;padding:15px;background:#FFD2D2;color:#444;border-radius:5px;border:2px solid #E0B3B3;font-size:15px;line-height:1.7;}
+    ul,ol{padding-left:22px;margin-bottom:14px;} li{margin-bottom:5px;}
+    .table-wrap{overflow-x:auto;margin:14px 0;} table{border-collapse:collapse;font-size:14px;width:100%;}
+    th,td{padding:8px 12px;border-bottom:1px solid #aaa;text-align:left;} th{border-bottom:2px solid #888;font-weight:700;background:#ddd;} tr:nth-child(even) td{background:#e8e8e8;}
+    td:first-child{font-family:'Courier New',monospace;font-size:13px;color:#2a6496;white-space:nowrap;}
+    .file-list{list-style:none;padding:0;margin:12px 0;}
+    .file-list li{padding:6px 0;border-bottom:1px solid #e0dcdd;display:flex;align-items:baseline;gap:10px;font-size:14px;}
+    .file-list li:last-child{border-bottom:none;}
+    .file-list .fp{font-family:'Courier New',monospace;font-size:13px;color:#58A;min-width:180px;}
+    .file-list .fd{color:#555;}
+    .page-nav{display:flex;justify-content:space-between;margin:36px 0 0;padding-top:16px;border-top:1px solid #ddd;font-size:14px;}
+    .page-nav a{color:#58A;text-decoration:none;display:flex;align-items:center;gap:6px;}
+    .page-nav a:hover{text-decoration:underline;}
+    .page-nav .pn-label{font-size:11px;color:#aaa;text-transform:uppercase;display:block;}
+    .page-nav .pn-title{display:block;} .page-nav .prev{text-align:left;} .page-nav .next{text-align:right;}
+    footer{margin-top:48px;padding-top:16px;border-top:1px solid #ccc;font-size:12px;color:#aaa;text-align:center;}
+    @media(max-width:800px){#wrapper{flex-direction:column;padding:20px 16px;}#sidebar{width:100%;}}
+  </style>
+</head>
+<body>
+<button id="lang-btn" onclick="toggleLang()"><span lang="en">中文</span><span lang="zh">English</span></button>
+<div id="wrapper">
+
+<!-- ════ SIDEBAR ════ -->
+<nav id="sidebar">
+  <div id="series-nav">
+    <span class="snav-label"><span lang="en">Series</span><span lang="zh">系列</span></span>
+    <ol>
+      <li class="snav-ch"><span lang="en">00 Introduction</span><span lang="zh">00 简介</span>
+        <ol>
+          <li class="snav-item"><a href="../00-introduction/introduction.html"><span lang="en">Introduction</span><span lang="zh">简介</span></a></li>
+        </ol>
+      </li>
+      <li class="snav-ch"><span lang="en">01 Shader System</span><span lang="zh">01 Shader 系统</span>
+        <ol>
+          <li class="snav-item active"><a href="../01-shader-system/nfx-surf.html"><span lang="en">NFX & SURF Format</span><span lang="zh">NFX & SURF 格式</span></a></li>
+          <li class="snav-item"><a href="../01-shader-system/hlsl-dialect.html"><span lang="en">NeoX HLSL Dialect</span><span lang="zh">NeoX HLSL 方言</span></a></li>
+        </ol>
+      </li>
+      <li class="snav-ch"><span lang="en">02 Rendering Pipeline</span><span lang="zh">02 渲染管线</span>
+        <ol>
+          <li class="snav-item"><a href="../02-rendering-pipeline/forward-shading.html"><span lang="en">Forward Shading</span><span lang="zh">前向渲染</span></a></li>
+          <li class="snav-item"><a href="../02-rendering-pipeline/deferred-shading.html"><span lang="en">Deferred Shading</span><span lang="zh">延迟渲染</span></a></li>
+        </ol>
+      </li>
+      <li class="snav-ch"><span lang="en">03 Material System</span><span lang="zh">03 材质系统</span>
+        <ol>
+          <li class="snav-item"><a href="../03-material-system/pbr-material.html"><span lang="en">PBR Material</span><span lang="zh">PBR 材质</span></a></li>
+          <li class="snav-item"><a href="../03-material-system/multi-layered-pbr.html"><span lang="en">Multi-Layered PBR</span><span lang="zh">多层 PBR</span></a></li>
+        </ol>
+      </li>
+      <li class="snav-ch"><span lang="en">04 Lighting Models</span><span lang="zh">04 光照模型</span>
+        <ol>
+          <li class="snav-item"><a href="../04-lighting-models/ggx-brdf.html"><span lang="en">GGX BRDF</span><span lang="zh">GGX BRDF</span></a></li>
+          <li class="snav-item"><a href="../04-lighting-models/shading-models.html"><span lang="en">13 Shading Models</span><span lang="zh">13 种光照模型</span></a></li>
+        </ol>
+      </li>
+      <li class="snav-ch"><span lang="en">05 Post Processing</span><span lang="zh">05 后处理</span>
+        <ol>
+          <li class="snav-item"><a href="../05-post-processing/post-effects.html"><span lang="en">Post Effects Overview</span><span lang="zh">后处理全景</span></a></li>
+        </ol>
+      </li>
+    </ol>
+  </div>
+  <h2><span lang="en">Contents</span><span lang="zh">目录</span></h2>
+  <ol>
+    <li><a href="#s1"><span lang="en">File Format Overview</span><span lang="zh">文件格式概览</span></a></li>
+    <li><a href="#s2"><span lang="en">NFX Format</span><span lang="zh">NFX 格式</span></a></li>
+    <li><a href="#s3"><span lang="en">SURF Format</span><span lang="zh">SURF 格式</span></a></li>
+    <li><a href="#s4"><span lang="en">Material Pipeline</span><span lang="zh">材质管线</span></a></li>
+    <li><a href="#s5"><span lang="en">Example Walkthrough</span><span lang="zh">实例演练</span></a></li>
+    <li><a href="#s6"><span lang="en">File Locations</span><span lang="zh">文件位置</span></a></li>
+  </ol>
+</nav>
+
+<!-- ════ MAIN CONTENT ════ -->
+<main id="content">
+  <div class="page-header">
+    <div class="crumb">NeoX Engine &middot; Shader System &middot; NFX & SURF</div>
+    <h1>
+      <span lang="en">NFX & SURF Format</span>
+      <span lang="zh">NFX & SURF 格式</span>
+    </h1>
+    <div class="subtitle">res/shader/built_in/surf/ &middot; Material Descriptors</div>
+  </div>
+
+  <!-- s1 -->
+  <h2 id="s1"><span lang="en">File Format Overview</span><span lang="zh">文件格式概览</span></h2>
+
+  <p lang="en">
+    NeoX separates material definition into two declarative file formats that work together with HLSL code:
+  </p>
+  <p lang="zh">
+    NeoX 将材质定义分为两种声明式文件格式，与 HLSL 代码配合工作：
+  </p>
+
+  <div class="table-wrap"><table>
+    <thead><tr>
+      <th><span lang="en">Format</span><span lang="zh">格式</span></th>
+      <th><span lang="en">Purpose</span><span lang="zh">用途</span></th>
+      <th><span lang="en">Syntax</span><span lang="zh">语法</span></th>
+    </tr></thead>
+    <tbody>
+      <tr>
+        <td>.nfx</td>
+        <td><span lang="en">Render technique definition (pass structure, entry points)</span><span lang="zh">渲染技法定义（Pass 结构、入口点）</span></td>
+        <td><span lang="en">Custom declarative syntax</span><span lang="zh">自定义声明式语法</span></td>
+      </tr>
+      <tr>
+        <td>.surf</td>
+        <td><span lang="en">Material properties descriptor (lighting model, resources, macros)</span><span lang="zh">材质属性描述符（光照模型、资源、宏）</span></td>
+        <td>XML</td>
+      </tr>
+      <tr>
+        <td>.hlsl</td>
+        <td><span lang="en">Shader code implementation</span><span lang="zh">着色器代码实现</span></td>
+        <td><span lang="en">HLSL dialect</span><span lang="zh">HLSL 方言</span></td>
+      </tr>
+    </tbody>
+  </table></div>
+
+  <!-- s2 -->
+  <h2 id="s2"><span lang="en">NFX Format — Render Technique Declaration</span><span lang="zh">NFX 格式 — 渲染技法声明</span></h2>
+
+  <p lang="en">
+    NFX (NeoX Effect) files declare rendering techniques without writing shader code. They specify:
+  </p>
+  <p lang="zh">
+    NFX（NeoX Effect）文件声明渲染技法而无需编写着色器代码。它们指定：
+  </p>
+
+  <ul>
+    <li lang="en"><strong>Technique/Pass structure:</strong> How many render passes, what their names are</li>
+    <li lang="zh"><strong>Technique/Pass 结构：</strong>多少个渲染 Pass、它们的名称</li>
+    
+    <li lang="en"><strong>Shader entry points:</strong> Which <code>.vs</code>/<code>.ps</code> files to use, what functions to call</li>
+    <li lang="zh"><strong>Shader 入口点：</strong>使用哪些 <code>.vs</code>/<code>.ps</code> 文件、调用什么函数</li>
+    
+    <li lang="en"><strong>Resource bindings:</strong> Texture slots, samplers, constant parameters</li>
+    <li lang="zh"><strong>资源绑定：</strong>纹理槽位、采样器、常量参数</li>
+    
+    <li lang="en"><strong>Metadata:</strong> Author, category, description (for editor UI)</li>
+    <li lang="zh"><strong>元数据：</strong>作者、分类、描述（用于编辑器 UI）</li>
+  </ul>
+
+  <h3><span lang="en">Example: common_nolight.nfx</span><span lang="zh">示例：common_nolight.nfx</span></h3>
+
+  <pre><span class="cm">// res/shader/common_nolight.nfx</span>
+
+<span class="kw">string</span> SasUiLabel = <span class="str">"Common NoLight"</span>;
+<span class="kw">string</span> SasUiCategory = <span class="str">"Basic"</span>;
+<span class="kw">string</span> SasUiCompany = <span class="str">"NetEase"</span>;
+<span class="kw">string</span> SasUiDescription = <span class="str">"Basic unlit shader"</span>;
+
+<span class="cm">// Texture declaration</span>
+<span class="kw">texture</span> Tex0 &lt; <span class="kw">string</span> SasUiLabel = <span class="str">"Base Texture"</span>; &gt;;
+<span class="kw">sampler2D</span> Tex0Sampler = <span class="kw">sampler_state</span> {
+  Texture = &lt;Tex0&gt;;
+  SamplerFilter[<span class="num">0</span>] = FILTER_TRILINEAR;
+  AddressU[<span class="num">0</span>] = WRAP;
+  AddressV[<span class="num">0</span>] = WRAP;
+};
+
+<span class="cm">// Constant parameters</span>
+<span class="kw">float</span> Brightness &lt; <span class="kw">string</span> SasUiLabel = <span class="str">"Brightness"</span>; <span class="kw">string</span> SasUiControl = <span class="str">"Slider"</span>; <span class="kw">float</span> SasUiMin = <span class="num">0.0</span>; <span class="kw">float</span> SasUiMax = <span class="num">2.0</span>; &gt; = <span class="num">1.0</span>;
+
+<span class="cm">// Technique definition</span>
+<span class="kw">technique</span> TShader
+{
+  <span class="kw">pass</span> p0
+  {
+    <span class="fn">VertexShader</span> = <span class="str">"common_nolight.vs"</span> es300 vs_main;
+    <span class="fn">PixelShader</span>  = <span class="str">"common_nolight.ps"</span> es300 ps_main;
+  }
+}</pre>
+
+  <div class="note">
+    <span lang="en"><strong>Key insight:</strong> The <code>es300</code> token specifies OpenGL ES 3.0 as the target platform. For D3D11, the engine uses the <code>.hlsl</code> source directly. The <code>vs_main</code> and <code>ps_main</code> are the actual function names in the compiled shader files.</span>
+    <span lang="zh"><strong>关键洞察：</strong><code>es300</code> 标记指定 OpenGL ES 3.0 为目标平台。对于 D3D11，引擎直接使用 <code>.hlsl</code> 源码。<code>vs_main</code> 和 <code>ps_main</code> 是编译后着色器文件中的实际函数名。</span>
+  </div>
+
+  <!-- s3 -->
+  <h2 id="s3"><span lang="en">SURF Format — Material Properties Descriptor</span><span lang="zh">SURF 格式 — 材质属性描述符</span></h2>
+
+  <p lang="en">
+    SURF (Surface) files are XML descriptors that define material properties without hardcoding them in shader code. 
+    They act as a bridge between artist-facing material parameters and engine-side rendering.
+  </p>
+  <p lang="zh">
+    SURF（Surface）文件是 XML 描述符，定义材质属性而无需在着色器代码中硬编码。
+    它们充当面向美术师的材质参数与引擎端渲染之间的桥梁。
+  </p>
+
+  <h3><span lang="en">SURF Structure</span><span lang="zh">SURF 结构</span></h3>
+
+  <pre><span class="cm">&lt;!-- res/shader/built_in/surf/default.surf --&gt;</span>
+<span class="kw">&lt;NeoX&gt;</span>
+  <span class="kw">&lt;Surface&gt;</span>
+    <span class="cm">&lt;!-- 1. Lighting Model Selection --&gt;</span>
+    <span class="kw">&lt;LightingModel</span> 
+      DefaultName=<span class="str">"Isotropy"</span>
+      ConfigurableList=<span class="str">"Isotropy"</span> <span class="kw">/&gt;</span>
+    
+    <span class="cm">&lt;!-- 2. Shader Code Reference --&gt;</span>
+    <span class="kw">&lt;Code</span> File=<span class="str">"shader\built_in\materials\default.hlsl"</span> <span class="kw">/&gt;</span>
+    
+    <span class="cm">&lt;!-- 3. Macro Switches --&gt;</span>
+    <span class="kw">&lt;Macro&gt;</span>
+      <span class="kw">&lt;Item</span> Name=<span class="str">"LIGHT_ENABLE"</span> DefaultValue=<span class="str">"1"</span> <span class="kw">/&gt;</span>
+      <span class="kw">&lt;Item</span> Name=<span class="str">"EMISSIVE_TEXTURE"</span> DefaultValue=<span class="str">"0"</span> <span class="kw">/&gt;</span>
+      <span class="kw">&lt;Item</span> Name=<span class="str">"NORMAL_MAP_ENABLE"</span> DefaultValue=<span class="str">"0"</span> <span class="kw">/&gt;</span>
+    <span class="kw">&lt;/Macro&gt;</span>
+    
+    <span class="cm">&lt;!-- 4. Resource Bindings --&gt;</span>
+    <span class="kw">&lt;Resources&gt;</span>
+      <span class="kw">&lt;Texture</span> 
+        Slot=<span class="str">"0"</span> 
+        Name=<span class="str">"Tex0"</span> 
+        Label=<span class="str">"Albedo"</span>
+        SamplerState=<span class="str">"Trilinear_Wrap"</span> <span class="kw">/&gt;</span>
+      <span class="kw">&lt;Texture</span> 
+        Slot=<span class="str">"1"</span> 
+        Name=<span class="str">"Tex1"</span> 
+        Label=<span class="str">"Normal Map"</span>
+        SamplerState=<span class="str">"Trilinear_Wrap"</span> <span class="kw">/&gt;</span>
+      <span class="kw">&lt;Parameter</span> 
+        Name=<span class="str">"BaseColor"</span> 
+        Type=<span class="str">"Float4"</span> 
+        Default=<span class="str">"1,1,1,1"</span>
+        Label=<span class="str">"Base Color"</span> <span class="kw">/&gt;</span>
+    <span class="kw">&lt;/Resources&gt;</span>
+    
+    <span class="cm">&lt;!-- 5. Render State --&gt;</span>
+    <span class="kw">&lt;RasterizerAndBlend</span>
+      BlendMode=<span class="str">"OPAQUE"</span>
+      CullMode=<span class="str">"Back"</span> <span class="kw">/&gt;</span>
+  <span class="kw">&lt;/Surface&gt;</span>
+<span class="kw">&lt;/NeoX&gt;</span></pre>
+
+  <h3><span lang="en">SURF Key Components</span><span lang="zh">SURF 关键组件</span></h3>
+
+  <div class="table-wrap"><table>
+    <thead><tr>
+      <th><span lang="en">Component</span><span lang="zh">组件</span></th>
+      <th><span lang="en">Purpose</span><span lang="zh">用途</span></th>
+      <th><span lang="en">Example Values</span><span lang="zh">示例值</span></th>
+    </tr></thead>
+    <tbody>
+      <tr>
+        <td>LightingModel</td>
+        <td><span lang="en">Determines shading model</span><span lang="zh">决定着色模型</span></td>
+        <td><code>Isotropy, Skin, Hair, ClearCoat, Toon, SSSS</code></td>
+      </tr>
+      <tr>
+        <td>Code</td>
+        <td><span lang="en">Points to HLSL implementation</span><span lang="zh">指向 HLSL 实现</span></td>
+        <td><code>shader\built_in\materials\default.hlsl</code></td>
+      </tr>
+      <tr>
+        <td>Macro</td>
+        <td><span lang="en">Feature switches</span><span lang="zh">功能开关</span></td>
+        <td><code>LIGHT_ENABLE, ALPHA_TEST_ENABLE</code></td>
+      </tr>
+      <tr>
+        <td>Resources</td>
+        <td><span lang="en">Texture slots & parameters</span><span lang="zh">纹理槽位 & 参数</span></td>
+        <td><code>Tex0=Albedo, Tex1=Normal, BaseColor</code></td>
+      </tr>
+      <tr>
+        <td>RasterizerAndBlend</td>
+        <td><span lang="en">Render states</span><span lang="zh">渲染状态</span></td>
+        <td><code>OPAQUE, TRANSPARENT, ADDITIVE</code></td>
+      </tr>
+    </tbody>
+  </table></div>
+
+  <!-- s4 -->
+  <h2 id="s4"><span lang="en">Material Pipeline — How They Work Together</span><span lang="zh">材质管线 — 它们如何协同工作</span></h2>
+
+  <p lang="en">
+    The three file types form a complete material definition:
+  </p>
+  <p lang="zh">
+    三种文件类型形成完整的材质定义：
+  </p>
+
+  <pre><span class="cm">+----------------------------------------------------------+</span>
+<span class="cm">|  1. Artist creates .surf file (or selects existing one)  |</span>
+<span class="cm">|     v Chooses LightingModel: Isotropy                    |</span>
+<span class="cm">|     v Enables macros: NORMAL_MAP_ENABLE=1                |</span>
+<span class="cm">|     v Assigns textures: Tex0=albedo.png, Tex1=normal.png |</span>
+<span class="cm">+----------------------------------------------------------+</span>
+              v
+<span class="cm">+----------------------------------------------------------+</span>
+<span class="cm">|  2. Engine reads .surf --&gt; loads referenced .hlsl file    |</span>
+<span class="cm">|     File="shader\built_in\materials\default.hlsl"        |</span>
+<span class="cm">+----------------------------------------------------------+</span>
+              v
+<span class="cm">+----------------------------------------------------------+</span>
+<span class="cm">|  3. .hlsl file implements material functions:            |</span>
+<span class="cm">|     float3 GetAlbedo(RawData data) { ... }               |</span>
+<span class="cm">|     float3 GetNormal(RawData data) { ... }               |</span>
+<span class="cm">|     #if NORMAL_MAP_ENABLE --&gt; decode normal map          |</span>
+<span class="cm">+----------------------------------------------------------+</span>
+              v
+<span class="cm">+----------------------------------------------------------+</span>
+<span class="cm">|  4. Rendering pipeline calls via .nfx:                   |</span>
+<span class="cm">|     technique TShader {                                  |</span>
+<span class="cm">|       pass p0 {                                          |</span>
+<span class="cm">|         VertexShader = "default.vs" es300 vs_main;       |</span>
+<span class="cm">|         PixelShader = "default.ps" es300 ps_main;        |</span>
+<span class="cm">|       }                                                  |</span>
+<span class="cm">|     }                                                    |</span>
+<span class="cm">+----------------------------------------------------------+</span></pre>
+
+  <!-- s5 -->
+  <h2 id="s5"><span lang="en">Example Walkthrough — Building a Custom Material</span><span lang="zh">实例演练 — 构建自定义材质</span></h2>
+
+  <p lang="en">
+    Let's trace how a custom "glowing emissive" material is defined:
+  </p>
+  <p lang="zh">
+    让我们追踪一个自定义"发光自发光"材质是如何定义的：
+  </p>
+
+  <h3><span lang="en">Step 1: Create SURF file</span><span lang="zh">步骤 1：创建 SURF 文件</span></h3>
+
+  <pre><span class="cm">&lt;!-- res/shader/custom/glowing.surf --&gt;</span>
+<span class="kw">&lt;NeoX&gt;</span>
+  <span class="kw">&lt;Surface&gt;</span>
+    <span class="kw">&lt;LightingModel</span> DefaultName=<span class="str">"Unlit"</span> <span class="kw">/&gt;</span>
+    <span class="kw">&lt;Code</span> File=<span class="str">"shader\custom\glowing.hlsl"</span> <span class="kw">/&gt;</span>
+    <span class="kw">&lt;Macro&gt;</span>
+      <span class="kw">&lt;Item</span> Name=<span class="str">"EMISSIVE_TEXTURE"</span> DefaultValue=<span class="str">"1"</span> <span class="kw">/&gt;</span>
+      <span class="kw">&lt;Item</span> Name=<span class="str">"PULSE_ANIMATION"</span> DefaultValue=<span class="str">"1"</span> <span class="kw">/&gt;</span>
+    <span class="kw">&lt;/Macro&gt;</span>
+    <span class="kw">&lt;Resources&gt;</span>
+      <span class="kw">&lt;Texture</span> Slot=<span class="str">"0"</span> Name=<span class="str">"Tex0"</span> Label=<span class="str">"Emissive Map"</span> <span class="kw">/&gt;</span>
+      <span class="kw">&lt;Parameter</span> Name=<span class="str">"GlowIntensity"</span> Type=<span class="str">"Float"</span> Default=<span class="str">"2.0"</span> <span class="kw">/&gt;</span>
+      <span class="kw">&lt;Parameter</span> Name=<span class="str">"PulseSpeed"</span> Type=<span class="str">"Float"</span> Default=<span class="str">"1.0"</span> <span class="kw">/&gt;</span>
+    <span class="kw">&lt;/Resources&gt;</span>
+    <span class="kw">&lt;RasterizerAndBlend</span> BlendMode=<span class="str">"ADDITIVE"</span> CullMode=<span class="str">"None"</span> <span class="kw">/&gt;</span>
+  <span class="kw">&lt;/Surface&gt;</span>
+<span class="kw">&lt;/NeoX&gt;</span></pre>
+
+  <h3><span lang="en">Step 2: Implement HLSL shader</span><span lang="zh">步骤 2：实现 HLSL 着色器</span></h3>
+
+  <pre><span class="cm">// res/shader/custom/glowing.hlsl</span>
+<span class="kw">#include</span> <span class="str">"../built_in/materials/material_common.hlsl"</span>
+
+<span class="kw">Texture2D</span> Tex0 : <span class="fn">register</span>(t0);
+<span class="kw">SamplerState</span> Tex0Sampler : Trilinear_Wrap;
+
+<span class="kw">float</span> GlowIntensity;
+<span class="kw">float</span> PulseSpeed;
+<span class="kw">float</span> Time;  <span class="cm">// Injected by engine</span>
+
+<span class="kw">float3</span> <span class="fn">GetEmissive</span>(<span class="type">RawData</span> data) {
+  <span class="kw">float3</span> emissive = Tex0.<span class="fn">Sample</span>(Tex0Sampler, data.uv0).<span class="fn">rgb</span>;
+  
+  <span class="cm">#if PULSE_ANIMATION</span>
+    <span class="kw">float</span> pulse = <span class="fn">sin</span>(Time * PulseSpeed) * <span class="num">0.5</span> + <span class="num">0.5</span>;
+    emissive *= pulse;
+  <span class="cm">#endif</span>
+  
+  <span class="kw">return</span> emissive * GlowIntensity;
+}</pre>
+
+  <h3><span lang="en">Step 3: Reference in NFX (or use existing)</span><span lang="zh">步骤 3：在 NFX 中引用（或使用现有）</span></h3>
+
+  <p lang="en">
+    Most materials reuse existing NFX files like <code>common_nolight.nfx</code>. The engine's material system 
+    automatically routes the SURF-defined shader code to the appropriate rendering pass.
+  </p>
+  <p lang="zh">
+    大多数材质重用现有 NFX 文件如 <code>common_nolight.nfx</code>。引擎的材质系统
+    自动将 SURF 定义的着色器代码路由到相应的渲染 Pass。
+  </p>
+
+  <!-- s6 -->
+  <h2 id="s6"><span lang="en">File Locations — Where to Find Them</span><span lang="zh">文件位置 — 在哪里找到它们</span></h2>
+
+  <ul class="file-list">
+    <li><span class="fp">res/shader/*.nfx</span><span class="fd"><span lang="en">Root-level NFX files (~30 files)</span><span lang="zh">根级 NFX 文件（~30 个文件）</span></span></li>
+    <li><span class="fp">res/shader/built_in/surf/</span><span class="fd"><span lang="en">Built-in SURF descriptors (~120 files)</span><span lang="zh">内置 SURF 描述符（~120 个文件）</span></span></li>
+    <li><span class="fp">res/shader/built_in/materials/</span><span class="fd"><span lang="en">Material HLSL implementations (~22 files)</span><span lang="zh">材质 HLSL 实现（~22 个文件）</span></span></li>
+    <li><span class="fp">res/shader/macro_define.xml</span><span class="fd"><span lang="en">Global macro enumeration</span><span lang="zh">全局宏枚举</span></span></li>
+    <li><span class="fp">res/shader/built_in/forward_shading.render</span><span class="fd"><span lang="en">Rendering pipeline declaration (XML)</span><span lang="zh">渲染管线声明（XML）</span></span></li>
+  </ul>
+
+  <div class="page-nav">
+    <a href="../00-introduction/introduction.html" class="prev">
+      <span class="pn-label">&larr; Prev</span>
+      <span class="pn-title"><span lang="en">Introduction</span><span lang="zh">简介</span></span>
+    </a>
+    <a href="../01-shader-system/hlsl-dialect.html" class="next">
+      <span class="pn-label">Next &rarr;</span>
+      <span class="pn-title"><span lang="en">NeoX HLSL Dialect</span><span lang="zh">NeoX HLSL 方言</span></span>
+    </a>
+  </div>
+
+  <footer>NeoX Engine &middot; G86 Project Shader System<br>For learning purposes</footer>
+</main>
+</div>
+
+<script>
+function toggleLang(){
+  var h=document.documentElement;
+  if(h.classList.contains('lang-zh')){h.classList.remove('lang-zh');h.lang='en';document.title='NFX & SURF Format — NeoX Engine';localStorage.setItem('neox-doc-lang','en');}
+  else{h.classList.add('lang-zh');h.lang='zh-CN';document.title='NFX & SURF 格式 — NeoX 引擎';localStorage.setItem('neox-doc-lang','zh');}
+}
+if(document.documentElement.classList.contains('lang-zh'))document.title='NFX & SURF 格式 — NeoX 引擎';
+</script>
+</body>
+</html>

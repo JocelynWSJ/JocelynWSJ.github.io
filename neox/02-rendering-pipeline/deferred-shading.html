@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Deferred Shading — NeoX Engine</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Gudea">
+  <script>(function(){if(localStorage.getItem('neox-doc-lang')==='zh'){document.documentElement.classList.add('lang-zh');document.documentElement.lang='zh-CN';}})();</script>
+  <style>
+    html:not(.lang-zh) [lang="zh"]{display:none;} html.lang-zh [lang="en"]{display:none;}
+    #lang-btn{position:fixed;top:16px;right:20px;z-index:999;background:#37425d;color:#fff;border:none;border-radius:4px;padding:5px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:Gudea,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.2);transition:background .15s;} #lang-btn:hover{background:#4a5a7a;}
+    *{box-sizing:border-box;margin:0;padding:0;} body{font-family:Gudea,sans-serif;font-size:16px;line-height:1.8;color:#111;background:#eee;}
+    #wrapper{max-width:1100px;margin:0 auto;display:flex;align-items:flex-start;padding:40px 24px;gap:36px;}
+    #sidebar{width:240px;flex-shrink:0;font-size:13px;} #content{flex:1;min-width:0;}
+    #series-nav{margin-bottom:24px;} #series-nav ol,#series-nav li{list-style:none;padding-left:0;}
+    .snav-label{font-size:11px;font-weight:800;color:#2d6a5a;text-transform:uppercase;letter-spacing:.14em;display:block;margin-bottom:10px;padding-bottom:4px;border-bottom:2px solid #2d6a5a;}
+    #series-nav > ol{list-style:none;padding:0;margin:0;} .snav-ch{margin-bottom:10px;}
+    .snav-ch > span{font-size:11px;font-weight:800;letter-spacing:.06em;color:#fff;background:#3d8070;display:block;padding:3px 7px 3px 6px;border-radius:3px;margin-bottom:3px;text-transform:uppercase;}
+    .snav-ch > ol{padding-left:0;margin-top:0;} .snav-item{margin-bottom:1px;}
+    .snav-item a{font-size:13.5px;color:#666;text-decoration:none;display:block;padding:3px 6px;border-left:3px solid transparent;border-radius:0 3px 3px 0;transition:color .12s,background .12s,border-color .12s;}
+    .snav-item a:hover{color:#2d6a5a;background:#edf5f3;border-left-color:#a8d4c8;}
+    .snav-item.active a{color:#2d6a5a;font-weight:700;background:#e2f0ec;border-left-color:#2d6a5a;}
+    #sidebar > h2{font-size:10.5px;font-style:italic;font-weight:400;color:#b0b0b0;margin-bottom:8px;border:none;padding:0;margin-top:20px;padding-top:16px;border-top:1px dashed #ddd;}
+    #sidebar > ol{list-style:none !important;padding:0;margin:0;} #sidebar > ol > li{list-style:none !important;margin-bottom:5px;}
+    #sidebar > ol > li a{color:#666;text-decoration:none;display:block;padding:1px 0;font-size:12px;transition:color .12s;} #sidebar > ol > li a:hover{color:#58A;}
+    .page-header{margin-bottom:32px;padding-bottom:20px;border-bottom:1px solid #ddd;}
+    .page-header .crumb{font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
+    .page-header h1{font-size:1.8rem;font-weight:900;color:#303236;margin-bottom:8px;line-height:1.25;}
+    .page-header .subtitle{font-family:'Courier New',monospace;font-size:13px;color:#777;}
+    h2{color:#37425d;font-size:22px;margin:36px 0 10px;} h3{color:#633739;font-size:17px;margin:24px 0 8px;}
+    p{margin-bottom:14px;} a{color:#58A;text-decoration:none;} a:hover{text-decoration:underline;} strong{color:#222;}
+    .fun{font-family:'Courier New',monospace;color:#2a6496;} .def{color:green;font-weight:600;}
+    code{font-family:'Courier New',monospace;font-size:14px;background:#ddd;border-radius:3px;padding:1px 5px;}
+    pre{background:#282c34;color:#abb2bf;border-radius:5px;padding:16px 18px;overflow-x:auto;margin:14px 0 18px;font-family:'Courier New',monospace;font-size:14px;line-height:1.6;}
+    pre code{background:none;padding:0;color:inherit;}
+    .kw{color:#c678dd;} .fn{color:#61afef;} .cm{color:#5c6370;font-style:italic;} .str{color:#98c379;} .num{color:#d19a66;} .type{color:#e5c07b;}
+    .note{display:block;margin:18px 0;padding:15px;background:#D8F5D8;color:#444;border-radius:5px;border:2px solid #AFDFAF;font-size:15px;line-height:1.7;}
+    .warning{display:block;margin:18px 0;padding:15px;background:#FFD2D2;color:#444;border-radius:5px;border:2px solid #E0B3B3;font-size:15px;line-height:1.7;}
+    ul,ol{padding-left:22px;margin-bottom:14px;} li{margin-bottom:5px;}
+    .table-wrap{overflow-x:auto;margin:14px 0;} table{border-collapse:collapse;font-size:14px;width:100%;}
+    th,td{padding:8px 12px;border-bottom:1px solid #aaa;text-align:left;} th{border-bottom:2px solid #888;font-weight:700;background:#ddd;} tr:nth-child(even) td{background:#e8e8e8;}
+    td:first-child{font-family:'Courier New',monospace;font-size:13px;color:#2a6496;white-space:nowrap;}
+    .arch-diagram{background:#fff;border:1px solid #ccc;border-radius:5px;padding:22px;margin:16px 0;font-family:'Courier New',monospace;font-size:13px;line-height:1.9;overflow-x:auto;}
+    .page-nav{display:flex;justify-content:space-between;margin:36px 0 0;padding-top:16px;border-top:1px solid #ddd;font-size:14px;}
+    .page-nav a{color:#58A;text-decoration:none;display:flex;align-items:center;gap:6px;} .page-nav a:hover{text-decoration:underline;}
+    .page-nav .pn-label{font-size:11px;color:#aaa;text-transform:uppercase;display:block;} .page-nav .pn-title{display:block;} .page-nav .prev{text-align:left;} .page-nav .next{text-align:right;}
+    footer{margin-top:48px;padding-top:16px;border-top:1px solid #ccc;font-size:12px;color:#aaa;text-align:center;}
+    @media(max-width:800px){#wrapper{flex-direction:column;padding:20px 16px;}#sidebar{width:100%;}}
+  </style>
+</head>
+<body>
+<button id="lang-btn" onclick="toggleLang()"><span lang="en">中文</span><span lang="zh">English</span></button>
+<div id="wrapper">
+<nav id="sidebar">
+  <div id="series-nav">
+    <span class="snav-label"><span lang="en">Series</span><span lang="zh">系列</span></span>
+    <ol>
+      <li class="snav-ch"><span lang="en">00 Introduction</span><span lang="zh">00 简介</span><ol><li class="snav-item"><a href="../00-introduction/introduction.html"><span lang="en">Introduction</span><span lang="zh">简介</span></a></li></ol></li>
+      <li class="snav-ch"><span lang="en">01 Shader System</span><span lang="zh">01 Shader 系统</span><ol><li class="snav-item"><a href="../01-shader-system/nfx-surf.html"><span lang="en">NFX & SURF Format</span><span lang="zh">NFX & SURF 格式</span></a></li><li class="snav-item"><a href="../01-shader-system/hlsl-dialect.html"><span lang="en">NeoX HLSL Dialect</span><span lang="zh">NeoX HLSL 方言</span></a></li></ol></li>
+      <li class="snav-ch"><span lang="en">02 Rendering Pipeline</span><span lang="zh">02 渲染管线</span><ol><li class="snav-item"><a href="../02-rendering-pipeline/forward-shading.html"><span lang="en">Forward Shading</span><span lang="zh">前向渲染</span></a></li><li class="snav-item active"><a href="../02-rendering-pipeline/deferred-shading.html"><span lang="en">Deferred Shading</span><span lang="zh">延迟渲染</span></a></li></ol></li>
+      <li class="snav-ch"><span lang="en">03 Material System</span><span lang="zh">03 材质系统</span><ol><li class="snav-item"><a href="../03-material-system/pbr-material.html"><span lang="en">PBR Material</span><span lang="zh">PBR 材质</span></a></li><li class="snav-item"><a href="../03-material-system/multi-layered-pbr.html"><span lang="en">Multi-Layered PBR</span><span lang="zh">多层 PBR</span></a></li></ol></li>
+      <li class="snav-ch"><span lang="en">04 Lighting Models</span><span lang="zh">04 光照模型</span><ol><li class="snav-item"><a href="../04-lighting-models/ggx-brdf.html"><span lang="en">GGX BRDF</span><span lang="zh">GGX BRDF</span></a></li><li class="snav-item"><a href="../04-lighting-models/shading-models.html"><span lang="en">13 Shading Models</span><span lang="zh">13 种光照模型</span></a></li></ol></li>
+      <li class="snav-ch"><span lang="en">05 Post Processing</span><span lang="zh">05 后处理</span><ol><li class="snav-item"><a href="../05-post-processing/post-effects.html"><span lang="en">Post Effects Overview</span><span lang="zh">后处理全景</span></a></li></ol></li>
+    </ol>
+  </div>
+  <h2><span lang="en">Contents</span><span lang="zh">目录</span></h2>
+  <ol>
+    <li><a href="#s1"><span lang="en">GBuffer Layout</span><span lang="zh">GBuffer 布局</span></a></li>
+    <li><a href="#s2"><span lang="en">GBuffer Write</span><span lang="zh">GBuffer 写入</span></a></li>
+    <li><a href="#s3"><span lang="en">Single-Pass Deferred</span><span lang="zh">单 Pass 延迟</span></a></li>
+    <li><a href="#s4"><span lang="en">Flag Encoding</span><span lang="zh">标志位编码</span></a></li>
+    <li><a href="#s5"><span lang="en">vs UE5 GBuffer</span><span lang="zh">与 UE5 GBuffer 对比</span></a></li>
+  </ol>
+</nav>
+
+<main id="content">
+  <div class="page-header">
+    <div class="crumb">NeoX Engine &middot; Rendering Pipeline &middot; Deferred Shading</div>
+    <h1><span lang="en">Deferred Shading Pipeline</span><span lang="zh">延迟渲染管线</span></h1>
+    <div class="subtitle">res/shader/built_in/deferred_shading_gbuffer.hlsl &middot; 109 lines</div>
+  </div>
+
+  <!-- s1 -->
+  <h2 id="s1"><span lang="en">GBuffer Layout</span><span lang="zh">GBuffer 布局</span></h2>
+
+  <p lang="en">NeoX's deferred path uses a compact <span class="def">3-RT GBuffer</span> for the standard mode, or a <span class="def">5-RT Single-Pass Deferred</span> for mobile (TBDR) optimization. This is significantly simpler than UE5's 5+ RT layout.</p>
+  <p lang="zh">NeoX 的延迟路径标准模式使用紧凑的 <span class="def">3-RT GBuffer</span>，或为移动端（TBDR）优化使用 <span class="def">5-RT 单 Pass 延迟</span>。这比 UE5 的 5+ RT 布局简单得多。</p>
+
+  <div class="arch-diagram">
+Standard Mode (3 Render Targets):
++=================================================================+
+|                                                                 |
+|  SV_Target0: <span style="color:#61afef">AlbedoAO</span>                                           |
+|  +----------+----------+----------+----------+                 |
+|  |  R: Alb.R|  G: Alb.G|  B: Alb.B|  A: AO   |  RGBA8/16      |
+|  +----------+----------+----------+----------+                 |
+|                                                                 |
+|  SV_Target1: <span style="color:#61afef">NormalRoughness</span>                                      |
+|  +----------+----------+----------+----------+                 |
+|  | R: N.x*  | G: N.y*  | B: N.z*  | A: Rough |  * = 0.5(n+1)  |
+|  +----------+----------+----------+----------+                 |
+|                                                                 |
+|  SV_Target2: <span style="color:#61afef">MetallicShadingModelFlags</span>                            |
+|  +----------+----------+----------+----------+                 |
+|  |R: Metalic| G: Flags | B: (free)| A: (free)|  Flags/255      |
+|  +----------+----------+----------+----------+                 |
+|                                                                 |
++=================================================================+
+
+Single-Pass Deferred Mode (5 Render Targets -- Mobile TBDR):
++=================================================================+
+|  SV_Target0: FinalResult      // direct emissive output         |
+|  SV_Target1: Depth            // manual depth (for GLSL)        |
+|  SV_Target2: AlbedoAO         // same as standard RT0           |
+|  SV_Target3: NormalRoughness  // same as standard RT1           |
+|  SV_Target4: MetallicFlags    // same as standard RT2           |
++=================================================================+</div>
+
+  <!-- s2 -->
+  <h2 id="s2"><span lang="en">GBuffer Write — ps_main()</span><span lang="zh">GBuffer 写入 — ps_main()</span></h2>
+
+  <p lang="en">The GBuffer pixel shader is remarkably simple — it just fills the Material struct and packs it into render targets:</p>
+  <p lang="zh">GBuffer 像素着色器非常简洁——只需填充 Material 结构体并打包到渲染目标：</p>
+
+  <pre><span class="kw">struct</span> <span class="type">GBuffer</span> {
+  <span class="kw">float4</span> AlbedoAO               : SV_Target0;
+  <span class="kw">float4</span> NormalRoughness         : SV_Target1;
+  <span class="kw">float4</span> MetallicShadingModelFlags : SV_Target2;
+};
+
+<span class="type">GBuffer</span> <span class="fn">ps_main</span>(<span class="type">Fragment</span> input, <span class="kw">bool</span> is_front_face : SV_IsFrontFace) {
+  <span class="type">RawData</span> raw_data = <span class="fn">GetRawData</span>(input);
+  <span class="type">Material</span> mtl = (<span class="type">Material</span>)<span class="num">0</span>;
+  <span class="fn">SetupMaterial</span>(input, raw_data, mtl);
+  <span class="fn">DeferredApplyNewDecal</span>(input, mtl);  <span class="cm">// apply decals</span>
+
+  <span class="type">GBuffer</span> gbuffer;
+  gbuffer.AlbedoAO = <span class="kw">float4</span>(mtl.albedo, mtl.occlusion);
+  gbuffer.NormalRoughness = <span class="kw">float4</span>(<span class="num">0.5</span> * (mtl.normal + <span class="num">1.0</span>), mtl.roughness);
+
+  <span class="cm">// Encode flags into single byte</span>
+  <span class="kw">uint</span> flags = <span class="num">0</span>;
+  flags = <span class="fn">EncodeShadingModel</span>(flags, mtl.shading_model);
+  flags = <span class="fn">EncodeReceiveShadow</span>(flags);          <span class="cm">// if SHADOW_MAP_ENABLE</span>
+  flags = <span class="fn">EncodeClusteredShadingLightProbeVolumeEnable</span>(flags);
+
+  gbuffer.MetallicShadingModelFlags = <span class="kw">float4</span>(
+    mtl.metalness,
+    <span class="kw">float</span>(flags) / <span class="num">255.0</span>,
+    <span class="num">0</span>, <span class="num">0</span>
+  );
+  <span class="kw">return</span> gbuffer;
+}</pre>
+
+  <!-- s3 -->
+  <h2 id="s3"><span lang="en">Single-Pass Deferred — Mobile Optimization</span><span lang="zh">单 Pass 延迟 — 移动端优化</span></h2>
+
+  <p lang="en">On tile-based deferred rendering (TBDR) GPUs (iOS/Android), NeoX supports <span class="def">Single-Pass Deferred Shading</span>. This writes both GBuffer data AND lighting result in one pass, avoiding the costly off-chip GBuffer readback that destroys TBDR benefits.</p>
+  <p lang="zh">在基于 Tile 的延迟渲染（TBDR）GPU 上（iOS/Android），NeoX 支持<span class="def">单 Pass 延迟着色</span>。在一个 Pass 中同时写入 GBuffer 数据和光照结果，避免了破坏 TBDR 优势的昂贵离片 GBuffer 回读。</p>
+
+  <pre><span class="cm">// Single-pass mode: output emissive directly + manual depth</span>
+<span class="kw">#if</span> SINGLE_PASS_DEFERRED_SHADING_ENABLE
+  gbuffer.FinalResult = <span class="kw">float4</span>(mtl.emissive, <span class="num">1</span>);
+  <span class="kw">#ifdef</span> NEOX_GLSL
+    gbuffer.Depth = input.position.z;           <span class="cm">// single float</span>
+  <span class="kw">#else</span>
+    gbuffer.Depth = <span class="kw">float4</span>(input.position.z);   <span class="cm">// packed</span>
+  <span class="kw">#endif</span>
+<span class="kw">#endif</span></pre>
+
+  <!-- s4 -->
+  <h2 id="s4"><span lang="en">Flag Encoding System</span><span lang="zh">标志位编码系统</span></h2>
+
+  <p lang="en">The G channel of <code>MetallicShadingModelFlags</code> packs multiple boolean flags into a single byte (0-255). Defined in <code>flags.hlsl</code>:</p>
+  <p lang="zh"><code>MetallicShadingModelFlags</code> 的 G 通道将多个布尔标志打包到单个字节（0-255）中。定义在 <code>flags.hlsl</code>：</p>
+
+  <div class="table-wrap"><table>
+    <thead><tr><th><span lang="en">Flag</span><span lang="zh">标志</span></th><th><span lang="en">Bits</span><span lang="zh">位</span></th><th><span lang="en">Purpose</span><span lang="zh">用途</span></th></tr></thead>
+    <tbody>
+      <tr><td>ShadingModel</td><td>bit 0-3</td><td><span lang="en">Which shading model (0=Isotropy, 1=Skin, 2=Hair...)</span><span lang="zh">哪个着色模型</span></td></tr>
+      <tr><td>ReceiveShadow</td><td>bit 4</td><td><span lang="en">Whether this pixel receives dynamic shadows</span><span lang="zh">此像素是否接收动态阴影</span></td></tr>
+      <tr><td>LightProbeVolume</td><td>bit 5</td><td><span lang="en">Clustered shading light probe active</span><span lang="zh">聚簇着色光照探针激活</span></td></tr>
+      <tr><td>BakedShadow</td><td>bit 6</td><td><span lang="en">Use baked shadow from light probe</span><span lang="zh">使用来自光照探针的烘焙阴影</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <!-- s5 -->
+  <h2 id="s5"><span lang="en">NeoX vs UE5 GBuffer Comparison</span><span lang="zh">NeoX vs UE5 GBuffer 对比</span></h2>
+
+  <div class="table-wrap"><table>
+    <thead><tr>
+      <th><span lang="en">Aspect</span><span lang="zh">方面</span></th>
+      <th>NeoX</th>
+      <th>UE5.6</th>
+    </tr></thead>
+    <tbody>
+      <tr><td><span lang="en">RT Count</span><span lang="zh">RT 数量</span></td><td><span lang="en">3 (standard) / 5 (single-pass)</span><span lang="zh">3（标准）/ 5（单 Pass）</span></td><td><span lang="en">5-6 (SceneColor + GBuffer A/B/C/D + Velocity)</span><span lang="zh">5-6 个</span></td></tr>
+      <tr><td><span lang="en">Normal Encoding</span><span lang="zh">法线编码</span></td><td><code>0.5*(normal+1)</code><span lang="en"> (RGB8/16)</span></td><td><span lang="en">Octahedron encoding (2-channel)</span><span lang="zh">八面体编码（2 通道）</span></td></tr>
+      <tr><td><span lang="en">Shading Model ID</span><span lang="zh">着色模型 ID</span></td><td><span lang="en">4-bit field in Flags byte</span><span lang="zh">Flags 字节中的 4 位</span></td><td><span lang="en">4-bit in GBufferB.a</span><span lang="zh">GBufferB.a 中 4 位</span></td></tr>
+      <tr><td><span lang="en">Custom Data</span><span lang="zh">自定义数据</span></td><td><span lang="en">None (limited by 3 RTs)</span><span lang="zh">无（受 3 RT 限制）</span></td><td><span lang="en">GBufferD (full RGBA for SSS color, cloth, etc.)</span><span lang="zh">GBufferD（完整 RGBA 用于 SSS 颜色等）</span></td></tr>
+      <tr><td><span lang="en">Bandwidth</span><span lang="zh">带宽</span></td><td><span lang="en">Lower (3 RT = less memory traffic)</span><span lang="zh">更低（3 RT = 更少内存流量）</span></td><td><span lang="en">Higher (5+ RT = more flexibility)</span><span lang="zh">更高（5+ RT = 更多灵活性）</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="note">
+    <span lang="en"><strong>Design trade-off:</strong> NeoX sacrifices GBuffer flexibility for bandwidth efficiency. With only 3 RTs, there's no room for per-pixel custom data (e.g., subsurface color). This is why NeoX primarily uses forward shading for complex materials (skin, hair) and reserves deferred for simple opaque geometry.</span>
+    <span lang="zh"><strong>设计取舍：</strong>NeoX 牺牲 GBuffer 灵活性换取带宽效率。只有 3 个 RT，没有空间放逐像素自定义数据（如次表面颜色）。这就是为什么 NeoX 主要对复杂材质（皮肤、头发）使用前向着色，将延迟留给简单不透明几何体。</span>
+  </div>
+
+  <div class="page-nav">
+    <a href="../02-rendering-pipeline/forward-shading.html" class="prev"><span class="pn-label">&larr; Prev</span><span class="pn-title"><span lang="en">Forward Shading</span><span lang="zh">前向渲染</span></span></a>
+    <a href="../03-material-system/pbr-material.html" class="next"><span class="pn-label">Next &rarr;</span><span class="pn-title"><span lang="en">PBR Material</span><span lang="zh">PBR 材质</span></span></a>
+  </div>
+  <footer>NeoX Engine &middot; G86 Rendering Pipeline<br>Source: built_in/deferred_shading_gbuffer.hlsl (109 lines)</footer>
+</main>
+</div>
+<script>
+function toggleLang(){var h=document.documentElement;if(h.classList.contains('lang-zh')){h.classList.remove('lang-zh');h.lang='en';document.title='Deferred Shading — NeoX Engine';localStorage.setItem('neox-doc-lang','en');}else{h.classList.add('lang-zh');h.lang='zh-CN';document.title='延迟渲染管线 — NeoX 引擎';localStorage.setItem('neox-doc-lang','zh');}}
+if(document.documentElement.classList.contains('lang-zh'))document.title='延迟渲染管线 — NeoX 引擎';
+</script>
+</body>
+</html>

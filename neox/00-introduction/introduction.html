@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Introduction — NeoX Engine Rendering Deep Dive</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Gudea">
+  <script>(function(){if(localStorage.getItem('neox-doc-lang')==='zh'){document.documentElement.classList.add('lang-zh');document.documentElement.lang='zh-CN';}})();</script>
+  <style>
+    html:not(.lang-zh) [lang="zh"]{display:none;} html.lang-zh [lang="en"]{display:none;}
+    #lang-btn{position:fixed;top:16px;right:20px;z-index:999;background:#37425d;color:#fff;border:none;border-radius:4px;padding:5px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:Gudea,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.2);transition:background .15s;} #lang-btn:hover{background:#4a5a7a;}
+    *{box-sizing:border-box;margin:0;padding:0;} body{font-family:Gudea,sans-serif;font-size:16px;line-height:1.8;color:#111;background:#eee;}
+    #wrapper{max-width:1100px;margin:0 auto;display:flex;align-items:flex-start;padding:40px 24px;gap:36px;}
+    #sidebar{width:240px;flex-shrink:0;font-size:13px;}
+    #content{flex:1;min-width:0;}
+    /* == Series Navigation == */
+    #series-nav{margin-bottom:24px;padding-bottom:0;}
+    #series-nav ol,#series-nav li{list-style:none;padding-left:0;}
+    .snav-label{font-size:11px;font-weight:800;color:#2d6a5a;text-transform:uppercase;letter-spacing:.14em;display:block;margin-bottom:10px;padding-bottom:4px;border-bottom:2px solid #2d6a5a;}
+    #series-nav > ol{list-style:none;padding:0;margin:0;}
+    .snav-ch{margin-bottom:10px;}
+    .snav-ch > span{font-size:11px;font-weight:800;letter-spacing:.06em;color:#fff;background:#3d8070;display:block;padding:3px 7px 3px 6px;border-radius:3px;margin-bottom:3px;text-transform:uppercase;}
+    .snav-ch > ol{padding-left:0;margin-top:0;}
+    .snav-item{margin-bottom:1px;}
+    .snav-item a{font-size:13.5px;color:#666;text-decoration:none;display:block;padding:3px 6px;border-left:3px solid transparent;border-radius:0 3px 3px 0;transition:color .12s,background .12s,border-color .12s;}
+    .snav-item a:hover{color:#2d6a5a;background:#edf5f3;border-left-color:#a8d4c8;}
+    .snav-item.active a{color:#2d6a5a;font-weight:700;background:#e2f0ec;border-left-color:#2d6a5a;}
+    /* == Contents == */
+    #sidebar > h2{font-size:10.5px;font-style:italic;font-weight:400;color:#b0b0b0;letter-spacing:0;text-transform:none;margin-bottom:8px;border:none;padding:0;margin-top:20px;padding-top:16px;border-top:1px dashed #ddd;}
+    #sidebar > ol{list-style:none !important;padding:0;margin:0;}
+    #sidebar > ol > li{list-style:none !important;margin-bottom:5px;}
+    #sidebar > ol > li a{color:#666;text-decoration:none;display:block;padding:1px 0;font-size:12px;transition:color .12s;}
+    #sidebar > ol > li a:hover{color:#58A;}
+    #sidebar > ol > li a::before{content:none;}
+    /* == Page header == */
+    .page-header{margin-bottom:32px;padding-bottom:20px;border-bottom:1px solid #ddd;}
+    .page-header .crumb{font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
+    .page-header h1{font-size:1.8rem;font-weight:900;color:#303236;margin-bottom:8px;line-height:1.25;}
+    .page-header .subtitle{font-family:'Courier New',monospace;font-size:13px;color:#777;}
+    h2{color:#37425d;font-size:22px;margin:36px 0 10px;} h3{color:#633739;font-size:17px;margin:24px 0 8px;}
+    p{margin-bottom:14px;} a{color:#58A;text-decoration:none;} a:hover{text-decoration:underline;} strong{color:#222;}
+    .fun{font-family:'Courier New',monospace;color:#2a6496;} .def{color:green;font-weight:600;}
+    code{font-family:'Courier New',monospace;font-size:14px;background:#ddd;border-radius:3px;padding:1px 5px;}
+    .note{display:block;margin:18px 0;padding:15px;background:#D8F5D8;color:#444;border-radius:5px;border:2px solid #AFDFAF;font-size:15px;line-height:1.7;}
+    ul,ol{padding-left:22px;margin-bottom:14px;} li{margin-bottom:5px;}
+    .table-wrap{overflow-x:auto;margin:14px 0;} table{border-collapse:collapse;font-size:14px;width:100%;}
+    th,td{padding:8px 12px;border-bottom:1px solid #aaa;text-align:left;} th{border-bottom:2px solid #888;font-weight:700;background:#ddd;} tr:nth-child(even) td{background:#e8e8e8;}
+    td:first-child{font-family:'Courier New',monospace;font-size:13px;color:#2a6496;white-space:nowrap;}
+    .arch-diagram{background:#fff;border:1px solid #ccc;border-radius:5px;padding:22px;margin:16px 0;font-family:'Courier New',monospace;font-size:13px;line-height:1.9;overflow-x:auto;}
+    .series-map{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0;}
+    .series-card{background:#fff;border:1px solid #ccc;border-left:4px solid #3d8070;border-radius:0 5px 5px 0;padding:12px 14px;}
+    .series-card h4{font-size:12px;font-weight:800;text-transform:uppercase;color:#3d8070;letter-spacing:.06em;margin-bottom:6px;}
+    .series-card ul{padding-left:14px;margin:0;} .series-card li{font-size:13px;margin-bottom:2px;color:#555;}
+    .series-card li a{color:#58A;}
+    .page-nav{display:flex;justify-content:flex-end;margin:36px 0 0;padding-top:16px;border-top:1px solid #ddd;font-size:14px;}
+    .page-nav a{color:#58A;text-decoration:none;display:flex;align-items:center;gap:6px;}
+    .page-nav a:hover{text-decoration:underline;}
+    .page-nav .pn-label{font-size:11px;color:#aaa;text-transform:uppercase;display:block;}
+    .page-nav .pn-title{display:block;} .page-nav .next{text-align:right;}
+    footer{margin-top:48px;padding-top:16px;border-top:1px solid #ccc;font-size:12px;color:#aaa;text-align:center;}
+    @media(max-width:800px){#wrapper{flex-direction:column;padding:20px 16px;}#sidebar{width:100%;}
+    .series-map{grid-template-columns:1fr;}}
+  </style>
+</head>
+<body>
+<button id="lang-btn" onclick="toggleLang()"><span lang="en">中文</span><span lang="zh">English</span></button>
+<div id="wrapper">
+
+<!-- ════ SIDEBAR ════ -->
+<nav id="sidebar">
+  <div id="series-nav">
+    <span class="snav-label"><span lang="en">Series</span><span lang="zh">系列</span></span>
+    <ol>
+      <li class="snav-ch"><span lang="en">00 Introduction</span><span lang="zh">00 简介</span>
+        <ol>
+          <li class="snav-item active"><a href="../00-introduction/introduction.html"><span lang="en">Introduction</span><span lang="zh">简介</span></a></li>
+        </ol>
+      </li>
+      <li class="snav-ch"><span lang="en">01 Shader System</span><span lang="zh">01 Shader 系统</span>
+        <ol>
+          <li class="snav-item"><a href="../01-shader-system/nfx-surf.html"><span lang="en">NFX & SURF Format</span><span lang="zh">NFX & SURF 格式</span></a></li>
+          <li class="snav-item"><a href="../01-shader-system/hlsl-dialect.html"><span lang="en">NeoX HLSL Dialect</span><span lang="zh">NeoX HLSL 方言</span></a></li>
+        </ol>
+      </li>
+      <li class="snav-ch"><span lang="en">02 Rendering Pipeline</span><span lang="zh">02 渲染管线</span>
+        <ol>
+          <li class="snav-item"><a href="../02-rendering-pipeline/forward-shading.html"><span lang="en">Forward Shading</span><span lang="zh">前向渲染</span></a></li>
+          <li class="snav-item"><a href="../02-rendering-pipeline/deferred-shading.html"><span lang="en">Deferred Shading</span><span lang="zh">延迟渲染</span></a></li>
+        </ol>
+      </li>
+      <li class="snav-ch"><span lang="en">03 Material System</span><span lang="zh">03 材质系统</span>
+        <ol>
+          <li class="snav-item"><a href="../03-material-system/pbr-material.html"><span lang="en">PBR Material</span><span lang="zh">PBR 材质</span></a></li>
+          <li class="snav-item"><a href="../03-material-system/multi-layered-pbr.html"><span lang="en">Multi-Layered PBR</span><span lang="zh">多层 PBR</span></a></li>
+        </ol>
+      </li>
+      <li class="snav-ch"><span lang="en">04 Lighting Models</span><span lang="zh">04 光照模型</span>
+        <ol>
+          <li class="snav-item"><a href="../04-lighting-models/ggx-brdf.html"><span lang="en">GGX BRDF</span><span lang="zh">GGX BRDF</span></a></li>
+          <li class="snav-item"><a href="../04-lighting-models/shading-models.html"><span lang="en">13 Shading Models</span><span lang="zh">13 种光照模型</span></a></li>
+        </ol>
+      </li>
+      <li class="snav-ch"><span lang="en">05 Post Processing</span><span lang="zh">05 后处理</span>
+        <ol>
+          <li class="snav-item"><a href="../05-post-processing/post-effects.html"><span lang="en">Post Effects Overview</span><span lang="zh">后处理全景</span></a></li>
+        </ol>
+      </li>
+    </ol>
+  </div>
+  <h2><span lang="en">Contents</span><span lang="zh">目录</span></h2>
+  <ol>
+    <li><a href="#s1"><span lang="en">What is NeoX?</span><span lang="zh">什么是 NeoX？</span></a></li>
+    <li><a href="#s2"><span lang="en">Core Architecture</span><span lang="zh">核心架构</span></a></li>
+    <li><a href="#s3"><span lang="en">Shader System Design</span><span lang="zh">Shader 系统设计</span></a></li>
+    <li><a href="#s4"><span lang="en">Rendering Technologies</span><span lang="zh">渲染技术</span></a></li>
+    <li><a href="#s5"><span lang="en">vs UE5.6 Comparison</span><span lang="zh">与 UE5.6 对比</span></a></li>
+    <li><a href="#s6"><span lang="en">How to Read This Series</span><span lang="zh">如何阅读本系列</span></a></li>
+    <li><a href="#s7"><span lang="en">Series Map</span><span lang="zh">系列地图</span></a></li>
+  </ol>
+</nav>
+
+<!-- ════ MAIN CONTENT ════ -->
+<main id="content">
+  <div class="page-header">
+    <div class="crumb">NeoX Engine &middot; Rendering Deep Dive &middot; Introduction</div>
+    <h1>
+      <span lang="en">Introduction</span>
+      <span lang="zh">简介</span>
+    </h1>
+    <div class="subtitle">res/shader/ &middot; G86 Project</div>
+  </div>
+
+  <!-- s1 -->
+  <h2 id="s1"><span lang="en">What is NeoX Engine?</span><span lang="zh">什么是 NeoX 引擎？</span></h2>
+
+  <p lang="en">
+    NeoX is NetEase's proprietary real-time rendering engine, powering titles like "Infinite Lagrange" (无尽的拉格朗日). 
+    Unlike commercial engines, NeoX provides <span class="def">complete shader-level control</span> — every rendering technique 
+    is implemented through handwritten HLSL shaders, NFX effect files, and SURF material descriptors. This gives artists 
+    unprecedented technical freedom but requires deep understanding of the rendering pipeline to use effectively.
+  </p>
+  <p lang="zh">
+    NeoX 是网易自研的实时渲染引擎，支持《无尽的拉格朗日》等游戏项目。与商业引擎不同，NeoX 提供<span class="def">完整的 Shader 级控制</span>——
+    所有渲染技术都通过手写 HLSL 着色器、NFX 效果文件和 SURF 材质描述符实现。这为美术师提供了前所未有的技术自由度，
+    但需要对渲染管线有深入理解才能有效使用。
+  </p>
+
+  <!-- s2 -->
+  <h2 id="s2"><span lang="en">Core Architecture</span><span lang="zh">核心架构</span></h2>
+
+  <p lang="en">
+    NeoX's rendering architecture is organized around three file types that separate concerns:
+  </p>
+  <p lang="zh">
+    NeoX 的渲染架构围绕三种文件类型组织，分离了不同关注点：
+  </p>
+
+  <div class="arch-diagram">
+Material Pipeline
+  |
+  +-- .surf (XML)         // Material Properties Declaration
+  |    +-- LightingModel   (Isotropy/Skin/Hair/ClearCoat/Toon...)
+  |    +-- Code File       --&gt; points to .hlsl
+  |    +-- Macro Switches  (LIGHT_ENABLE, NORMAL_MAP_ENABLE...)
+  |    +-- Resources       (Tex0-Tex7 slots, Parameters)
+  |
+  +-- .nfx                // Technique/Pass/Shader Entry Points
+  |    +-- Technique       (TShader)
+  |    +-- Pass            (p0, p1...)
+  |    +-- VertexShader    --&gt; .vs es300 vs_main
+  |    +-- PixelShader     --&gt; .ps es300 ps_main
+  |
+  +-- .hlsl               // Shader Implementation (HLSL Dialect)
+       +-- Material Functions (CalcMaterialParam)
+       +-- Property Getters   (GetAlbedo/Normal/Roughness/Metalness)
+       +-- Lighting Code      (forward_shading.hlsl)
+</div>
+
+  <p lang="en">
+    This three-tier system decouples material authoring (.surf editing), rendering technique (.nfx), and shader code (.hlsl).
+    Artists primarily work with .surf files, while engineers write .hlsl implementations.
+  </p>
+  <p lang="zh">
+    这个三层系统将材质创作（.surf 编辑）、渲染技法（.nfx）和着色器代码（.hlsl）解耦。
+    美术师主要使用 .surf 文件，而工程师编写 .hlsl 实现。
+  </p>
+
+  <!-- s3 -->
+  <h2 id="s3"><span lang="en">Shader System Design Philosophy</span><span lang="zh">Shader 系统设计哲学</span></h2>
+
+  <p lang="en">
+    NeoX's shader system is built on several key principles that differentiate it from UE5:
+  </p>
+  <p lang="zh">
+    NeoX 的 Shader 系统基于几个关键原则，这些原则使其区别于 UE5：
+  </p>
+
+  <ul>
+    <li lang="en"><strong>No Visual Shader Editor:</strong> All materials are written as HLSL code or configured via XML. No node-based Material Editor like UE's Blueprint system.</li>
+    <li lang="zh"><strong>无可视化 Shader 编辑器：</strong>所有材质都通过 HLSL 代码编写或 XML 配置。没有像 UE 蓝图系统那样的节点编辑器。</li>
+    
+    <li lang="en"><strong>Cross-Platform by Design:</strong> Shaders are written in a custom HLSL dialect that compiles to both D3D11 and OpenGL ES/Metal. Pre-compiled <code>.ps</code>/<code>.vs</code> files for GL/Metal platforms are checked into the repository.</li>
+    <li lang="zh"><strong>跨平台设计：</strong>着色器使用自定义 HLSL 方言编写，可编译到 D3D11 和 OpenGL ES/Metal。预编译的 <code>.ps</code>/<code>.vs</code> 文件（GL/Metal 平台）直接提交到代码库。</li>
+    
+    <li lang="en"><strong>Declarative Pipeline Configuration:</strong> The entire rendering pipeline is configured via <code>forward_shading.render</code> XML file, which declares VertexFragmentModels, LightingModels, BlendStates, DepthStates, and ShaderCompositors in one place.</li>
+    <li lang="zh"><strong>声明式管线配置：</strong>整个渲染管线通过 <code>forward_shading.render</code> XML 文件配置，在一处声明 VertexFragmentModels、LightingModels、BlendStates、DepthStates 和 ShaderCompositors。</li>
+    
+    <li lang="en"><strong>Macro-Based Shader Variants:</strong> Instead of UE's ShaderPermutationDomain, NeoX uses <code>macro_define.xml</code> to enumerate all valid macro combinations (INSTANCE_TYPE, TON_MAPPING_TYPE, LOD_LEVEL_TYPE, etc.).</li>
+    <li lang="zh"><strong>基于宏的 Shader 变体：</strong>NeoX 使用 <code>macro_define.xml</code> 枚举所有有效宏组合（INSTANCE_TYPE、TON_MAPPING_TYPE、LOD_LEVEL_TYPE 等），而不是 UE 的 ShaderPermutationDomain。</li>
+  </ul>
+
+  <!-- s4 -->
+  <h2 id="s4"><span lang="en">Rendering Technologies</span><span lang="zh">渲染技术</span></h2>
+
+  <p lang="en">
+    NeoX implements a comprehensive set of rendering technologies, with some unique systems not found in UE5:
+  </p>
+  <p lang="zh">
+    NeoX 实现了一套全面的渲染技术，其中一些独特系统在 UE5 中找不到：
+  </p>
+
+  <div class="table-wrap"><table>
+    <thead><tr>
+      <th><span lang="en">Technology</span><span lang="zh">技术</span></th>
+      <th><span lang="en">NeoX Implementation</span><span lang="zh">NeoX 实现</span></th>
+      <th><span lang="en">UE5.6 Equivalent</span><span lang="zh">UE5.6 对应物</span></th>
+    </tr></thead>
+    <tbody>
+      <tr>
+        <td>BRDF</td>
+        <td><span lang="en">GGX (D_GGX + F_Schlick + SmithJoint)</span><span lang="zh">GGX（D_GGX + F_Schlick + SmithJoint）</span></td>
+        <td><span lang="en">Similar (GGX with slight variations)</span><span lang="zh">类似（GGX 略有差异）</span></td>
+      </tr>
+      <tr>
+        <td><span lang="en">Shading Models</span><span lang="zh">光照模型</span></td>
+        <td><span lang="en">13 models (Isotropy/Skin/Hair/ClearCoat/Toon/SSSS/etc.)</span><span lang="zh">13 种模型（Isotropy/Skin/Hair/ClearCoat/Toon/SSSS等）</span></td>
+        <td><span lang="en">11 models (no built-in Toon)</span><span lang="zh">11 种模型（无内置 Toon）</span></td>
+      </tr>
+      <tr>
+        <td><span lang="en">Multi-Layered PBR</span><span lang="zh">多层 PBR</span></td>
+        <td><span lang="en">Built-in N-layer clearcoat system</span><span lang="zh">内置 N 层清漆系统</span></td>
+        <td><span lang="en">Substrate (experimental, UE5.4+)</span><span lang="zh">Substrate（实验性，UE5.4+）</span></td>
+      </tr>
+      <tr>
+        <td><span lang="en">Planet Rendering</span><span lang="zh">星球渲染</span></td>
+        <td><span lang="en">✓ Complete planet shader system (672-line library)</span><span lang="zh">✓ 完整星球着色器系统（672 行库）</span></td>
+        <td><span lang="en">✗ No built-in system</span><span lang="zh">✗ 无内置系统</span></td>
+      </tr>
+      <tr>
+        <td><span lang="en">Post Processing</span><span lang="zh">后处理</span></td>
+        <td><span lang="en">~60+ hand-written effects</span><span lang="zh">~60+ 手写效果</span></td>
+        <td><span lang="en">~30+ built-in + PostProcessVolume</span><span lang="zh">~30+ 内置 + PostProcessVolume</span></td>
+      </tr>
+      <tr>
+        <td><span lang="en">Dynamic GI</span><span lang="zh">动态 GI</span></td>
+        <td><span lang="en">Light Probe SH (limited)</span><span lang="zh">Light Probe SH（有限）</span></td>
+        <td><span lang="en">Lumen (full dynamic GI)</span><span lang="zh">Lumen（全动态 GI）</span></td>
+      </tr>
+      <tr>
+        <td>Nanite</td>
+        <td><span lang="en">✗ No equivalent</span><span lang="zh">✗ 无对应物</span></td>
+        <td><span lang="en">✓ Virtual geometry system</span><span lang="zh">✓ 虚拟几何系统</span></td>
+      </tr>
+      <tr>
+        <td><span lang="en">Shadow Maps</span><span lang="zh">阴影贴图</span></td>
+        <td>CSM</td>
+        <td><span lang="en">CSM + Virtual Shadow Maps</span><span lang="zh">CSM + 虚拟阴影贴图</span></td>
+      </tr>
+    </tbody>
+  </table></div>
+
+  <!-- s5 -->
+  <h2 id="s5"><span lang="en">NeoX vs UE5.6 — Key Differences</span><span lang="zh">NeoX vs UE5.6 — 关键差异</span></h2>
+
+  <div class="note">
+    <span lang="en"><strong>Design Philosophy:</strong> NeoX prioritizes <em>complete shader-level control</em> and <em>minimal abstraction layers</em>. Every rendering feature is a direct HLSL implementation. UE5 prioritizes <em>high-level tooling</em> (Material Editor, Niagara, Blueprint) and <em>next-gen rendering systems</em> (Nanite/Lumen/VSM) at the cost of more abstraction layers.</span>
+    <span lang="zh"><strong>设计哲学：</strong>NeoX 优先考虑<em>完整的 Shader 级控制</em>和<em>最少的抽象层</em>。每个渲染功能都是直接的 HLSL 实现。UE5 优先考虑<em>高层工具</em>（材质编辑器、Niagara、蓝图）和<em>次世代渲染系统</em>（Nanite/Lumen/VSM），代价是更多抽象层。</span>
+  </div>
+
+  <p lang="en">
+    <strong>When NeoX excels:</strong> Projects requiring deep customization of rendering algorithms, mobile optimization 
+    with tight memory budgets, or specific visual styles (e.g., stylized toon shading, procedural space effects) benefit 
+    from NeoX's direct shader control.
+  </p>
+  <p lang="zh">
+    <strong>NeoX 擅长的场景：</strong>需要深度定制渲染算法、移动端优化（严格内存预算）、或特定视觉风格（如风格化卡通着色、程序化太空效果）的项目
+    受益于 NeoX 的直接 Shader 控制。
+  </p>
+
+  <p lang="en">
+    <strong>When UE5 excels:</strong> Projects requiring film-quality visuals in real time, large open worlds, 
+    or rapid prototyping benefit from UE5's Nanite/Lumen/VSM and high-level authoring tools.
+  </p>
+  <p lang="zh">
+    <strong>UE5 擅长的场景：</strong>需要实时电影级画质、大型开放世界、或快速原型开发的项目
+    受益于 UE5 的 Nanite/Lumen/VSM 和高层创作工具。
+  </p>
+
+  <!-- s6 -->
+  <h2 id="s6"><span lang="en">How to Read This Series</span><span lang="zh">如何阅读本系列</span></h2>
+
+  <p lang="en">
+    This series is structured to mirror the actual shader codebase organization at <code>res/shader/</code>. 
+    Each article examines a specific subsystem with references to actual file paths in the G86 project.
+  </p>
+  <p lang="zh">
+    本系列按照 <code>res/shader/</code> 中实际 Shader 代码库的组织结构编写。
+    每篇文章检查特定子系统，并引用 G86 项目中的实际文件路径。
+  </p>
+
+  <div class="note">
+    <span lang="en"><strong>Suggested reading order:</strong> Start with the Shader System articles (01-A, 01-B) to understand NFX/SURF/HLSL file formats. Then read the Rendering Pipeline articles (02-A, 02-B) for the big picture. Material System (03) and Lighting Models (04) build on the shader system foundation. Post Processing (05) can be read independently.</span>
+    <span lang="zh"><strong>建议阅读顺序：</strong>从 Shader 系统文章（01-A、01-B）开始了解 NFX/SURF/HLSL 文件格式。然后阅读渲染管线文章（02-A、02-B）获得全局视图。材质系统（03）和光照模型（04）建立在 Shader 系统基础上。后处理（05）可以独立阅读。</span>
+  </div>
+
+  <!-- s7 -->
+  <h2 id="s7"><span lang="en">Series Map</span><span lang="zh">系列地图</span></h2>
+
+  <div class="series-map">
+    <div class="series-card">
+      <h4><span lang="en">01 Shader System</span><span lang="zh">01 Shader 系统</span></h4>
+      <ul>
+        <li><a href="../01-shader-system/nfx-surf.html"><span lang="en">NFX & SURF Format</span><span lang="zh">NFX & SURF 格式</span></a></li>
+        <li><a href="../01-shader-system/hlsl-dialect.html"><span lang="en">NeoX HLSL Dialect</span><span lang="zh">NeoX HLSL 方言</span></a></li>
+      </ul>
+    </div>
+    <div class="series-card">
+      <h4><span lang="en">02 Rendering Pipeline</span><span lang="zh">02 渲染管线</span></h4>
+      <ul>
+        <li><a href="../02-rendering-pipeline/forward-shading.html"><span lang="en">Forward Shading Pipeline</span><span lang="zh">前向渲染管线</span></a></li>
+        <li><a href="../02-rendering-pipeline/deferred-shading.html"><span lang="en">Deferred Shading Pipeline</span><span lang="zh">延迟渲染管线</span></a></li>
+      </ul>
+    </div>
+    <div class="series-card">
+      <h4><span lang="en">03 Material System</span><span lang="zh">03 材质系统</span></h4>
+      <ul>
+        <li><a href="../03-material-system/pbr-material.html"><span lang="en">PBR Material System</span><span lang="zh">PBR 材质系统</span></a></li>
+        <li><a href="../03-material-system/multi-layered-pbr.html"><span lang="en">Multi-Layered PBR</span><span lang="zh">多层 PBR</span></a></li>
+      </ul>
+    </div>
+    <div class="series-card">
+      <h4><span lang="en">04 Lighting Models</span><span lang="zh">04 光照模型</span></h4>
+      <ul>
+        <li><a href="../04-lighting-models/ggx-brdf.html"><span lang="en">GGX BRDF Implementation</span><span lang="zh">GGX BRDF 实现</span></a></li>
+        <li><a href="../04-lighting-models/shading-models.html"><span lang="en">13 Shading Models</span><span lang="zh">13 种光照模型</span></a></li>
+      </ul>
+    </div>
+    <div class="series-card">
+      <h4><span lang="en">05 Post Processing</span><span lang="zh">05 后处理</span></h4>
+      <ul>
+        <li><a href="../05-post-processing/post-effects.html"><span lang="en">Post Effects Overview</span><span lang="zh">后处理全景</span></a></li>
+      </ul>
+    </div>
+    <div class="series-card">
+      <h4><span lang="en">06 Custom Features *(planned)*</span><span lang="zh">06 自定义功能 *(待写)*</span></h4>
+      <ul>
+        <li style="color:#aaa;font-style:italic"><span lang="en">Planet Rendering System</span><span lang="zh">星球渲染系统</span></li>
+        <li style="color:#aaa;font-style:italic"><span lang="en">PSE Particle System</span><span lang="zh">PSE 粒子系统</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="page-nav">
+    <a href="../01-shader-system/nfx-surf.html" class="next">
+      <span class="pn-label">Next &rarr;</span>
+      <span class="pn-title"><span lang="en">NFX & SURF Format</span><span lang="zh">NFX & SURF 格式</span></span>
+    </a>
+  </div>
+
+  <footer>NeoX Engine &middot; G86 Project Rendering Deep Dive<br>For learning purposes</footer>
+</main>
+</div>
+
+<script>
+function toggleLang(){
+  var h=document.documentElement;
+  if(h.classList.contains('lang-zh')){h.classList.remove('lang-zh');h.lang='en';document.title='Introduction — NeoX Engine Rendering Deep Dive';localStorage.setItem('neox-doc-lang','en');}
+  else{h.classList.add('lang-zh');h.lang='zh-CN';document.title='简介 — NeoX 引擎渲染深度解析';localStorage.setItem('neox-doc-lang','zh');}
+}
+if(document.documentElement.classList.contains('lang-zh'))document.title='简介 — NeoX 引擎渲染深度解析';
+</script>
+</body>
+</html>

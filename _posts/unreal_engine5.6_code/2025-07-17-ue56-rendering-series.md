@@ -42,6 +42,7 @@ A hands-on reading series through the C++ source of Unreal Engine 5.6's renderin
 | Article | Topic |
 |---|---|
 | [Shader Compilation & Material Translation](/ue/03-shader-architecture/material-translation.html) | `FShader` hierarchy, permutation domains, `FHLSLMaterialTranslator`, ShaderMap caching |
+| [Post-Processing Pipeline](/ue/03-shader-architecture/post-processing.html) | Execution order (EPass enum), all 16 effects, TSR pivot, Tonemap+LUT, three ways to write custom PP shaders |
 
 ---
 

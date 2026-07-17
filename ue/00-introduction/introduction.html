@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Introduction — UE 5.6 Rendering Source Deep Dive</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Gudea">
+  <script>(function(){if(localStorage.getItem('ue-doc-lang')==='zh'){document.documentElement.classList.add('lang-zh');document.documentElement.lang='zh-CN';}})();</script>
+  <style>
+    html:not(.lang-zh) [lang="zh"]{display:none;} html.lang-zh [lang="en"]{display:none;}
+    #lang-btn{position:fixed;top:16px;right:20px;z-index:999;background:#37425d;color:#fff;border:none;border-radius:4px;padding:5px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:Gudea,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.2);transition:background .15s;} #lang-btn:hover{background:#4a5a7a;}
+    *{box-sizing:border-box;margin:0;padding:0;} body{font-family:Gudea,sans-serif;font-size:16px;line-height:1.8;color:#111;background:#eee;}
+    #wrapper{max-width:1100px;margin:0 auto;display:flex;align-items:flex-start;padding:40px 24px;gap:36px;}
+    #sidebar{width:240px;flex-shrink:0;font-size:13px;}
+    #content{flex:1;min-width:0;}
+    /* == Series Navigation == */
+    #series-nav{margin-bottom:24px;padding-bottom:0;}
+    #series-nav ol,#series-nav li{list-style:none;padding-left:0;}
+    .snav-label{font-size:11px;font-weight:800;color:#37425d;text-transform:uppercase;letter-spacing:.14em;display:block;margin-bottom:10px;padding-bottom:4px;border-bottom:2px solid #37425d;}
+    #series-nav > ol{list-style:none;padding:0;margin:0;}
+    .snav-ch{margin-bottom:10px;}
+    .snav-ch > span{font-size:11px;font-weight:800;letter-spacing:.06em;color:#fff;background:#5a6a80;display:block;padding:3px 7px 3px 6px;border-radius:3px;margin-bottom:3px;text-transform:uppercase;}
+    .snav-ch > ol{padding-left:0;margin-top:0;}
+    .snav-item{margin-bottom:1px;}
+    .snav-item a{font-size:13.5px;color:#666;text-decoration:none;display:block;padding:3px 6px;border-left:3px solid transparent;border-radius:0 3px 3px 0;transition:color .12s,background .12s,border-color .12s;}
+    .snav-item a:hover{color:#37425d;background:#f0f2f5;border-left-color:#c0cad8;}
+    .snav-item.active a{color:#37425d;font-weight:700;background:#e8ecf4;border-left-color:#37425d;}
+    /* == Contents == */
+    #sidebar > h2{font-size:10.5px;font-style:italic;font-weight:400;color:#b0b0b0;letter-spacing:0;text-transform:none;margin-bottom:8px;border:none;padding:0;margin-top:20px;padding-top:16px;border-top:1px dashed #ddd;}
+    #sidebar > ol{list-style:none !important;padding:0;margin:0;}
+    #sidebar > ol > li{list-style:none !important;margin-bottom:5px;}
+    #sidebar > ol > li a{color:#666;text-decoration:none;display:block;padding:1px 0;font-size:12px;transition:color .12s;}
+    #sidebar > ol > li a:hover{color:#58A;}
+    #sidebar > ol > li a::before{content:none;}
+    /* == Page header == */
+    .page-header{margin-bottom:32px;padding-bottom:20px;border-bottom:1px solid #ddd;}
+    .page-header .crumb{font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
+    .page-header h1{font-size:1.8rem;font-weight:900;color:#303236;margin-bottom:8px;line-height:1.25;}
+    .page-header .subtitle{font-family:'Courier New',monospace;font-size:13px;color:#777;}
+    h2{color:#37425d;font-size:22px;margin:36px 0 10px;} h3{color:#633739;font-size:17px;margin:24px 0 8px;}
+    p{margin-bottom:14px;} a{color:#58A;text-decoration:none;} a:hover{text-decoration:underline;} strong{color:#222;}
+    .fun{font-family:'Courier New',monospace;color:#2a6496;} .def{color:green;font-weight:600;}
+    code{font-family:'Courier New',monospace;font-size:14px;background:#ddd;border-radius:3px;padding:1px 5px;}
+    .note{display:block;margin:18px 0;padding:15px;background:#D8F5D8;color:#444;border-radius:5px;border:2px solid #AFDFAF;font-size:15px;line-height:1.7;}
+    ul,ol{padding-left:22px;margin-bottom:14px;} li{margin-bottom:5px;}
+    .table-wrap{overflow-x:auto;margin:14px 0;} table{border-collapse:collapse;font-size:14px;width:100%;}
+    th,td{padding:8px 12px;border-bottom:1px solid #aaa;text-align:left;} th{border-bottom:2px solid #888;font-weight:700;background:#ddd;} tr:nth-child(even) td{background:#e8e8e8;}
+    td:first-child{font-family:'Courier New',monospace;font-size:13px;color:#2a6496;white-space:nowrap;}
+    .arch-diagram{background:#fff;border:1px solid #ccc;border-radius:5px;padding:22px;margin:16px 0;font-family:'Courier New',monospace;font-size:13px;line-height:1.9;overflow-x:auto;}
+    .series-map{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0;}
+    .series-card{background:#fff;border:1px solid #ccc;border-left:4px solid #5a6a80;border-radius:0 5px 5px 0;padding:12px 14px;}
+    .series-card h4{font-size:12px;font-weight:800;text-transform:uppercase;color:#5a6a80;letter-spacing:.06em;margin-bottom:6px;}
+    .series-card ul{padding-left:14px;margin:0;} .series-card li{font-size:13px;margin-bottom:2px;color:#555;}
+    .series-card li a{color:#58A;}
+    .page-nav{display:flex;justify-content:flex-end;margin:36px 0 0;padding-top:16px;border-top:1px solid #ddd;font-size:14px;}
+    .page-nav a{color:#58A;text-decoration:none;display:flex;align-items:center;gap:6px;}
+    .page-nav a:hover{text-decoration:underline;}
+    .page-nav .pn-label{font-size:11px;color:#aaa;text-transform:uppercase;display:block;}
+    .page-nav .pn-title{display:block;} .page-nav .next{text-align:right;}
+    footer{margin-top:48px;padding-top:16px;border-top:1px solid #ccc;font-size:12px;color:#aaa;text-align:center;}
+    @media(max-width:800px){#wrapper{flex-direction:column;padding:20px 16px;}#sidebar{width:100%;}
+    .series-map{grid-template-columns:1fr;}}
+  </style>
+</head>
+<body>
+<button id="lang-btn" onclick="toggleLang()"><span lang="en">中文</span><span lang="zh">English</span></button>
+<div id="wrapper">
+
+<!-- ════ SIDEBAR ════ -->
+<nav id="sidebar">
+  <div id="series-nav">
+    <span class="snav-label"><span lang="en">Series</span><span lang="zh">系列</span></span>
+    <ol>
+      <li class="snav-ch"><span lang="en">00 Introduction</span><span lang="zh">00 简介</span>
+        <ol>
+          <li class="snav-item active"><a href="../00-introduction/introduction.html"><span lang="en">Introduction</span><span lang="zh">简介</span></a></li>
+        </ol>
+      </li>
+      <li class="snav-ch"><span lang="en">01 Pipeline Paradigms</span><span lang="zh">01 管线范式</span>
+        <ol>
+          <li class="snav-item"><a href="../01-pipeline-paradigms/deferred-shading.html"><span lang="en">Deferred Rendering</span><span lang="zh">延迟渲染</span></a></li>
+          <li class="snav-item"><a href="../01-pipeline-paradigms/forward-shading.html"><span lang="en">Forward Shading</span><span lang="zh">前向渲染</span></a></li>
+        </ol>
+      </li>
+      <li class="snav-ch"><span lang="en">02 Infrastructure &amp; Graph</span><span lang="zh">02 基础设施与图</span>
+        <ol>
+          <li class="snav-item"><a href="../02-infrastructure-graph/rdg-compiler.html"><span lang="en">RDG — Render Dependency Graph</span><span lang="zh">RDG 渲染依赖图</span></a></li>
+          <li class="snav-item"><a href="../02-infrastructure-graph/thread-concurrency.html"><span lang="en">Thread Concurrency</span><span lang="zh">线程并发</span></a></li>
+        </ol>
+      </li>
+      <li class="snav-ch"><span lang="en">03 Shader Architecture</span><span lang="zh">03 Shader 架构</span>
+        <ol>
+          <li class="snav-item"><a href="../03-shader-architecture/material-translation.html"><span lang="en">Shader Architecture</span><span lang="zh">Shader 架构</span></a></li>
+        </ol>
+      </li>
+      <li class="snav-ch"><span lang="en">04 Next-Gen Hardware</span><span lang="zh">04 次世代硬件</span>
+        <ol>
+          <li class="snav-item"><a href="../04-next-gen-hardware/nanite-rasterizer.html"><span lang="en">Nanite</span><span lang="zh">Nanite 虚拟几何</span></a></li>
+          <li class="snav-item"><a href="../04-next-gen-hardware/lumen-raytracing.html"><span lang="en">Lumen</span><span lang="zh">Lumen GI</span></a></li>
+          <li class="snav-item"><a href="../04-next-gen-hardware/virtual-resources.html"><span lang="en">Virtual Shadow Maps</span><span lang="zh">虚拟阴影贴图</span></a></li>
+        </ol>
+      </li>
+      <li class="snav-ch"><span lang="en">05 Engine Modding</span><span lang="zh">05 引擎魔改</span>
+        <ol>
+          <li class="snav-item"><a href="../05-engine-modding/shading-model-hack.html"><span lang="en">Custom Shading Model</span><span lang="zh">自定义着色模型</span></a></li>
+          <li class="snav-item"><a href="../05-engine-modding/niagara-gpu-compute.html"><span lang="en">Niagara GPU Compute</span><span lang="zh">Niagara GPU 计算</span></a></li>
+        </ol>
+      </li>
+      <li class="snav-ch"><span lang="en">06 Profiling</span><span lang="zh">06 性能分析</span>
+        <ol>
+          <li class="snav-item"><a href="../06-profiling-deep-dives/hardware-profiling.html"><span lang="en">Profiling</span><span lang="zh">性能分析</span></a></li>
+        </ol>
+      </li>
+    </ol>
+  </div>
+  <h2><span lang="en">Contents</span><span lang="zh">目录</span></h2>
+  <ol>
+    <li><a href="#s1"><span lang="en">What is UE 5.6?</span><span lang="zh">什么是 UE 5.6？</span></a></li>
+    <li><a href="#s2"><span lang="en">Three Renderers</span><span lang="zh">三大渲染器</span></a></li>
+    <li><a href="#s3"><span lang="en">Next-Gen Technologies</span><span lang="zh">次世代核心技术</span></a></li>
+    <li><a href="#s4"><span lang="en">Infrastructure Layer</span><span lang="zh">基础设施层</span></a></li>
+    <li><a href="#s5"><span lang="en">How to Read This Series</span><span lang="zh">如何阅读本系列</span></a></li>
+    <li><a href="#s6"><span lang="en">Prerequisites</span><span lang="zh">前置知识</span></a></li>
+    <li><a href="#s7"><span lang="en">Series Map</span><span lang="zh">系列地图</span></a></li>
+  </ol>
+</nav>
+
+<!-- ════ MAIN CONTENT ════ -->
+<main id="content">
+  <div class="page-header">
+    <div class="crumb">Unreal Engine 5.6 &middot; Source Deep Dive &middot; Introduction</div>
+    <h1>
+      <span lang="en">Introduction</span>
+      <span lang="zh">简介</span>
+    </h1>
+    <div class="subtitle">Engine/Source/Runtime/Renderer/Private/ &middot; UE 5.6</div>
+  </div>
+
+  <!-- s1 -->
+  <h2 id="s1"><span lang="en">What is Unreal Engine 5.6?</span><span lang="zh">什么是 Unreal Engine 5.6？</span></h2>
+
+  <p lang="en">
+    Unreal Engine 5.6 is Epic Games' flagship real-time rendering and game engine, used in AAA games,
+    film-quality cinematics, architectural visualization, and simulation. At its core, UE 5.6 ships three
+    revolutionary rendering technologies — <span class="def">Nanite</span>, <span class="def">Lumen</span>,
+    and <span class="def">Virtual Shadow Maps</span> — that fundamentally change how real-time content is
+    created and rendered. Understanding how these systems work at the source code level gives you a decisive
+    advantage: you can debug rendering issues no tool can explain, extend the engine for custom effects, and
+    make architectural decisions grounded in first principles rather than guesswork.
+  </p>
+  <p lang="zh">
+    Unreal Engine 5.6 是 Epic Games 的旗舰实时渲染与游戏引擎，被用于 AAA 游戏、电影级过场动画、建筑可视化和仿真领域。
+    其核心搭载了三项革命性渲染技术——<span class="def">Nanite</span>、<span class="def">Lumen</span>
+    和<span class="def">Virtual Shadow Maps</span>——从根本上改变了实时内容的创作和渲染方式。
+    理解这些系统在源码层面的工作原理能带来决定性优势：你可以调试任何工具都无法解释的渲染问题、为自定义效果扩展引擎，
+    并基于第一性原理而非猜测做出架构决策。
+  </p>
+
+  <!-- s2 -->
+  <h2 id="s2"><span lang="en">The Three Renderers — One Engine, Multiple Pipelines</span><span lang="zh">三大渲染器 — 一个引擎，多条管线</span></h2>
+
+  <p lang="en">
+    UE 5.6 does not have a single monolithic rendering path. Instead it has three distinct renderer classes
+    that share common infrastructure but implement fundamentally different GPU strategies:
+  </p>
+  <p lang="zh">
+    UE 5.6 没有单一的整体渲染路径。它有三个不同的渲染器类，共享公共基础设施，但实现根本不同的 GPU 策略：
+  </p>
+
+  <div class="arch-diagram">
+FSceneRenderer  (abstract base — SceneRendering.h)
+  │
+  ├── FDeferredShadingSceneRenderer   ← PC / Console
+  │    Deferred GBuffer → Shadow Maps → Deferred Lighting → Post Process
+  │    Supports: Nanite, Lumen, VSM, Ray Tracing, Path Tracing
+  │
+  ├── FMobileSceneRenderer            ← iOS / Android
+  │    Single-pass Forward → TBDR-optimized subpasses
+  │    Supports: Mobile Deferred (optional), Clustered Lights
+  │
+  └── (Path Tracer — inside FDeferredShadingSceneRenderer)
+       Reference-quality unbiased path tracing for cinematics</div>
+
+  <p lang="en">
+    The deferred renderer is the focus of most articles in this series. It is by far the most complex
+    (its main <span class="fun">Render()</span> function is ~2300 lines and orchestrates 12 distinct render stages),
+    but also the most powerful — it is the path used for all PC and console shipping titles in UE5.
+  </p>
+  <p lang="zh">
+    延迟渲染器是本系列大多数文章的关注焦点。它是目前最复杂的（其主 <span class="fun">Render()</span> 函数约 2300 行，
+    编排 12 个不同的渲染阶段），但也是最强大的——它是 UE5 中所有 PC 和主机发行项目使用的路径。
+  </p>
+
+  <!-- s3 -->
+  <h2 id="s3"><span lang="en">Next-Gen Technologies — The Three Pillars</span><span lang="zh">次世代核心技术 — 三大支柱</span></h2>
+
+  <p lang="en">
+    UE 5.x's landmark technologies all solve the same fundamental problem: how do you render film-quality
+    visuals in real time without crushing artists under technical constraints?
+  </p>
+  <p lang="zh">
+    UE 5.x 的标志性技术都在解决同一个根本问题：如何在不给美术师施加技术约束的情况下实时渲染电影级画质？
+  </p>
+
+  <div class="table-wrap"><table>
+    <thead><tr>
+      <th><span lang="en">Technology</span><span lang="zh">技术</span></th>
+      <th><span lang="en">The old constraint it removes</span><span lang="zh">消除的旧约束</span></th>
+      <th><span lang="en">How</span><span lang="zh">如何实现</span></th>
+    </tr></thead>
+    <tbody>
+      <tr>
+        <td>Nanite</td>
+        <td><span lang="en">Polygon budget per mesh, multiple LOD levels, draw call overhead</span><span lang="zh">每个网格的多边形预算、多个 LOD 级别、绘制调用开销</span></td>
+        <td><span lang="en">Virtualizes geometry into a cluster hierarchy (BVH/DAG); renders only screen-pixel-sized triangles via GPU-driven culling and a software rasterizer</span><span lang="zh">将几何体虚拟化为 Cluster 层级（BVH/DAG）；通过 GPU 驱动剔除和软件光栅器仅渲染屏幕像素大小的三角形</span></td>
+      </tr>
+      <tr>
+        <td>Lumen</td>
+        <td><span lang="en">Baked lightmaps, fixed-sky probes, no real-time indirect lighting for dynamic geometry</span><span lang="zh">烘焙光照贴图、固定天空探针、动态几何体无法实时间接光照</span></td>
+        <td><span lang="en">Maintains a Surface Cache (dynamic low-res atlas of direct lighting); traces rays via Mesh SDF + Screen Probes + optional Hardware RT to compute indirect bounces every frame</span><span lang="zh">维护表面缓存（直接光照的动态低分辨率图集）；每帧通过 Mesh SDF + 屏幕探针 + 可选硬件光追计算间接反弹</span></td>
+      </tr>
+      <tr>
+        <td>Virtual Shadow Maps</td>
+        <td><span lang="en">Fixed-resolution cascaded shadow maps, visible seams at cascade boundaries, separate shadow map per light</span><span lang="zh">固定分辨率级联阴影贴图、级联边界可见接缝、每个光源独立阴影贴图</span></td>
+        <td><span lang="en">Gives each light a virtual 16K×16K shadow atlas; allocates 128×128 texel pages on demand; caches static geometry pages across frames</span><span lang="zh">为每个光源提供虚拟 16K×16K 阴影图集；按需分配 128×128 纹素页面；跨帧缓存静态几何体页面</span></td>
+      </tr>
+    </tbody>
+  </table></div>
+
+  <!-- s4 -->
+  <h2 id="s4"><span lang="en">The Infrastructure Layer — What Everything Runs On</span><span lang="zh">基础设施层 — 所有技术的运行基础</span></h2>
+
+  <p lang="en">
+    Beneath Nanite, Lumen, and VSM lies an equally important infrastructure that most engineers first
+    encounter as an obstacle before understanding it as a powerful tool:
+  </p>
+  <p lang="zh">
+    在 Nanite、Lumen 和 VSM 之下，有一套同样重要的基础设施，大多数工程师最初将其视为障碍，
+    后来才理解它是一个强大的工具：
+  </p>
+
+  <ul>
+    <li lang="en"><strong>RDG (Render Dependency Graph):</strong> UE's frame-level GPU task graph. Every render pass is registered declaratively with its resource reads/writes. RDG automatically inserts barriers, culls unused passes, merges adjacent render passes, and schedules async compute. Understanding RDG is the single most important prerequisite for reading any UE rendering code.</li>
+    <li lang="zh"><strong>RDG（渲染依赖图）：</strong>UE 的帧级 GPU 任务图。每个渲染 Pass 以声明方式注册其资源读写。RDG 自动插入屏障、剔除未使用的 Pass、合并相邻渲染 Pass，并调度异步计算。理解 RDG 是阅读任何 UE 渲染代码最重要的前提条件。</li>
+    <li lang="en"><strong>Three-Thread Model:</strong> Game Thread → Render Thread → RHI Thread. UE's rendering is always one frame behind the game logic. Understanding the thread boundaries is essential to avoid race conditions when extending the engine.</li>
+    <li lang="zh"><strong>三线程模型：</strong>Game Thread → Render Thread → RHI Thread。UE 的渲染始终落后游戏逻辑一帧。理解线程边界对于在扩展引擎时避免竞争条件至关重要。</li>
+    <li lang="en"><strong>Shader System:</strong> <span class="fun">FShader</span> type hierarchy, permutation domains, <span class="fun">FHLSLMaterialTranslator</span> that converts Material Expression graphs to HLSL, and the ShaderMap caching system (DDC).</li>
+    <li lang="zh"><strong>Shader 系统：</strong><span class="fun">FShader</span> 类型层级、排列组合域、将材质表达式图转换为 HLSL 的 <span class="fun">FHLSLMaterialTranslator</span>，以及 ShaderMap 缓存系统（DDC）。</li>
+    <li lang="en"><strong>GPUScene:</strong> A GPU-side structured buffer holding all primitive data, enabling GPU-driven instance culling without CPU readback.</li>
+    <li lang="zh"><strong>GPUScene：</strong>保存所有图元数据的 GPU 侧结构化缓冲区，无需 CPU 回读即可实现 GPU 驱动的实例裁剪。</li>
+  </ul>
+
+  <!-- s5 -->
+  <h2 id="s5"><span lang="en">How to Read This Series</span><span lang="zh">如何阅读本系列</span></h2>
+
+  <p lang="en">
+    Each article in this series traces a specific area of the rendering codebase from the top down:
+    starting with the high-level function call that triggers the system, then diving into the data
+    structures and GPU shaders that do the actual work. Every claim is tied to a specific source file
+    and line number in UE 5.6.
+  </p>
+  <p lang="zh">
+    本系列每篇文章都自上而下追踪渲染代码库的特定区域：从触发系统的高级函数调用开始，然后深入到完成实际工作的数据结构和 GPU 着色器。
+    每个论断都与 UE 5.6 中的特定源文件和行号相关联。
+  </p>
+
+  <div class="note">
+    <span lang="en"><strong>Suggested reading order:</strong> Start with the RDG article (02-A) since every other article references it. Then read the pipeline overview articles (01-A Deferred, 01-B Forward) to understand the big picture. After that, the next-gen hardware articles (04-A/B/C) and infrastructure articles (02-B, 03-A) can be read in any order. The engine modding and profiling sections assume familiarity with all prior material.</span>
+    <span lang="zh"><strong>建议阅读顺序：</strong>从 RDG 文章（02-A）开始，因为其他所有文章都会引用它。然后阅读管线概览文章（01-A 延迟、01-B 前向）了解整体图景。之后，次世代硬件文章（04-A/B/C）和基础设施文章（02-B、03-A）可以任意顺序阅读。引擎魔改和性能分析部分假设你已熟悉之前所有内容。</span>
+  </div>
+
+  <!-- s6 -->
+  <h2 id="s6"><span lang="en">Prerequisites</span><span lang="zh">前置知识</span></h2>
+
+  <ul>
+    <li lang="en"><strong>C++ fluency:</strong> UE uses heavy template metaprogramming, macros, and custom containers. You don't need to know UE's C++ conventions upfront — this series explains them as they appear — but basic C++ is essential.</li>
+    <li lang="zh"><strong>C++ 熟练度：</strong>UE 大量使用模板元编程、宏和自定义容器。你不需要事先了解 UE 的 C++ 惯例——本系列在出现时会解释它们——但基本 C++ 是必需的。</li>
+    <li lang="en"><strong>Real-time rendering fundamentals:</strong> Understanding what a GBuffer is, what a render pass does, what vertex/pixel shaders are, and what "deferred shading" means at a conceptual level.</li>
+    <li lang="zh"><strong>实时渲染基础：</strong>理解 GBuffer 是什么、渲染 Pass 做什么、顶点/像素着色器是什么，以及"延迟着色"在概念层面意味着什么。</li>
+    <li lang="en"><strong>GPU architecture awareness:</strong> Knowing roughly how a GPU executes draw calls, what a compute shader is, and what VRAM bandwidth means. Knowledge of DirectX 12 or Vulkan is helpful but not required.</li>
+    <li lang="zh"><strong>GPU 架构认知：</strong>大致了解 GPU 如何执行绘制调用、计算着色器是什么，以及 VRAM 带宽意味着什么。了解 DirectX 12 或 Vulkan 有帮助但非必需。</li>
+    <li lang="en"><strong>UE installed with source access:</strong> Engine source at <code>Engine/Source/</code> and shader source at <code>Engine/Shaders/</code>. All file path references in this series assume UE 5.6.</li>
+    <li lang="zh"><strong>安装了带源码访问的 UE：</strong>引擎源码位于 <code>Engine/Source/</code>，着色器源码位于 <code>Engine/Shaders/</code>。本系列所有文件路径引用均假设 UE 5.6。</li>
+  </ul>
+
+  <!-- s7 -->
+  <h2 id="s7"><span lang="en">Series Map</span><span lang="zh">系列地图</span></h2>
+
+  <div class="series-map">
+    <div class="series-card">
+      <h4><span lang="en">01 Pipeline Paradigms</span><span lang="zh">01 管线范式</span></h4>
+      <ul>
+        <li><a href="../01-pipeline-paradigms/deferred-shading.html"><span lang="en">Deferred Rendering Pipeline</span><span lang="zh">延迟渲染管线</span></a></li>
+        <li><a href="../01-pipeline-paradigms/forward-shading.html"><span lang="en">Forward Shading Pipeline</span><span lang="zh">前向渲染管线</span></a></li>
+      </ul>
+    </div>
+    <div class="series-card">
+      <h4><span lang="en">02 Infrastructure &amp; Graph</span><span lang="zh">02 基础设施与图</span></h4>
+      <ul>
+        <li><a href="../02-infrastructure-graph/rdg-compiler.html"><span lang="en">RDG — Render Dependency Graph</span><span lang="zh">RDG 渲染依赖图</span></a></li>
+        <li><a href="../02-infrastructure-graph/thread-concurrency.html"><span lang="en">Thread Concurrency</span><span lang="zh">线程并发</span></a></li>
+      </ul>
+    </div>
+    <div class="series-card">
+      <h4><span lang="en">03 Shader Architecture</span><span lang="zh">03 Shader 架构</span></h4>
+      <ul>
+        <li><a href="../03-shader-architecture/material-translation.html"><span lang="en">Shader Compilation &amp; Material Translation</span><span lang="zh">Shader 编译与材质翻译</span></a></li>
+      </ul>
+    </div>
+    <div class="series-card">
+      <h4><span lang="en">04 Next-Gen Hardware</span><span lang="zh">04 次世代硬件</span></h4>
+      <ul>
+        <li><a href="../04-next-gen-hardware/nanite-rasterizer.html"><span lang="en">Nanite — Virtual Geometry</span><span lang="zh">Nanite 虚拟几何</span></a></li>
+        <li><a href="../04-next-gen-hardware/lumen-raytracing.html"><span lang="en">Lumen — Dynamic GI</span><span lang="zh">Lumen 动态全局光照</span></a></li>
+        <li><a href="../04-next-gen-hardware/virtual-resources.html"><span lang="en">Virtual Shadow Maps</span><span lang="zh">虚拟阴影贴图</span></a></li>
+      </ul>
+    </div>
+    <div class="series-card">
+      <h4><span lang="en">05 Engine Modding</span><span lang="zh">05 引擎魔改</span></h4>
+      <ul>
+        <li><a href="../05-engine-modding/shading-model-hack.html"><span lang="en">Custom Shading Model &amp; Substrate</span><span lang="zh">自定义着色模型与 Substrate</span></a></li>
+        <li><a href="../05-engine-modding/niagara-gpu-compute.html"><span lang="en">Niagara GPU Compute</span><span lang="zh">Niagara GPU 计算</span></a></li>
+      </ul>
+    </div>
+    <div class="series-card">
+      <h4><span lang="en">06 Profiling</span><span lang="zh">06 性能分析</span></h4>
+      <ul>
+        <li><a href="../06-profiling-deep-dives/hardware-profiling.html"><span lang="en">Profiling — Insights, RDG &amp; Hardware Profilers</span><span lang="zh">性能分析全景</span></a></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="page-nav">
+    <a href="../01-pipeline-paradigms/deferred-shading.html" class="next">
+      <span class="pn-label">Next &rarr;</span>
+      <span class="pn-title"><span lang="en">Deferred Rendering Pipeline</span><span lang="zh">延迟渲染管线</span></span>
+    </a>
+  </div>
+
+  <footer>Unreal Engine 5.6 &middot; Source Deep Dive Series<br>For learning purposes</footer>
+</main>
+</div>
+
+<script>
+function toggleLang(){
+  var h=document.documentElement;
+  if(h.classList.contains('lang-zh')){h.classList.remove('lang-zh');h.lang='en';document.title='Introduction — UE 5.6 Rendering Source Deep Dive';localStorage.setItem('ue-doc-lang','en');}
+  else{h.classList.add('lang-zh');h.lang='zh-CN';document.title='简介 — UE 5.6 渲染源码深度解析';localStorage.setItem('ue-doc-lang','zh');}
+}
+if(document.documentElement.classList.contains('lang-zh'))document.title='简介 — UE 5.6 渲染源码深度解析';
+</script>
+</body>
+</html>

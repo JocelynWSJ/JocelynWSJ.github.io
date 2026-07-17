@@ -11,10 +11,19 @@
     *{box-sizing:border-box;margin:0;padding:0;} body{font-family:Gudea,sans-serif;font-size:16px;line-height:1.8;color:#111;background:#eee;}
     #wrapper{max-width:1100px;margin:0 auto;display:flex;align-items:flex-start;padding:40px 24px;gap:36px;}
     #sidebar{width:240px;flex-shrink:0;font-size:13px;}
-    #sidebar h2{font-size:12px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;border:none;padding:0;}
-    #sidebar ol{list-style:none;padding:0;counter-reset:toc;} #sidebar ol li{counter-increment:toc;margin-bottom:4px;}
-    #sidebar ol li a{color:#555;text-decoration:none;display:block;padding:2px 0;transition:color .12s;} #sidebar ol li a:hover{color:#58A;}
-    #sidebar ol li a::before{content:counter(toc,decimal-leading-zero) '. ';color:#bbb;font-size:11px;font-family:'Courier New',monospace;}
+    #sidebar > h2 {
+      font-size: 10.5px; font-style: italic; font-weight: 400;
+      color: #b0b0b0; letter-spacing: 0; text-transform: none;
+      margin-bottom: 8px; border: none; padding: 0;
+      margin-top: 20px; padding-top: 16px;
+      border-top: 1px dashed #ddd;
+    }
+    #sidebar > ol > li a {
+      color: #666; text-decoration: none; display: block;
+      padding: 1px 0; font-size: 12px; transition: color .12s;
+    }
+    #sidebar > ol > li a:hover { color: #58A; }
+    #sidebar > ol > li a::before { content: none; }
     #content{flex:1;min-width:0;}
     .page-header{margin-bottom:32px;padding-bottom:20px;border-bottom:1px solid #ddd;}
     .page-header .crumb{font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
@@ -37,17 +46,41 @@
     footer{margin-top:48px;padding-top:16px;border-top:1px solid #ccc;font-size:12px;color:#aaa;text-align:center;}
     @media(max-width:800px){#wrapper{flex-direction:column;padding:20px 16px;}#sidebar{width:100%;position:static;max-height:none;margin-bottom:24px;}}
   
-    /* ── Series Navigation ──────────────────────────────── */
-    #series-nav { margin-bottom: 22px; border-bottom: 1px solid #ccc; padding-bottom: 16px; }
-    #series-nav .snav-label { font-size: 11px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: .08em; display: block; margin-bottom: 10px; }
-    #series-nav ol { list-style: none; padding: 0; margin: 0; }
-    .snav-ch { margin-bottom: 6px; }
-    .snav-ch > span { font-size: 11px; font-weight: 700; color: #555; display: block; padding: 2px 0; letter-spacing: .03em; }
-    .snav-ch > ol { padding-left: 10px; margin-top: 2px; }
-    .snav-item { margin-bottom: 2px; }
-    .snav-item a { font-size: 13px; color: #777; text-decoration: none; display: block; padding: 2px 0; transition: color .12s; }
-    .snav-item a:hover { color: #58A; }
-    .snav-item.active a { color: #37425d; font-weight: 700; }
+        /* == Series Navigation (book-index style) == */
+    #series-nav {
+      margin-bottom: 24px;
+      padding-bottom: 0;
+    }
+        #series-nav ol, #series-nav li { list-style: none; padding-left: 0; }
+    .snav-label {
+      font-size: 11px; font-weight: 800; color: #37425d;
+      text-transform: uppercase; letter-spacing: .14em;
+      display: block; margin-bottom: 10px;
+      padding-bottom: 4px; border-bottom: 2px solid #37425d;
+    }
+    #series-nav > ol { list-style: none; padding: 0; margin: 0; } #series-nav ol { list-style: none; padding: 0; margin: 0; }
+    .snav-ch { margin-bottom: 10px; }
+    .snav-ch > span {
+      font-size: 11px; font-weight: 800; letter-spacing: .06em;
+      color: #fff; background: #5a6a80;
+      display: block; padding: 3px 7px 3px 6px;
+      border-radius: 3px; margin-bottom: 3px;
+      text-transform: uppercase;
+    }
+    .snav-ch > ol { padding-left: 0; margin-top: 0; }
+    .snav-item { margin-bottom: 1px; }
+    .snav-item a {
+      font-size: 13.5px; color: #666; text-decoration: none;
+      display: block; padding: 3px 6px;
+      border-left: 3px solid transparent;
+      border-radius: 0 3px 3px 0;
+      transition: color .12s, background .12s, border-color .12s;
+    }
+    .snav-item a:hover { color: #37425d; background: #f0f2f5; border-left-color: #c0cad8; }
+    .snav-item.active a {
+      color: #37425d; font-weight: 700;
+      background: #e8ecf4; border-left-color: #37425d;
+    }
     /* ── Prev / Next Navigation ─────────────────────────── */
     .page-nav { display: flex; justify-content: space-between; align-items: center; margin: 36px 0 0; padding-top: 16px; border-top: 1px solid #ddd; font-size: 14px; }
     .page-nav a { color: #58A; text-decoration: none; display: flex; align-items: center; gap: 6px; max-width: 42%; }
@@ -66,6 +99,11 @@
     <div id="series-nav">
       <span class="snav-label"><span lang="en">Series</span><span lang="zh">系列</span></span>
       <ol>
+      <li class="snav-ch"><span lang="en">00 Introduction</span><span lang="zh">00 简介</span>
+        <ol>
+          <li class="snav-item"><a href="../00-introduction/introduction.html"><span lang="en">Introduction</span><span lang="zh">简介</span></a></li>
+        </ol>
+      </li>
         <li class="snav-ch"><span lang="en">01 Pipeline Paradigms</span><span lang="zh">01 管线范式</span>
           <ol>
             <li class="snav-item"><a href="../01-pipeline-paradigms/deferred-shading.html"><span lang="en">Deferred Rendering</span><span lang="zh">延迟渲染</span></a></li>

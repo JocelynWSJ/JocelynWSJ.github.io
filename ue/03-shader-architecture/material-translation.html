@@ -13,12 +13,19 @@
     *{box-sizing:border-box;margin:0;padding:0;} body{font-family:Gudea,sans-serif;font-size:16px;line-height:1.8;color:#111;background:#eee;}
     #wrapper{max-width:1100px;margin:0 auto;display:flex;align-items:flex-start;padding:40px 24px;gap:36px;}
     #sidebar{width:240px;flex-shrink:0;font-size:13px;}
-    #sidebar h2{font-size:12px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;border:none;padding:0;}
-    #sidebar ol{list-style:none;padding:0;counter-reset:toc;}
-    #sidebar ol li{counter-increment:toc;margin-bottom:4px;}
-    #sidebar ol li a{color:#555;text-decoration:none;display:block;padding:2px 0;transition:color .12s;}
-    #sidebar ol li a:hover{color:#58A;}
-    #sidebar ol li a::before{content:counter(toc,decimal-leading-zero) '. ';color:#bbb;font-size:11px;font-family:'Courier New',monospace;}
+    #sidebar > h2 {
+      font-size: 10.5px; font-style: italic; font-weight: 400;
+      color: #b0b0b0; letter-spacing: 0; text-transform: none;
+      margin-bottom: 8px; border: none; padding: 0;
+      margin-top: 20px; padding-top: 16px;
+      border-top: 1px dashed #ddd;
+    }
+    #sidebar > ol > li a {
+      color: #666; text-decoration: none; display: block;
+      padding: 1px 0; font-size: 12px; transition: color .12s;
+    }
+    #sidebar > ol > li a:hover { color: #58A; }
+    #sidebar > ol > li a::before { content: none; }
     #content{flex:1;min-width:0;}
     .page-header{margin-bottom:32px;padding-bottom:20px;border-bottom:1px solid #ddd;}
     .page-header .crumb{font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
@@ -42,17 +49,41 @@
     footer{margin-top:48px;padding-top:16px;border-top:1px solid #ccc;font-size:12px;color:#aaa;text-align:center;}
     @media(max-width:800px){#wrapper{flex-direction:column;padding:20px 16px;}#sidebar{width:100%;position:static;max-height:none;margin-bottom:24px;}}
   
-    /* ── Series Navigation ──────────────────────────────── */
-    #series-nav { margin-bottom: 22px; border-bottom: 1px solid #ccc; padding-bottom: 16px; }
-    #series-nav .snav-label { font-size: 11px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: .08em; display: block; margin-bottom: 10px; }
-    #series-nav ol { list-style: none; padding: 0; margin: 0; }
-    .snav-ch { margin-bottom: 6px; }
-    .snav-ch > span { font-size: 11px; font-weight: 700; color: #555; display: block; padding: 2px 0; letter-spacing: .03em; }
-    .snav-ch > ol { padding-left: 10px; margin-top: 2px; }
-    .snav-item { margin-bottom: 2px; }
-    .snav-item a { font-size: 13px; color: #777; text-decoration: none; display: block; padding: 2px 0; transition: color .12s; }
-    .snav-item a:hover { color: #58A; }
-    .snav-item.active a { color: #37425d; font-weight: 700; }
+        /* == Series Navigation (book-index style) == */
+    #series-nav {
+      margin-bottom: 24px;
+      padding-bottom: 0;
+    }
+        #series-nav ol, #series-nav li { list-style: none; padding-left: 0; }
+    .snav-label {
+      font-size: 11px; font-weight: 800; color: #37425d;
+      text-transform: uppercase; letter-spacing: .14em;
+      display: block; margin-bottom: 10px;
+      padding-bottom: 4px; border-bottom: 2px solid #37425d;
+    }
+    #series-nav > ol { list-style: none; padding: 0; margin: 0; } #series-nav ol { list-style: none; padding: 0; margin: 0; }
+    .snav-ch { margin-bottom: 10px; }
+    .snav-ch > span {
+      font-size: 11px; font-weight: 800; letter-spacing: .06em;
+      color: #fff; background: #5a6a80;
+      display: block; padding: 3px 7px 3px 6px;
+      border-radius: 3px; margin-bottom: 3px;
+      text-transform: uppercase;
+    }
+    .snav-ch > ol { padding-left: 0; margin-top: 0; }
+    .snav-item { margin-bottom: 1px; }
+    .snav-item a {
+      font-size: 13.5px; color: #666; text-decoration: none;
+      display: block; padding: 3px 6px;
+      border-left: 3px solid transparent;
+      border-radius: 0 3px 3px 0;
+      transition: color .12s, background .12s, border-color .12s;
+    }
+    .snav-item a:hover { color: #37425d; background: #f0f2f5; border-left-color: #c0cad8; }
+    .snav-item.active a {
+      color: #37425d; font-weight: 700;
+      background: #e8ecf4; border-left-color: #37425d;
+    }
     /* ── Prev / Next Navigation ─────────────────────────── */
     .page-nav { display: flex; justify-content: space-between; align-items: center; margin: 36px 0 0; padding-top: 16px; border-top: 1px solid #ddd; font-size: 14px; }
     .page-nav a { color: #58A; text-decoration: none; display: flex; align-items: center; gap: 6px; max-width: 42%; }
@@ -71,6 +102,11 @@
     <div id="series-nav">
       <span class="snav-label"><span lang="en">Series</span><span lang="zh">系列</span></span>
       <ol>
+      <li class="snav-ch"><span lang="en">00 Introduction</span><span lang="zh">00 简介</span>
+        <ol>
+          <li class="snav-item"><a href="../00-introduction/introduction.html"><span lang="en">Introduction</span><span lang="zh">简介</span></a></li>
+        </ol>
+      </li>
         <li class="snav-ch"><span lang="en">01 Pipeline Paradigms</span><span lang="zh">01 管线范式</span>
           <ol>
             <li class="snav-item"><a href="../01-pipeline-paradigms/deferred-shading.html"><span lang="en">Deferred Rendering</span><span lang="zh">延迟渲染</span></a></li>
@@ -120,6 +156,9 @@
     <li><a href="#s7"><span lang="en">ShaderMap &amp; Caching</span><span lang="zh">ShaderMap 与缓存</span></a></li>
     <li><a href="#s8"><span lang="en">TShaderMapRef — Runtime Lookup</span><span lang="zh">TShaderMapRef — 运行时查找</span></a></li>
     <li><a href="#s9"><span lang="en">Source Navigation</span><span lang="zh">源码导航</span></a></li>
+    <li><a href="#spp1"><span lang="en">Post-Processing Pipeline</span><span lang="zh">后处理管线</span></a></li>
+    <li><a href="#spp2"><span lang="en">All Post-Process Effects</span><span lang="zh">所有后处理效果</span></a></li>
+    <li><a href="#spp3"><span lang="en">Custom Post-Process Shader</span><span lang="zh">自定义后处理 Shader</span></a></li>
   </ol>
 </nav>
 <main id="content">
@@ -338,7 +377,220 @@ FComputeShaderUtils::<span class="fn">AddFullscreenPass</span>(GraphBuilder,
     Shader, PassParams,
     FIntVector(DispatchX, DispatchY, <span class="num">1</span>));</pre>
 
-  <h2 id="s9"><span lang="en">Source Navigation</span><span lang="zh">源码导航</span></h2>
+  
+  <!-- ════ Post-Processing Pipeline ════ -->
+  <h2 id="spp1"><span lang="en">Post-Processing Pipeline — Execution Order</span><span lang="zh">后处理管线 — 执行顺序</span></h2>
+
+  <p lang="en">
+    Post-processing in UE 5.6 is orchestrated entirely by <span class="fun">AddPostProcessingPasses()</span>
+    (<code>PostProcess/PostProcessing.cpp:347</code>). It uses a <span class="def">TOverridePassSequence</span>
+    that tracks which passes are enabled and routes the final output through the last active pass.
+    The passes form a fixed ordered chain — the <code>EPass</code> enum inside that function defines the
+    canonical execution order:
+  </p>
+  <p lang="zh">
+    UE 5.6 的后处理完全由 <span class="fun">AddPostProcessingPasses()</span>
+    （<code>PostProcess/PostProcessing.cpp:347</code>）编排。它使用 <span class="def">TOverridePassSequence</span>
+    跟踪哪些 Pass 已启用，并将最终输出路由到最后一个激活的 Pass。
+    Pass 形成固定的有序链——该函数内的 <code>EPass</code> 枚举定义了规范执行顺序：
+  </p>
+
+  <pre><span class="cm">// PostProcessing.cpp:440 — the canonical post-processing pass order</span>
+<span class="kw">enum class</span> EPass : uint32
+{
+    <span class="cm">// ── Pre-temporal ──────────────────────────────────────────────────────</span>
+    <span class="cm">// PP Materials: BL_SceneColorBeforeDOF   (injected before DOF)</span>
+    <span class="cm">// DiaphragmDOF                            (bokeh / Gaussian / cinematic)</span>
+    <span class="cm">// PP Materials: BL_SceneColorAfterDOF     (injected after DOF)</span>
+
+    <span class="cm">// ── Temporal ──────────────────────────────────────────────────────────</span>
+    <span class="cm">// TSR / TAA / TAAU                         (upscale primary → secondary res)</span>
+
+    <span class="cm">// ── Post-temporal ─────────────────────────────────────────────────────</span>
+    MotionBlur,                   <span class="cm">// needs velocity + half-res from TSR</span>
+    PostProcessMaterialBeforeBloom, <span class="cm">// BL_SceneColorBeforeBloom chain</span>
+
+    <span class="cm">// ── Bloom / Exposure chain (not explicit passes, run inside pipeline) ─</span>
+    <span class="cm">// EyeAdaptation (histogram or basic)</span>
+    <span class="cm">// LocalExposure bilateral grid</span>
+    <span class="cm">// BloomSetup → Bloom downsample pyramid → Bloom upsample pyramid</span>
+    <span class="cm">// LensFlares (composited onto Bloom)</span>
+
+    Tonemap,                      <span class="cm">// HDR → LDR (ACES / Filmic), Color Grading LUT, Vignette</span>
+    FXAA,                         <span class="cm">// Fast Approximate Anti-Aliasing (if AAM_FXAA)</span>
+    PostProcessMaterialAfterTonemapping, <span class="cm">// BL_SceneColorAfterTonemapping chain</span>
+
+    <span class="cm">// ── Debug / Visualize passes (disabled in Shipping) ──────────────────</span>
+    VisualizeLumenScene,
+    VisualizeDepthOfField,
+    VisualizeStationaryLightOverlap,
+    VisualizeLightCulling,
+    VisualizePostProcessStack,
+    VisualizeSubstrate,
+    <span class="cm">// ... (many more visualize passes) ...</span>
+    SelectionOutline,             <span class="cm">// editor-only: selected object outline</span>
+    EditorPrimitive,              <span class="cm">// editor-only: gizmos, grid</span>
+    VisualizeMotionVectors,
+    VisualizeTemporalUpscaler,
+    PixelInspector,               <span class="cm">// editor-only</span>
+    HMDDistortion,                <span class="cm">// VR lens distortion</span>
+
+    <span class="cm">// ── Final output ──────────────────────────────────────────────────────</span>
+    PrimaryUpscale,               <span class="cm">// spatial upscale if TSR not used (e.g. DLSS)</span>
+    SecondaryUpscale,             <span class="cm">// second upscale pass for super-resolution</span>
+    AlphaInvert,
+    MAX
+};</pre>
+
+  <div class="note">
+    <span lang="en"><strong>TSR and the pivot point:</strong> TSR (Temporal Super Resolution) sits between DOF and Motion Blur — it upscales from the <em>primary</em> viewport (e.g., 1440p internal) to the <em>secondary</em> viewport (e.g., 4K output). This is why Motion Blur runs <em>after</em> TSR: it needs the full-resolution output. TSR also generates half/quarter/eighth-res mip outputs in the same dispatch, which the Bloom chain samples directly to avoid redundant downsamples.</span>
+    <span lang="zh"><strong>TSR 与分水岭：</strong>TSR（时间超分辨率）位于 DOF 和运动模糊之间——它将<em>主视口</em>（如内部 1440p）上采样到<em>辅视口</em>（如 4K 输出）。这就是为什么运动模糊在 TSR <em>之后</em>运行：它需要全分辨率输出。TSR 还在同一次分发中生成半/四分之一/八分之一分辨率的 Mip 输出，Bloom 链直接采样这些输出以避免冗余下采样。</span>
+  </div>
+
+  <!-- ════ All Post-Process Effects ════ -->
+  <h2 id="spp2"><span lang="en">All Post-Processing Effects — Reference</span><span lang="zh">所有后处理效果 — 参考</span></h2>
+
+  <p lang="en">Each effect maps to one or more source files under <code>Engine/Source/Runtime/Renderer/Private/PostProcess/</code>:</p>
+  <p lang="zh">每个效果对应 <code>Engine/Source/Runtime/Renderer/Private/PostProcess/</code> 下的一个或多个源文件：</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th><span lang="en">Effect</span><span lang="zh">效果</span></th>
+        <th><span lang="en">Source File</span><span lang="zh">源文件</span></th>
+        <th><span lang="en">What it does / Key CVar</span><span lang="zh">作用 / 关键控制台变量</span></th>
+      </tr></thead>
+      <tbody>
+        <tr><td>Depth of Field</td><td><code>DiaphragmDOF.cpp</code></td><td><span lang="en">Physically accurate bokeh via a scattering-gathering algorithm; 3 quality modes: Gaussian, Bokeh, Cinematic. <code>r.DOF.Algorithm</code></span><span lang="zh">通过散射-收集算法实现物理精确散景；3 种质量模式：Gaussian、Bokeh、Cinematic。<code>r.DOF.Algorithm</code></span></td></tr>
+        <tr><td>TSR</td><td><code>TemporalSuperResolution.cpp</code></td><td><span lang="en">UE's in-house temporal upscaler (174KB source); uses motion vectors, history rejection, moire heuristics. <code>r.TSR.*</code></span><span lang="zh">UE 自研时间超分辨率（174KB 源码）；使用运动向量、历史拒绝、摩尔纹启发式算法。<code>r.TSR.*</code></span></td></tr>
+        <tr><td>TAA</td><td><code>TemporalAA.cpp</code></td><td><span lang="en">Gen4 TAA; temporal anti-aliasing without upscaling. <code>r.TemporalAA.*</code></span><span lang="zh">Gen4 TAA；无上采样的时间抗锯齿。<code>r.TemporalAA.*</code></span></td></tr>
+        <tr><td>Motion Blur</td><td><code>PostProcessMotionBlur.cpp</code></td><td><span lang="en">Screen-space motion blur using velocity buffer; supports per-object and camera blur. <code>r.MotionBlur.*</code></span><span lang="zh">使用速度缓冲区的屏幕空间运动模糊；支持逐物体和相机模糊。<code>r.MotionBlur.*</code></span></td></tr>
+        <tr><td>Eye Adaptation</td><td><code>PostProcessEyeAdaptation.cpp</code></td><td><span lang="en">Automatic exposure via histogram or basic luminance. <code>r.EyeAdaptation.*</code></span><span lang="zh">通过直方图或基本亮度实现自动曝光。<code>r.EyeAdaptation.*</code></span></td></tr>
+        <tr><td>Local Exposure</td><td><code>PostProcessLocalExposure.cpp</code></td><td><span lang="en">Per-region exposure via bilateral grid; controls highlight/shadow contrast independently. <code>r.LocalExposure.*</code></span><span lang="zh">通过双边网格实现逐区域曝光；独立控制高光/阴影对比度。<code>r.LocalExposure.*</code></span></td></tr>
+        <tr><td>Bloom</td><td><code>PostProcessWeightedSampleSum.cpp</code></td><td><span lang="en">Gaussian pyramid: 6-level downsample + upsample. Alternatively FFT Bloom for physically accurate results. <code>r.Bloom.*</code></span><span lang="zh">高斯金字塔：6 级下采样 + 上采样。或使用 FFT Bloom 获得物理精确结果。<code>r.Bloom.*</code></span></td></tr>
+        <tr><td>FFT Bloom</td><td><code>PostProcessFFTBloom.cpp</code></td><td><span lang="en">Convolution bloom using FFT for cinematic-quality lens glare. <code>r.Bloom.CrossBloom</code></span><span lang="zh">使用 FFT 的卷积 Bloom，用于电影级镜头炫光。<code>r.Bloom.CrossBloom</code></span></td></tr>
+        <tr><td>Lens Flares</td><td><code>PostProcessLensFlares.cpp</code></td><td><span lang="en">Streak flares from bright spots; composed onto the Bloom output. <code>r.LensFlare</code></span><span lang="zh">来自亮点的条纹炫光；合成到 Bloom 输出上。<code>r.LensFlare</code></span></td></tr>
+        <tr><td>Tonemap</td><td><code>PostProcessTonemap.cpp</code></td><td><span lang="en">HDR→LDR with ACES/Filmic/Linear operator; applies Color Grading LUT, Vignette, Chromatic Aberration, Film Grain. <code>r.Tonemapper.*</code></span><span lang="zh">用 ACES/Filmic/线性算子实现 HDR→LDR；应用色调映射 LUT、渐晕、色差、胶片颗粒。<code>r.Tonemapper.*</code></span></td></tr>
+        <tr><td>Color Grading LUT</td><td><code>PostProcessCombineLUTs.cpp</code></td><td><span lang="en">Combines up to 5 color grading LUTs from post-process volumes; baked into a 32×32×32 combined LUT before tonemapping. <code>r.LUT.*</code></span><span lang="zh">合并来自后处理体积的最多 5 个色调分级 LUT；在色调映射前烘焙为 32×32×32 组合 LUT。<code>r.LUT.*</code></span></td></tr>
+        <tr><td>FXAA</td><td><code>PostProcessAA.cpp</code></td><td><span lang="en">Fast Approximate Anti-Aliasing; runs after tonemapping on LDR. Lower quality than TAA/TSR but zero temporal lag. <code>r.FXAA</code></span><span lang="zh">快速近似抗锯齿；在色调映射后对 LDR 运行。质量低于 TAA/TSR，但无时间延迟。<code>r.FXAA</code></span></td></tr>
+        <tr><td>PP Materials</td><td><code>PostProcessMaterial.cpp</code></td><td><span lang="en">Artist-authored post-process materials injected at 4 blendable locations: BeforeDOF, BeforeBloom, AfterTonemapping, ReplacingTonemapper. <code>FPostProcessMaterialChain</code></span><span lang="zh">美术编写的后处理材质，注入 4 个可混合位置：BeforeDOF、BeforeBloom、AfterTonemapping、ReplacingTonemapper。<code>FPostProcessMaterialChain</code></span></td></tr>
+        <tr><td>Subsurface Scattering</td><td><code>PostProcessSubsurface.cpp</code></td><td><span lang="en">Screen-space subsurface scattering for skin/wax materials; reads from GBufferD. Runs before TAA. <code>r.SSS.*</code></span><span lang="zh">用于皮肤/蜡质材质的屏幕空间次表面散射；从 GBufferD 读取。在 TAA 之前运行。<code>r.SSS.*</code></span></td></tr>
+        <tr><td>Lens Distortion</td><td><code>LensDistortion.cpp</code></td><td><span lang="en">Physical lens distortion correction (barrel/pincushion); can run inside TSR for efficiency. <code>r.LensDistortion</code></span><span lang="zh">物理镜头畸变校正（桶形/枕形）；可在 TSR 内运行以提高效率。<code>r.LensDistortion</code></span></td></tr>
+        <tr><td>Neural Post Process</td><td><code>NeuralPostProcess.cpp</code></td><td><span lang="en">Experimental Neural Network based upscaling / filtering using NNE (Neural Network Engine). <code>r.NNE.*</code></span><span lang="zh">实验性神经网络上采样/滤波，使用 NNE（神经网络引擎）。<code>r.NNE.*</code></span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ════ Custom Post-Process Shader ════ -->
+  <h2 id="spp3"><span lang="en">Writing a Custom Post-Processing Shader — Three Methods</span><span lang="zh">编写自定义后处理 Shader — 三种方法</span></h2>
+
+  <p lang="en">
+    There are three ways to inject custom post-processing into UE's pipeline, each with different power/complexity tradeoffs:
+  </p>
+  <p lang="zh">
+    有三种方式向 UE 管线注入自定义后处理，各有不同的功能/复杂度权衡：
+  </p>
+
+  <h3><span lang="en">Method 1: Post-Process Material (No C++ required)</span><span lang="zh">方法 1：后处理材质（无需 C++）</span></h3>
+  <p lang="en">
+    Create a material with <strong>Material Domain = Post Process</strong>. Assign it to a Post Process Volume
+    or Camera with a <span class="def">Blendable Location</span> that controls when in the pipeline it runs:
+  </p>
+  <p lang="zh">
+    创建材质域为 <strong>Post Process</strong> 的材质，将其分配给后处理体积或相机，并通过<span class="def">可混合位置</span>控制它在管线中的运行时机：
+  </p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Blendable Location</th><th><span lang="en">When it runs</span><span lang="zh">运行时机</span></th><th><span lang="en">SceneColor state</span><span lang="zh">SceneColor 状态</span></th></tr></thead>
+    <tbody>
+      <tr><td>BL_SceneColorBeforeDOF</td><td><span lang="en">Before Depth of Field</span><span lang="zh">景深之前</span></td><td><span lang="en">HDR, native resolution, no blur</span><span lang="zh">HDR，原始分辨率，无模糊</span></td></tr>
+      <tr><td>BL_SceneColorBeforeBloom</td><td><span lang="en">After TAA/TSR, before Bloom</span><span lang="zh">TAA/TSR 之后，Bloom 之前</span></td><td><span lang="en">HDR, full secondary resolution</span><span lang="zh">HDR，完整辅分辨率</span></td></tr>
+      <tr><td>BL_ReplacingTonemapper</td><td><span lang="en">Replaces the tonemapper entirely</span><span lang="zh">完全替换色调映射器</span></td><td><span lang="en">HDR input, must output LDR [0,1]</span><span lang="zh">HDR 输入，必须输出 LDR [0,1]</span></td></tr>
+      <tr><td>BL_SceneColorAfterTonemapping</td><td><span lang="en">After tonemap, before upscale</span><span lang="zh">色调映射后，上采样前</span></td><td><span lang="en">LDR [0,1], final color space</span><span lang="zh">LDR [0,1]，最终色彩空间</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <h3><span lang="en">Method 2: Custom RDG Compute Pass via ISceneViewExtension</span><span lang="zh">方法 2：通过 ISceneViewExtension 注入自定义 RDG Compute Pass</span></h3>
+  <p lang="en">
+    For full control over shader code and pass placement, implement <span class="fun">ISceneViewExtension</span>
+    and override <span class="fun">SubscribeToPostProcessingPass()</span>. This is the production-quality
+    approach used by DLSS, FSR, and other third-party upscalers:
+  </p>
+  <p lang="zh">
+    若需完全控制着色器代码和 Pass 位置，实现 <span class="fun">ISceneViewExtension</span>
+    并重写 <span class="fun">SubscribeToPostProcessingPass()</span>。这是 DLSS、FSR 等第三方上采样器使用的生产级方法：
+  </p>
+
+  <pre><span class="cm">// 1. Declare your ViewExtension</span>
+<span class="kw">class</span> <span class="type">FMyPostProcessExtension</span> : <span class="kw">public</span> FSceneViewExtensionBase
+{
+    IMPLEMENT_SCENE_VIEW_EXTENSION(<span class="type">FMyPostProcessExtension</span>);
+<span class="kw">public</span>:
+    <span class="kw">virtual void</span> <span class="fn">SubscribeToPostProcessingPass</span>(
+        ISceneViewExtension::EPostProcessingPass Pass,
+        <span class="kw">const</span> FSceneView& View,
+        FAfterPassCallbackDelegateArray& InOutPassCallbacks,
+        <span class="kw">bool</span> bIsPassEnabled) <span class="kw">override</span>
+    {
+        <span class="cm">// Inject after the Tonemap pass</span>
+        <span class="kw">if</span> (Pass == ISceneViewExtension::EPostProcessingPass::Tonemap)
+        {
+            InOutPassCallbacks.Add(
+                FAfterPassCallbackDelegate::CreateRaw(<span class="kw">this</span>, &<span class="type">FMyPostProcessExtension</span>::AddMyPass));
+        }
+    }
+
+<span class="kw">private</span>:
+    FScreenPassTexture <span class="fn">AddMyPass</span>(
+        FRDGBuilder& GraphBuilder,
+        <span class="kw">const</span> FSceneView& View,
+        <span class="kw">const</span> FPostProcessMaterialInputs& Inputs)
+    {
+        FScreenPassTexture SceneColor = Inputs.<span class="fn">GetInput</span>(EPostProcessMaterialInput::SceneColor);
+        
+        <span class="cm">// Create output texture</span>
+        FRDGTextureDesc Desc = SceneColor.Texture->Desc;
+        Desc.Flags |= TexCreate_UAV;
+        FRDGTextureRef Output = GraphBuilder.<span class="fn">CreateTexture</span>(Desc, TEXT(<span class="str">"MyEffect"</span>));
+
+        <span class="cm">// Build pass parameters</span>
+        FMyEffectCS::FParameters* PassParams = GraphBuilder.<span class="fn">AllocParameters</span>&lt;FMyEffectCS::FParameters&gt;();
+        PassParams->InputTexture = SceneColor.Texture;
+        PassParams->Output = GraphBuilder.<span class="fn">CreateUAV</span>(Output);
+        PassParams->InvSize = FVector4f(<span class="num">1.0f</span>/Desc.Extent.X, <span class="num">1.0f</span>/Desc.Extent.Y, <span class="num">0</span>, <span class="num">0</span>);
+
+        TShaderMapRef&lt;FMyEffectCS&gt; ComputeShader(GetGlobalShaderMap(View.<span class="fn">GetFeatureLevel</span>()));
+        FComputeShaderUtils::<span class="fn">AddFullscreenPass</span>(GraphBuilder,
+            GetGlobalShaderMap(View.<span class="fn">GetFeatureLevel</span>()),
+            RDG_EVENT_NAME(<span class="str">"MyEffect"</span>),
+            ComputeShader, PassParams,
+            FIntVector(
+                FMath::<span class="fn">DivideAndRoundUp</span>(Desc.Extent.X, <span class="num">8</span>),
+                FMath::<span class="fn">DivideAndRoundUp</span>(Desc.Extent.Y, <span class="num">8</span>),
+                <span class="num">1</span>));
+
+        <span class="kw">return</span> FScreenPassTexture(Output, SceneColor.ViewRect);
+    }
+};
+
+<span class="cm">// 2. Register during module startup:</span>
+GEngine-&gt;ViewExtensions-&gt;<span class="fn">NewExtension</span>&lt;<span class="type">FMyPostProcessExtension</span>&gt;();</pre>
+
+  <h3><span lang="en">Method 3: Direct RDG Injection (Engine Modification)</span><span lang="zh">方法 3：直接 RDG 注入（引擎修改）</span></h3>
+  <p lang="en">
+    For maximum control — especially if you need to read GBuffer data or hook into a specific point in the
+    deferred pipeline that isn't exposed by <code>ISceneViewExtension</code> — you can directly call
+    your RDG pass from inside <span class="fun">AddPostProcessingPasses()</span> or
+    <span class="fun">FDeferredShadingSceneRenderer::Render()</span>. This requires shipping a
+    custom engine build but is the only option for passes that need per-frame GBuffer access,
+    interoperability with Lumen data, or Nanite visibility information.
+  </p>
+  <p lang="zh">
+    若需最大控制——尤其是需要读取 GBuffer 数据或接入 <code>ISceneViewExtension</code> 未暴露的延迟管线特定点——
+    可以直接从 <span class="fun">AddPostProcessingPasses()</span> 或
+    <span class="fun">FDeferredShadingSceneRenderer::Render()</span> 内部调用 RDG Pass。
+    这需要发布自定义引擎构建，但对于需要每帧 GBuffer 访问、与 Lumen 数据互操作或 Nanite 可见性信息的 Pass，这是唯一选项。
+  </p>
+<h2 id="s9"><span lang="en">Source Navigation</span><span lang="zh">源码导航</span></h2>
   <ul class="file-list">
     <li><span class="fp">RenderCore/Public/Shader.h:845</span><span class="fd"><span lang="en"><span class="fun">FShader</span> base class — parameters, bindings, type system</span><span lang="zh"><span class="fun">FShader</span> 基类 — 参数、绑定、类型系统</span></span></li>
     <li><span class="fp">RenderCore/Public/Shader.h:1754</span><span class="fd"><span lang="en"><code>IMPLEMENT_SHADER_TYPE</code> macro — static type registration</span><span lang="zh"><code>IMPLEMENT_SHADER_TYPE</code> 宏 — 静态类型注册</span></span></li>

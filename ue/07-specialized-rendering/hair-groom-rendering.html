@@ -1,0 +1,493 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hair &amp; Groom Rendering — Marschner BRDF &amp; Strand Pipeline</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Gudea">
+  <script>(function(){if(localStorage.getItem('ue-doc-lang')==='zh'){document.documentElement.classList.add('lang-zh');document.documentElement.lang='zh-CN';}})();</script>
+  <style>
+    html:not(.lang-zh) [lang="zh"]{display:none;} html.lang-zh [lang="en"]{display:none;}
+    #lang-btn{position:fixed;top:16px;right:20px;z-index:999;background:#37425d;color:#fff;border:none;border-radius:4px;padding:5px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:Gudea,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.2);transition:background .15s;} #lang-btn:hover{background:#4a5a7a;}
+    *{box-sizing:border-box;margin:0;padding:0;} body{font-family:Gudea,sans-serif;font-size:16px;line-height:1.8;color:#111;background:#eee;}
+    #wrapper{max-width:1100px;margin:0 auto;display:flex;align-items:flex-start;padding:40px 24px;gap:36px;}
+    #sidebar{width:240px;flex-shrink:0;font-size:13px;}
+    #sidebar h2{font-size:12px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;border:none;padding:0;}
+    #sidebar > ol{list-style:none !important;padding:0;} #sidebar > ol > li{list-style:none !important;margin-bottom:5px;}
+    #sidebar > ol > li a{color:#555;text-decoration:none;display:block;padding:2px 0;transition:color .12s;} #sidebar > ol > li a:hover{color:#58A;} #sidebar > ol > li a::before{content:none;}
+    #content{flex:1;min-width:0;}
+    .page-header{margin-bottom:32px;padding-bottom:20px;border-bottom:1px solid #ddd;}
+    .page-header .crumb{font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
+    .page-header h1{font-size:1.8rem;font-weight:900;color:#303236;margin-bottom:8px;line-height:1.25;}
+    .page-header .subtitle{font-family:'Courier New',monospace;font-size:13px;color:#777;}
+    h2{color:#37425d;font-size:22px;margin:36px 0 10px;} h3{color:#633739;font-size:17px;margin:24px 0 8px;}
+    p{margin-bottom:14px;} a{color:#58A;text-decoration:none;} a:hover{text-decoration:underline;} strong{color:#222;}
+    .fun{font-family:'Courier New',monospace;color:#2a6496;} .def{color:green;font-weight:600;}
+    code{font-family:'Courier New',monospace;font-size:14px;background:#ddd;border-radius:3px;padding:1px 5px;}
+    pre{background:#282c34;color:#abb2bf;border-radius:5px;padding:16px 18px;overflow-x:auto;margin:14px 0 18px;font-family:'Courier New',monospace;font-size:13.5px;line-height:1.6;}
+    pre code{background:none;padding:0;color:inherit;} .kw{color:#c678dd;} .fn{color:#61afef;} .cm{color:#5c6370;font-style:italic;} .str{color:#98c379;} .num{color:#d19a66;} .type{color:#e5c07b;}
+    .note{display:block;margin:18px 0;padding:15px;background:#D8F5D8;color:#444;border-radius:5px;border:2px solid #AFDFAF;font-size:15px;line-height:1.7;}
+    .warning{display:block;margin:18px 0;padding:15px;background:#FFD2D2;color:#444;border-radius:5px;border:2px solid #E0B3B3;font-size:15px;line-height:1.7;}
+    ul,ol{padding-left:22px;margin-bottom:14px;} li{margin-bottom:5px;}
+    .table-wrap{overflow-x:auto;margin:14px 0;} table{border-collapse:collapse;font-size:14px;width:100%;}
+    th,td{padding:8px 12px;border-bottom:1px solid #aaa;text-align:left;} th{border-bottom:2px solid #888;font-weight:700;background:#ddd;} tr:nth-child(even) td{background:#e8e8e8;}
+    td:first-child{font-family:'Courier New',monospace;font-size:13px;color:#2a6496;white-space:nowrap;}
+    .diagram{background:#fff;border:1px solid #ccc;border-radius:5px;padding:20px;margin:16px 0;font-family:'Courier New',monospace;font-size:13px;line-height:1.8;overflow-x:auto;white-space:pre;}
+    .file-list{list-style:none;padding:0;margin:12px 0;} .file-list li{padding:6px 0;border-bottom:1px solid #ccc;display:flex;align-items:baseline;gap:10px;font-size:14px;} .file-list li:last-child{border-bottom:none;} .file-list .fp{font-family:'Courier New',monospace;font-size:13px;color:#58A;min-width:300px;} .file-list .fd{color:#555;}
+    footer{margin-top:48px;padding-top:16px;border-top:1px solid #ccc;font-size:12px;color:#aaa;text-align:center;}
+    @media(max-width:800px){#wrapper{flex-direction:column;padding:20px 16px;}#sidebar{width:100%;position:static;max-height:none;margin-bottom:24px;}}
+    #series-nav{margin-bottom:24px;} #series-nav ol,#series-nav li{list-style:none;padding-left:0;}
+    .snav-label{font-size:11px;font-weight:800;color:#37425d;text-transform:uppercase;letter-spacing:.14em;display:block;margin-bottom:10px;padding-bottom:4px;border-bottom:2px solid #37425d;}
+    #series-nav > ol{list-style:none;padding:0;margin:0;} #series-nav ol{list-style:none;padding:0;margin:0;}
+    .snav-ch{margin-bottom:10px;}
+    .snav-ch > span{font-size:11px;font-weight:800;letter-spacing:.06em;color:#fff;background:#5a6a80;display:block;padding:3px 7px 3px 6px;border-radius:3px;margin-bottom:3px;text-transform:uppercase;}
+    .snav-ch > ol{padding-left:0;margin-top:0;}
+    .snav-item{margin-bottom:1px;}
+    .snav-item a{font-size:13.5px;color:#666;text-decoration:none;display:block;padding:3px 6px;border-left:3px solid transparent;border-radius:0 3px 3px 0;transition:color .12s,background .12s,border-color .12s;}
+    .snav-item a:hover{color:#37425d;background:#f0f2f5;border-left-color:#c0cad8;}
+    .snav-item.active a{color:#37425d;font-weight:700;background:#e8ecf4;border-left-color:#37425d;}
+    .page-nav{display:flex;justify-content:space-between;align-items:center;margin:36px 0 0;padding-top:16px;border-top:1px solid #ddd;font-size:14px;}
+    .page-nav a{color:#58A;text-decoration:none;display:flex;align-items:center;gap:6px;max-width:42%;}
+    .page-nav a:hover{text-decoration:underline;}
+    .page-nav .pn-label{font-size:11px;color:#aaa;text-transform:uppercase;display:block;}
+    .page-nav .pn-title{display:block;} .page-nav .prev{text-align:left;} .page-nav .next{text-align:right;}
+  
+    .snav-children{display:block;list-style:none;padding:2px 0 4px 10px;margin:1px 0 0;border-left:2px solid #dde3ee;}
+    .snav-subitem{margin-bottom:1px;}
+    .snav-subitem a{font-size:12px;color:#888;text-decoration:none;display:block;padding:2px 4px 2px 8px;border-left:2px solid transparent;border-radius:0 3px 3px 0;transition:color .12s,background .12s,border-color .12s;}
+    .snav-subitem a:hover{color:#37425d;background:#f0f2f5;border-left-color:#c0cad8;}
+    .snav-subitem.active a{color:#37425d;font-weight:700;background:#e8ecf4;border-left-color:#37425d;}  </style>
+</head>
+<body>
+<button id="lang-btn" onclick="toggleLang()"><span lang="en">中文</span><span lang="zh">English</span></button>
+<div id="wrapper">
+<nav id="sidebar">
+  <div id="series-nav">
+    <span class="snav-label"><span lang="en">Series</span><span lang="zh">系列</span></span>
+    <ol>
+
+      <li class="snav-ch"><span lang="en">00 Overview</span><span lang="zh">00 概述</span>
+        <ol>
+          <li class="snav-item"><a href="../00-overview/introduction.html"><span lang="en">Introduction</span><span lang="zh">系列简介</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">01 Rendering Pipeline</span><span lang="zh">01 渲染管线</span>
+        <ol>
+          <li class="snav-item"><a href="../01-rendering-pipeline/deferred-shading.html"><span lang="en">Deferred Rendering</span><span lang="zh">延迟渲染</span></a></li>
+          <li class="snav-item"><a href="../01-rendering-pipeline/forward-shading.html"><span lang="en">Forward Rendering</span><span lang="zh">前向渲染</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">02 Engine Infrastructure</span><span lang="zh">02 引擎基础设施</span>
+        <ol>
+          <li class="snav-item"><a href="../02-engine-infrastructure/rdg-compiler.html"><span lang="en">RDG — Render Dependency Graph</span><span lang="zh">RDG 渲染依赖图</span></a></li>
+          <li class="snav-item"><a href="../02-engine-infrastructure/thread-concurrency.html"><span lang="en">Thread Concurrency</span><span lang="zh">线程并发</span></a></li>
+          <li class="snav-item"><a href="../02-engine-infrastructure/virtual-texture.html"><span lang="en">Virtual Texture Streaming</span><span lang="zh">虚拟纹理流送</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">03 Lighting &amp; Shadows</span><span lang="zh">03 光照与阴影</span>
+        <ol>
+          <li class="snav-item"><a href="../03-lighting-shadows/lighting-architecture.html"><span lang="en">Lighting Architecture</span><span lang="zh">光照架构</span></a></li>
+          <li class="snav-item"><a href="../03-lighting-shadows/virtual-shadow-maps.html"><span lang="en">Virtual Shadow Maps</span><span lang="zh">虚拟阴影贴图</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">04 Material &amp; Shader System</span><span lang="zh">04 材质与着色器系统</span>
+        <ol>
+          <li class="snav-item"><a href="../04-material-shader/material-translation.html"><span lang="en">Shader Compilation &amp; Architecture</span><span lang="zh">着色器编译与架构</span></a></li>
+          <li class="snav-item"><a href="../04-material-shader/shading-models-reference.html"><span lang="en">Shading Models Reference</span><span lang="zh">着色模型参考</span></a></li>
+          <li class="snav-item"><a href="../04-material-shader/usf-hlsl-guide.html"><span lang="en">USF / HLSL Writing Guide</span><span lang="zh">USF / HLSL 编写指南</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">05 UE5 Core Technologies</span><span lang="zh">05 UE5 核心技术</span>
+        <ol>
+          <li class="snav-item"><a href="../05-ue5-core/nanite-rasterizer.html"><span lang="en">Nanite — Virtual Geometry</span><span lang="zh">Nanite 虚拟几何</span></a></li>
+          <li class="snav-item"><a href="../05-ue5-core/lumen-raytracing.html"><span lang="en">Lumen — Dynamic GI</span><span lang="zh">Lumen 动态全局光照</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">06 Post-Processing &amp; Effects</span><span lang="zh">06 后处理与屏幕效果</span>
+        <ol>
+          <li class="snav-item"><a href="../06-post-processing/post-processing.html"><span lang="en">Post-Processing Pipeline</span><span lang="zh">后处理管线</span></a></li>
+          <li class="snav-item"><a href="../06-post-processing/screen-space-effects.html"><span lang="en">Screen Space Effects</span><span lang="zh">屏幕空间效果</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">07 Specialized Rendering</span><span lang="zh">07 专项渲染</span>
+        <ol>
+          <li class="snav-item"><a href="../07-specialized-rendering/volumetric-atmosphere.html"><span lang="en">Volumetric Fog &amp; Atmosphere</span><span lang="zh">体积雾与大气</span></a></li>
+          <li class="snav-item"><a href="../07-specialized-rendering/water-rendering.html"><span lang="en">Water Rendering</span><span lang="zh">水体渲染</span></a></li>
+          <li class="snav-item active"><a href="../07-specialized-rendering/hair-groom-rendering.html"><span lang="en">Hair &amp; Groom</span><span lang="zh">毛发渲染</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">08 Engine Customization</span><span lang="zh">08 引擎定制</span>
+        <ol>
+          <li class="snav-item"><a href="../08-engine-customization/custom-shading-model.html"><span lang="en">Custom Shading Model</span><span lang="zh">自定义着色模型</span></a></li>
+          <li class="snav-item"><a href="../08-engine-customization/niagara-gpu-compute.html"><span lang="en">Niagara GPU Compute</span><span lang="zh">Niagara GPU 计算</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">09 Performance &amp; Profiling</span><span lang="zh">09 性能与分析</span>
+        <ol>
+          <li class="snav-item"><a href="../09-profiling/hardware-profiling.html"><span lang="en">Hardware Profiling</span><span lang="zh">硬件性能分析</span></a></li>
+        </ol>
+      </li>
+
+    </ol>
+  </div>
+  <h2><span lang="en">Contents</span><span lang="zh">目录</span></h2>
+  <ol>
+    <li><a href="#s1"><span lang="en">Why Hair Needs Its Own Pipeline</span><span lang="zh">为何毛发需要专用管线</span></a></li>
+    <li><a href="#s2"><span lang="en">Strand Data Structures</span><span lang="zh">发丝数据结构</span></a></li>
+    <li><a href="#s3"><span lang="en">Visibility &amp; Rasterization</span><span lang="zh">可见性与光栅化</span></a></li>
+    <li><a href="#s4"><span lang="en">Marschner BRDF Deep Dive</span><span lang="zh">Marschner BRDF 深度解析</span></a></li>
+    <li><a href="#s5"><span lang="en">Deep Shadow Maps</span><span lang="zh">深度阴影贴图</span></a></li>
+    <li><a href="#s6"><span lang="en">Voxelization &amp; Self-Shadowing</span><span lang="zh">体素化与自阴影</span></a></li>
+    <li><a href="#s7"><span lang="en">Transmittance &amp; Environment Lighting</span><span lang="zh">透射率与环境光照</span></a></li>
+    <li><a href="#s8"><span lang="en">Groom Asset Setup</span><span lang="zh">Groom 资产配置</span></a></li>
+    <li><a href="#s9"><span lang="en">Performance Tuning</span><span lang="zh">性能调优</span></a></li>
+    <li><a href="#s10"><span lang="en">Source Navigation</span><span lang="zh">源码导航</span></a></li>
+  </ol>
+</nav>
+
+<main id="content">
+  <div class="page-header">
+    <div class="crumb">Unreal Engine 5.6 &middot; Shader Architecture &middot; Part 03-G</div>
+    <h1><span lang="en">Hair &amp; Groom Rendering — Marschner BRDF &amp; Strand Pipeline</span><span lang="zh">毛发渲染 — Marschner BRDF 与发丝管线</span></h1>
+    <div class="subtitle">Renderer/Private/HairStrands/ &middot; Engine/Shaders/Private/HairBsdf.ush &middot; HairStrandsVisibility.cpp</div>
+  </div>
+
+  <!-- s1 -->
+  <h2 id="s1"><span lang="en">Why Hair Needs Its Own Rendering Pipeline</span><span lang="zh">为何毛发需要专用渲染管线</span></h2>
+  <p lang="en">
+    Hair strands are fundamentally different from every other surface in real-time rendering:
+  </p>
+  <p lang="zh">实时渲染中，毛发发丝与其他所有表面有根本性的不同：</p>
+  <ul>
+    <li lang="en"><strong>Sub-pixel geometry:</strong> A single strand is 40–80 µm wide — far thinner than one pixel on screen. Standard rasterization produces aliased, flickery results. Hair uses a <strong>screen-door coverage mask</strong> and stochastic techniques.</li>
+    <li lang="zh"><strong>次像素几何体：</strong>单根发丝宽度为 40–80 µm——远比屏幕上的一个像素细。标准光栅化产生锯齿状、闪烁的结果。毛发使用<strong>屏幕门覆盖遮罩</strong>和随机技术。</li>
+    <li lang="en"><strong>Cylindrical BRDF:</strong> Flat-surface BRDFs are wrong for cylinders. The Marschner model is specifically derived for circular cross-section fibers.</li>
+    <li lang="zh"><strong>圆柱形 BRDF：</strong>平面 BRDF 对圆柱体是错误的。Marschner 模型专门为圆形截面纤维推导。</li>
+    <li lang="en"><strong>Massive overdraw:</strong> A single Groom asset can have 100,000+ strands, each rendered as a camera-facing quad or tube. Deep overdraw (10–100× per pixel) makes standard shadow maps too expensive — a dedicated <strong>deep shadow map</strong> system is required.</li>
+    <li lang="zh"><strong>巨大过绘制：</strong>单个 Groom 资产可以有 10 万+根发丝，每根作为面向相机的四边形或管道渲染。深度过绘制（每像素 10–100×）使标准阴影贴图过于昂贵——需要专用的<strong>深度阴影贴图</strong>系统。</li>
+  </ul>
+
+  <!-- s2 -->
+  <h2 id="s2"><span lang="en">Strand Data Structures</span><span lang="zh">发丝数据结构</span></h2>
+  <p lang="en">
+    Hair strands in UE5 are stored in a highly compact GPU buffer format.
+    Each strand is a polyline of control points; each control point stores position and a radius.
+    The data is organized for fast GPU traversal during rasterization and voxelization.
+  </p>
+  <p lang="zh">
+    UE5 中的毛发发丝以高度紧凑的 GPU 缓冲区格式存储。
+    每根发丝是控制点的折线；每个控制点存储位置和半径。
+    数据组织以便在光栅化和体素化期间快速 GPU 遍历。
+  </p>
+  <pre><span class="cm">// FHairStrandsData — GPU buffer layout (HairStrandsData.h)</span>
+
+<span class="cm">// Per control point (FPackedHairVertex, 16 bytes)</span>
+<span class="kw">struct</span> <span class="type">FPackedHairVertex</span>
+{
+    uint32 CoordX    : <span class="num">21</span>; <span class="cm">// position X (quantized to hair root space)</span>
+    uint32 CoordY    : <span class="num">21</span>;
+    uint32 CoordZ    : <span class="num">21</span>;
+    uint32 Radius    :  8; <span class="cm">// strand radius at this point (quantized)</span>
+    uint32 UCoord    :  8; <span class="cm">// UV along strand length [0=root, 255=tip]</span>
+};
+
+<span class="cm">// Per-strand metadata</span>
+<span class="kw">struct</span> <span class="type">FHairStrandInfo</span>
+{
+    uint16 PointOffset;  <span class="cm">// index of first point in PointBuffer</span>
+    uint16 PointCount;   <span class="cm">// number of points in this strand</span>
+    uint8  RootUV_U;     <span class="cm">// scalp UV (for hair color lookup)</span>
+    uint8  RootUV_V;
+};
+
+<span class="cm">// The full Groom buffers on GPU:</span>
+<span class="cm">// - StrandPointBuffer: FPackedHairVertex × TotalPoints</span>
+<span class="cm">// - StrandInfoBuffer:  FHairStrandInfo × TotalStrands</span>
+<span class="cm">// - TangentBuffer:     float3 × TotalPoints (precomputed tangent = fiber direction)</span>
+<span class="cm">// - AttributeBuffer:   per-strand: roughness, width scale, color from root texture</span></pre>
+
+  <!-- s3 -->
+  <h2 id="s3"><span lang="en">Visibility &amp; Rasterization — The Coverage Problem</span><span lang="zh">可见性与光栅化 — 覆盖率问题</span></h2>
+  <p lang="en">
+    Because strands are sub-pixel, UE5 uses a <span class="def">visibility buffer approach</span>:
+    instead of shading each fragment, the rasterizer first records <em>which strand</em> is closest
+    at each pixel (the "visibility buffer"). Multiple strands per pixel are handled by
+    <strong>tile classification</strong> — tiles with high strand density get a deeper per-sample resolve.
+  </p>
+  <p lang="zh">
+    由于发丝是次像素的，UE5 使用<span class="def">可见性缓冲区方法</span>：
+    不是对每个片段进行着色，而是光栅化器首先记录每个像素处最近的<em>哪根发丝</em>（"可见性缓冲区"）。
+    每像素多根发丝通过<strong>瓦片分类</strong>处理——发丝密度高的瓦片获得更深的逐样本解析。
+  </p>
+  <div class="diagram">
+Hair Rasterization Pipeline (HairStrandsVisibility.cpp):
+
+  1. Bounding Box Cull (CPU):
+     → Remove Groom components outside frustum
+
+  2. Curve Rasterization (GPU):
+     → Each strand segment → screen-space AABB → rasterize as quads
+     → Sub-pixel width: use a stochastic coverage mask
+       (one bit per 8×8 tile, stochastic per-frame rotation)
+     → Write: StrandID + depth into HairVisibilityBuffer
+
+  3. Tile Classification:
+     → Classify tiles by strand density:
+       Tile type 0: no hair     → skip
+       Tile type 1: sparse hair → 1 strand/pixel, fast path
+       Tile type 2: dense hair  → PPLL (Per-Pixel Linked List, slow path)
+
+  4. Shading Dispatch:
+     → For each visible strand pixel:
+       - Read strand tangent from TangentBuffer
+       - Evaluate Marschner BRDF for all lights
+       - Accumulate in SceneColor (blended over background)</div>
+
+  <!-- s4 -->
+  <h2 id="s4"><span lang="en">Marschner BRDF Deep Dive</span><span lang="zh">Marschner BRDF 深度解析</span></h2>
+  <p lang="en">
+    The Marschner model (2003) decomposes fiber scattering into three physical interaction paths.
+    UE5 uses a modified version with additional parameters for artistic control.
+  </p>
+  <p lang="zh">
+    Marschner 模型（2003）将纤维散射分解为三种物理交互路径。
+    UE5 使用带有额外艺术控制参数的修改版本。
+  </p>
+  <div class="diagram">
+Cross-section of a hair fiber — the three light paths:
+
+         Light →                Light →                Light →
+           ↓                      ↓                      ↓
+        ╔══════╗              ╔══════╗              ╔══════╗
+        ║      ║              ║ IOR  ║              ║      ║
+  R →   ╚══════╝    TT:  → → ╚══════╝ → →   TRT: → ╚══╗   ╝ ←
+  (reflect off             (refract in,              (refract in,
+   cuticle)                 exit other side)          internal reflect,
+                                                       exit same side)
+
+  R lobe:   Sharp specular, shifted toward root (~2°)
+            Color: nearly white (reflects before pigment)
+            Width: narrow (β_M ≈ 0.03)
+
+  TT lobe:  Soft, forward-scattered (halo when backlit)
+            Color: tinted by melanin (pigment inside cortex)
+            Width: medium (β_M ≈ 0.1)
+
+  TRT lobe: Wide, warm highlight — the main colored sheen
+            Color: tinted 2× by melanin (enters and exits through pigment)
+            Width: broad (β_N ≈ 0.3)
+            → DOMINANT lobe for brown/black hair in direct light</div>
+
+  <pre><span class="cm">// HairBsdf.ush — simplified Marschner evaluation</span>
+
+<span class="cm">// Longitudinal scattering function M(β, sinθ_i, sinθ_r)</span>
+<span class="cm">// Gaussian over the difference angle θ_r - θ_i - α</span>
+float <span class="fn">M_lobe</span>(float Beta, float SinThetaI, float SinThetaR, float Alpha)
+{
+    float DeltaTheta = SinThetaR - SinThetaI - Alpha;
+    <span class="kw">return</span> <span class="fn">exp</span>(-<span class="num">0.5f</span> * DeltaTheta*DeltaTheta / (Beta*Beta))
+         / (Beta * <span class="fn">sqrt</span>(<span class="num">2.0f</span> * PI));
+}
+
+<span class="cm">// Azimuthal scattering function N(β_N, φ)</span>
+<span class="cm">// Different for each lobe (R: single, TT: two, TRT: broad forward)</span>
+float <span class="fn">N_lobe</span>(float BetaN, float Phi, float p <span class="cm">/*lobe order: 1,2,3*/</span>) { ... }
+
+<span class="cm">// Full hair BRDF (per-lobe weights depend on Fresnel)</span>
+float3 <span class="fn">HairBRDF</span>(float3 L, float3 V, float3 Tangent, FHairMaterial M)
+{
+    float SinThetaI = <span class="fn">dot</span>(Tangent, L);   <span class="cm">// longitudinal (along fiber)</span>
+    float SinThetaR = <span class="fn">dot</span>(Tangent, V);
+    float CosThetaD = <span class="fn">cos</span>(<span class="fn">asin</span>(SinThetaR) - <span class="fn">asin</span>(SinThetaI)) * <span class="num">0.5f</span>;
+
+    <span class="cm">// Per-lobe Fresnel (controls energy partition between R, TT, TRT)</span>
+    float F_R   = <span class="fn">FresnelDielectric</span>(CosThetaD, <span class="num">1.55f</span>);  <span class="cm">// hair IOR=1.55</span>
+    float F_TT  = (<span class="num">1</span>-F_R)*(<span class="num">1</span>-F_R);
+    float F_TRT = (<span class="num">1</span>-F_R)*(<span class="num">1</span>-F_R)*F_R;
+
+    <span class="cm">// Melanin absorption (determines hair color)</span>
+    <span class="cm">// Sigma_a: per-channel absorption coefficient (higher = darker hair)</span>
+    float3 T = <span class="fn">exp</span>(-M.AbsorptionColor * (<span class="num">2.0f</span> / CosThetaD));
+
+    float3 Result =
+        F_R   * <span class="fn">M_lobe</span>(M.LongRoughness, SinThetaI, SinThetaR, M.Alpha_R)   <span class="cm">// R</span>
+              * <span class="fn">N_lobe</span>(M.AziRoughness_N, Phi_R, <span class="num">1</span>)
+      + F_TT  * T * <span class="fn">M_lobe</span>(M.LongRoughness*<span class="num">0.5f</span>, SinThetaI, SinThetaR, M.Alpha_TT)  <span class="cm">// TT</span>
+              * <span class="fn">N_lobe</span>(M.AziRoughness_N*<span class="num">0.5f</span>, Phi_TT, <span class="num">2</span>)
+      + F_TRT * T*T * <span class="fn">M_lobe</span>(M.LongRoughness*<span class="num">2</span>, SinThetaI, SinThetaR, M.Alpha_TRT) <span class="cm">// TRT</span>
+              * <span class="fn">N_lobe</span>(M.AziRoughness_N*<span class="num">2</span>, Phi_TRT, <span class="num">3</span>);
+
+    <span class="kw">return</span> Result / (<span class="fn">max</span>(<span class="fn">cos</span>(<span class="fn">asin</span>(SinThetaI)), <span class="num">0.001f</span>) * <span class="fn">max</span>(<span class="fn">cos</span>(<span class="fn">asin</span>(SinThetaR)), <span class="num">0.001f</span>));
+}</pre>
+
+  <h3><span lang="en">Key Material Parameters for Hair Shading Model</span><span lang="zh">Hair 着色模型的关键材质参数</span></h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th><span lang="en">Pin</span><span lang="zh">引脚</span></th><th><span lang="en">Meaning</span><span lang="zh">含义</span></th><th><span lang="en">Effect</span><span lang="zh">效果</span></th></tr></thead>
+    <tbody>
+      <tr><td>Base Color</td><td><span lang="en">Melanin pigment color (absorption σ_a)</span><span lang="zh">黑色素色素颜色（吸收 σ_a）</span></td><td><span lang="en">Dark = dark hair. White = albino. Blonde = light yellow. Red = orange-red.</span><span lang="zh">深色 = 深发色。白色 = 白化病。金发 = 浅黄色。红色 = 橙红色。</span></td></tr>
+      <tr><td>Roughness</td><td><span lang="en">Longitudinal roughness β_M (along fiber axis)</span><span lang="zh">纵向粗糙度 β_M（沿纤维轴）</span></td><td><span lang="en">Low = sharp needle-like highlight. High = broad, fuzzy highlight.</span><span lang="zh">低 = 尖锐针状高光。高 = 宽而模糊的高光。</span></td></tr>
+      <tr><td>Scatter (CustomData.x)</td><td><span lang="en">Azimuthal roughness β_N (around fiber)</span><span lang="zh">方位粗糙度 β_N（围绕纤维）</span></td><td><span lang="en">Controls how wide the TRT lobe spreads around the fiber circumference.</span><span lang="zh">控制 TRT 叶瓣在纤维周长周围的宽度。</span></td></tr>
+      <tr><td>Backlit (CustomData.y)</td><td><span lang="en">TT lobe weight — how much back-lit glow</span><span lang="zh">TT 叶瓣权重——背光光晕量</span></td><td><span lang="en">High = strong rim/halo when backlit. 0.5 is default.</span><span lang="zh">高 = 背光时强烈边缘/光晕。0.5 为默认值。</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <!-- s5 -->
+  <h2 id="s5"><span lang="en">Deep Shadow Maps — Transmittance Through Hair</span><span lang="zh">深度阴影贴图 — 穿越毛发的透射率</span></h2>
+  <p lang="en">
+    Standard shadow maps produce binary results: lit or not. Hair has thousands of overlapping semi-transparent
+    strands — a binary shadow would make all hair underneath completely black. The <span class="def">Deep Shadow Map</span>
+    (DSM) system stores a <strong>transmittance function</strong> along each shadow ray, recording how much
+    light survives at each depth. This allows the lighting shader to compute how much light reaches each
+    strand through the hair above it.
+  </p>
+  <p lang="zh">
+    标准阴影贴图产生二值结果：有光或无光。毛发有数千根重叠的半透明发丝——
+    二值阴影会使下方所有毛发完全变黑。<span class="def">深度阴影贴图</span>（DSM）系统
+    沿每条阴影光线存储<strong>透射率函数</strong>，记录每个深度处有多少光线存活。
+    这使光照 Shader 能够计算有多少光线穿过上方的毛发到达每根发丝。
+  </p>
+  <pre><span class="cm">// HairStrandsDeepShadow.cpp — Deep Shadow Map concept</span>
+
+<span class="cm">// Instead of binary depth comparison, store transmittance as a function:</span>
+<span class="cm">// T(d) = exp(-σ × ∫₀ᵈ opacity(s) ds)</span>
+
+<span class="cm">// Per texel in the DSM, store a 4-layer quantized transmittance curve:</span>
+<span class="kw">struct</span> FHairDeepShadowTexel
+{
+    float4 Depth;         <span class="cm">// depth of each of 4 opacity layers</span>
+    float4 Transmittance; <span class="cm">// transmittance at each layer boundary</span>
+};
+
+<span class="cm">// During hair shadow pass (AddHairDeepShadowPass):</span>
+<span class="cm">// For each strand in shadow frustum:</span>
+<span class="cm">//   Scatter strand opacity into the DSM at its depth layer</span>
+<span class="cm">//   Each strand contributes: opacity = 1 - exp(-ExtinctionCoeff × StrandRadius)</span>
+
+<span class="cm">// During hair lighting:</span>
+<span class="cm">// ShadowTransmittance = LookupDeepShadow(lightSpacePos, depth)</span>
+<span class="cm">// Returns: [0,1] how much light survives at this depth</span>
+<span class="cm">// → Used to attenuate the light contribution for this strand</span></pre>
+
+  <!-- s6 -->
+  <h2 id="s6"><span lang="en">Voxelization — Self-Shadowing &amp; AO</span><span lang="zh">体素化 — 自阴影与 AO</span></h2>
+  <p lang="en">
+    For <strong>ambient occlusion</strong> and <strong>environment occlusion</strong> (sky light blocked by hair),
+    UE5 voxelizes the hair volume. The hair strands are rasterized into a low-resolution 3D voxel grid
+    (<code>HairStrandsVoxelization.cpp</code>), storing per-voxel opacity. Indirect and environment
+    lighting uses this voxel representation to determine how occluded each strand is.
+  </p>
+  <p lang="zh">
+    对于<strong>环境光遮蔽</strong>和<strong>环境遮蔽</strong>（被毛发阻挡的天空光），
+    UE5 将毛发体积进行体素化。发丝被光栅化到低分辨率 3D 体素网格（<code>HairStrandsVoxelization.cpp</code>）中，
+    存储逐体素不透明度。间接和环境光照使用此体素表示来确定每根发丝的遮挡程度。
+  </p>
+
+  <!-- s7 -->
+  <h2 id="s7"><span lang="en">Transmittance &amp; Environment Lighting</span><span lang="zh">透射率与环境光照</span></h2>
+  <p lang="en">
+    Hair receives environment lighting differently from opaque surfaces. Because light can pass through hair,
+    the sky light contribution is modulated by the <strong>voxel-based transmittance</strong>.
+    For direct lighting, <code>HairStrandsTransmittance.cpp</code> computes per-strand directional transmittance
+    using either the deep shadow map or voxel data, then applies it to the Marschner BRDF evaluation.
+  </p>
+  <p lang="zh">
+    毛发接收环境光照的方式与不透明表面不同。由于光线可以穿过毛发，
+    天空光贡献由<strong>基于体素的透射率</strong>调制。
+    对于直接光照，<code>HairStrandsTransmittance.cpp</code> 使用深度阴影贴图或体素数据
+    计算逐发丝方向透射率，然后将其应用于 Marschner BRDF 计算。
+  </p>
+
+  <!-- s8 -->
+  <h2 id="s8"><span lang="en">Groom Asset Setup &amp; Material Configuration</span><span lang="zh">Groom 资产配置与材质设置</span></h2>
+
+  <h3><span lang="en">Importing Groom Assets</span><span lang="zh">导入 Groom 资产</span></h3>
+  <ol>
+    <li lang="en">Export hair curves from DCC (Maya, Houdini, XGen) as <strong>.abc (Alembic)</strong> format</li>
+    <li lang="zh">从 DCC 工具（Maya、Houdini、XGen）将毛发曲线导出为 <strong>.abc（Alembic）</strong>格式</li>
+    <li lang="en">In UE5: drag .abc into Content Browser → Import → select <strong>Groom</strong> as asset type</li>
+    <li lang="zh">在 UE5 中：将 .abc 拖入内容浏览器 → 导入 → 选择 <strong>Groom</strong> 作为资产类型</li>
+    <li lang="en">In Groom Import Options: set LOD count, interpolation quality, simulation settings</li>
+    <li lang="zh">在 Groom 导入选项中：设置 LOD 数量、插值质量、模拟设置</li>
+    <li lang="en">Add a <strong>Groom Component</strong> to your Skeletal Mesh actor, assign the Groom asset</li>
+    <li lang="zh">向骨骼网格 Actor 添加 <strong>Groom Component</strong>，分配 Groom 资产</li>
+    <li lang="en">Set <strong>Binding Asset</strong> — connects Groom root UV to the scalp mesh for skinning</li>
+    <li lang="zh">设置 <strong>Binding Asset</strong>——将 Groom 根 UV 连接到头皮网格以进行蒙皮</li>
+  </ol>
+
+  <h3><span lang="en">Creating a Hair Material</span><span lang="zh">创建毛发材质</span></h3>
+  <pre><span class="cm">// Hair material setup in Material Editor:</span>
+
+<span class="cm">// 1. Shading Model: Hair</span>
+<span class="cm">//    (Normal pin disappears — replaced by tangent-based BRDF)</span>
+
+<span class="cm">// 2. Base Color = hair color (melanin pigment)</span>
+<span class="cm">//    Sample a root-to-tip color texture for natural variation:</span>
+float4 HairColor = <span class="fn">Texture2DSample</span>(HairColorAtlas, HairAtlasSampler,
+    float2(V_StrandCoord, RootUV.y));  <span class="cm">// U=tip position, V=scalp location</span>
+
+<span class="cm">// 3. Roughness: longitudinal roughness (0.05–0.15 for most hair)</span>
+float Roughness = 0.08;
+
+<span class="cm">// 4. Scatter (CustomData.x): azimuthal roughness</span>
+float Scatter = 0.7;  <span class="cm">// high = wide TRT lobe = more sheen</span>
+
+<span class="cm">// 5. Backlit (CustomData.y): TT lobe weight</span>
+float Backlit = 0.5;  <span class="cm">// default. Increase for backlit glamour look.</span>
+
+<span class="cm">// Tangent is automatically read from strand geometry — do NOT connect Normal</span></pre>
+
+  <!-- s9 -->
+  <h2 id="s9"><span lang="en">Performance Tuning</span><span lang="zh">性能调优</span></h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>CVar / Setting</th><th><span lang="en">Effect</span><span lang="zh">效果</span></th></tr></thead>
+    <tbody>
+      <tr><td>r.HairStrands.Enable</td><td><span lang="en">0 = disable all strand rendering (fallback to card-based if available)</span><span lang="zh">0 = 禁用所有发丝渲染（如可用则回退到卡片式）</span></td></tr>
+      <tr><td>r.HairStrands.DeepShadow.Enable</td><td><span lang="en">0 = no deep shadows (cheap but no self-shadowing)</span><span lang="zh">0 = 无深度阴影（便宜但无自阴影）</span></td></tr>
+      <tr><td>r.HairStrands.Voxelization</td><td><span lang="en">0 = no voxel AO (skips voxelization pass)</span><span lang="zh">0 = 无体素 AO（跳过体素化通道）</span></td></tr>
+      <tr><td>r.HairStrands.LOD.Bias</td><td><span lang="en">Positive = use lower LOD (fewer strands) globally. Each LOD halves strand count.</span><span lang="zh">正值 = 全局使用更低 LOD（更少发丝）。每个 LOD 将发丝数减半。</span></td></tr>
+      <tr><td>Groom LODs</td><td><span lang="en">In Groom asset settings: add LODs with strand count reduction. LOD 0=100%, LOD1=50%, LOD2=25%</span><span lang="zh">在 Groom 资产设置中：添加发丝数递减的 LOD。LOD0=100%，LOD1=50%，LOD2=25%</span></td></tr>
+      <tr><td>r.HairStrands.ShadowMask</td><td><span lang="en">1 = use shadow mask for hair (reduces shadow pass overdraw)</span><span lang="zh">1 = 为毛发使用阴影遮罩（减少阴影通道过绘制）</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="note">
+    <span lang="en"><strong>Practical tip — Hair performance budget:</strong> A typical hero character hair budget on PC (60fps target): 100–200K strands at LOD0, 2ms GPU budget for hair rendering (visibility + deep shadow + lighting). On console: 50–100K strands, 1.5ms. Always add LOD levels that kick in at 2m+ from camera. Use r.HairStrands.DeepShadow.MaxSampleCount to limit shadow resolution.</span>
+    <span lang="zh"><strong>实用技巧 — 毛发性能预算：</strong>PC 上典型英雄角色毛发预算（60fps 目标）：LOD0 100–200K 根发丝，毛发渲染（可见性 + 深度阴影 + 光照）GPU 预算 2ms。主机：50–100K 根发丝，1.5ms。始终添加在相机 2m+ 处触发的 LOD 级别。使用 r.HairStrands.DeepShadow.MaxSampleCount 限制阴影分辨率。</span>
+  </div>
+
+  <!-- s10 -->
+  <h2 id="s10"><span lang="en">Source Navigation</span><span lang="zh">源码导航</span></h2>
+  <ul class="file-list">
+    <li><span class="fp">HairStrands/HairStrandsVisibility.h/.cpp</span><span class="fd"><span lang="en">Visibility buffer, tile classification, coverage rasterization</span><span lang="zh">可见性缓冲区、瓦片分类、覆盖率光栅化</span></span></li>
+    <li><span class="fp">HairStrands/HairStrandsRendering.h/.cpp</span><span class="fd"><span lang="en">Main hair rendering orchestrator: schedule all passes</span><span lang="zh">主毛发渲染协调器：调度所有通道</span></span></li>
+    <li><span class="fp">HairStrands/HairStrandsDeepShadow.h/.cpp</span><span class="fd"><span lang="en">Deep shadow map generation and lookup</span><span lang="zh">深度阴影贴图生成和查找</span></span></li>
+    <li><span class="fp">HairStrands/HairStrandsVoxelization.h/.cpp</span><span class="fd"><span lang="en">Voxel grid generation for AO and occlusion</span><span lang="zh">用于 AO 和遮蔽的体素网格生成</span></span></li>
+    <li><span class="fp">HairStrands/HairStrandsTransmittance.h/.cpp</span><span class="fd"><span lang="en">Per-strand transmittance: shadow + environment</span><span lang="zh">逐发丝透射率：阴影 + 环境</span></span></li>
+    <li><span class="fp">HairStrands/HairStrandsEnvironment.h/.cpp</span><span class="fd"><span lang="en">Sky light and environment map hair integration</span><span lang="zh">天空光和环境贴图毛发集成</span></span></li>
+    <li><span class="fp">Shaders/Private/HairBsdf.ush</span><span class="fd"><span lang="en">Marschner R/TT/TRT lobe implementation, LUT tables</span><span lang="zh">Marschner R/TT/TRT 叶瓣实现，LUT 表</span></span></li>
+    <li><span class="fp">HairStrands/HairStrandsLUT.h/.cpp</span><span class="fd"><span lang="en">Precomputed LUT for longitudinal/azimuthal integrals</span><span lang="zh">纵向/方位积分的预计算 LUT</span></span></li>
+    <li><span class="fp">HairStrands/HairStrandsTile.h/.cpp</span><span class="fd"><span lang="en">Tile classification: sparse vs dense hair dispatch</span><span lang="zh">瓦片分类：稀疏与密集毛发调度</span></span></li>
+  </ul>
+
+  <footer>Unreal Engine 5.6 &middot; Engine/Source/Runtime/Renderer/Private/HairStrands/ &middot; Engine/Shaders/Private/<br>Source analysis &middot; For learning purposes</footer>
+
+  <div class="page-nav">
+    <a href="../07-specialized-rendering/water-rendering.html" class="prev"><span class="pn-label">&larr; Prev</span><span class="pn-title"><span lang="en">Water Rendering</span><span lang="zh">水体渲染</span></span></a>
+    <a href="../05-ue5-core/nanite-rasterizer.html" class="next"><span class="pn-label">Next &rarr;</span><span class="pn-title"><span lang="en">Nanite</span><span lang="zh">Nanite 虚拟几何</span></span></a>
+  </div>
+</main>
+</div>
+<script>
+function toggleLang(){var h=document.documentElement;if(h.classList.contains('lang-zh')){h.classList.remove('lang-zh');h.lang='en';document.title='Hair & Groom Rendering';localStorage.setItem('ue-doc-lang','en');}else{h.classList.add('lang-zh');h.lang='zh-CN';document.title='毛发渲染';localStorage.setItem('ue-doc-lang','zh');}}
+if(document.documentElement.classList.contains('lang-zh'))document.title='毛发渲染';
+</script>
+</body>
+</html>

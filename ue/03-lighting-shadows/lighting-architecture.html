@@ -1,0 +1,559 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lighting Architecture — Clustered Deferred, Froxels &amp; MegaLights</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Gudea">
+  <script>(function(){if(localStorage.getItem('ue-doc-lang')==='zh'){document.documentElement.classList.add('lang-zh');document.documentElement.lang='zh-CN';}})();</script>
+  <style>
+    html:not(.lang-zh) [lang="zh"]{display:none;} html.lang-zh [lang="en"]{display:none;}
+    #lang-btn{position:fixed;top:16px;right:20px;z-index:999;background:#37425d;color:#fff;border:none;border-radius:4px;padding:5px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:Gudea,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.2);transition:background .15s;} #lang-btn:hover{background:#4a5a7a;}
+    *{box-sizing:border-box;margin:0;padding:0;} body{font-family:Gudea,sans-serif;font-size:16px;line-height:1.8;color:#111;background:#eee;}
+    #wrapper{max-width:1100px;margin:0 auto;display:flex;align-items:flex-start;padding:40px 24px;gap:36px;}
+    #sidebar{width:240px;flex-shrink:0;font-size:13px;}
+    #sidebar h2{font-size:12px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;border:none;padding:0;}
+    #sidebar > ol{list-style:none !important;padding:0;} #sidebar > ol > li{list-style:none !important;margin-bottom:5px;}
+    #sidebar > ol > li a{color:#555;text-decoration:none;display:block;padding:2px 0;transition:color .12s;} #sidebar > ol > li a:hover{color:#58A;} #sidebar > ol > li a::before{content:none;}
+    #content{flex:1;min-width:0;}
+    .page-header{margin-bottom:32px;padding-bottom:20px;border-bottom:1px solid #ddd;}
+    .page-header .crumb{font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
+    .page-header h1{font-size:1.8rem;font-weight:900;color:#303236;margin-bottom:8px;line-height:1.25;}
+    .page-header .subtitle{font-family:'Courier New',monospace;font-size:13px;color:#777;}
+    h2{color:#37425d;font-size:22px;margin:36px 0 10px;} h3{color:#633739;font-size:17px;margin:24px 0 8px;}
+    p{margin-bottom:14px;} a{color:#58A;text-decoration:none;} a:hover{text-decoration:underline;} strong{color:#222;}
+    .fun{font-family:'Courier New',monospace;color:#2a6496;} .def{color:green;font-weight:600;}
+    code{font-family:'Courier New',monospace;font-size:14px;background:#ddd;border-radius:3px;padding:1px 5px;}
+    pre{background:#282c34;color:#abb2bf;border-radius:5px;padding:16px 18px;overflow-x:auto;margin:14px 0 18px;font-family:'Courier New',monospace;font-size:13.5px;line-height:1.6;}
+    pre code{background:none;padding:0;color:inherit;} .kw{color:#c678dd;} .fn{color:#61afef;} .cm{color:#5c6370;font-style:italic;} .str{color:#98c379;} .num{color:#d19a66;} .type{color:#e5c07b;}
+    .note{display:block;margin:18px 0;padding:15px;background:#D8F5D8;color:#444;border-radius:5px;border:2px solid #AFDFAF;font-size:15px;line-height:1.7;}
+    .warning{display:block;margin:18px 0;padding:15px;background:#FFD2D2;color:#444;border-radius:5px;border:2px solid #E0B3B3;font-size:15px;line-height:1.7;}
+    ul,ol{padding-left:22px;margin-bottom:14px;} li{margin-bottom:5px;}
+    .table-wrap{overflow-x:auto;margin:14px 0;} table{border-collapse:collapse;font-size:14px;width:100%;}
+    th,td{padding:8px 12px;border-bottom:1px solid #aaa;text-align:left;} th{border-bottom:2px solid #888;font-weight:700;background:#ddd;} tr:nth-child(even) td{background:#e8e8e8;}
+    td:first-child{font-family:'Courier New',monospace;font-size:13px;color:#2a6496;white-space:nowrap;}
+    .diagram{background:#fff;border:1px solid #ccc;border-radius:5px;padding:20px;margin:16px 0;font-family:'Courier New',monospace;font-size:13px;line-height:1.8;overflow-x:auto;white-space:pre;}
+    .file-list{list-style:none;padding:0;margin:12px 0;} .file-list li{padding:6px 0;border-bottom:1px solid #ccc;display:flex;align-items:baseline;gap:10px;font-size:14px;} .file-list li:last-child{border-bottom:none;} .file-list .fp{font-family:'Courier New',monospace;font-size:13px;color:#58A;min-width:320px;} .file-list .fd{color:#555;}
+    footer{margin-top:48px;padding-top:16px;border-top:1px solid #ccc;font-size:12px;color:#aaa;text-align:center;}
+    @media(max-width:800px){#wrapper{flex-direction:column;padding:20px 16px;}#sidebar{width:100%;position:static;max-height:none;margin-bottom:24px;}}
+    #series-nav{margin-bottom:24px;padding-bottom:0;}
+    #series-nav ol,#series-nav li{list-style:none;padding-left:0;}
+    .snav-label{font-size:11px;font-weight:800;color:#37425d;text-transform:uppercase;letter-spacing:.14em;display:block;margin-bottom:10px;padding-bottom:4px;border-bottom:2px solid #37425d;}
+    #series-nav > ol{list-style:none;padding:0;margin:0;} #series-nav ol{list-style:none;padding:0;margin:0;}
+    .snav-ch{margin-bottom:10px;}
+    .snav-ch > span{font-size:11px;font-weight:800;letter-spacing:.06em;color:#fff;background:#5a6a80;display:block;padding:3px 7px 3px 6px;border-radius:3px;margin-bottom:3px;text-transform:uppercase;}
+    .snav-ch > ol{padding-left:0;margin-top:0;}
+    .snav-item{margin-bottom:1px;}
+    .snav-item a{font-size:13.5px;color:#666;text-decoration:none;display:block;padding:3px 6px;border-left:3px solid transparent;border-radius:0 3px 3px 0;transition:color .12s,background .12s,border-color .12s;}
+    .snav-item a:hover{color:#37425d;background:#f0f2f5;border-left-color:#c0cad8;}
+    .snav-item.active a{color:#37425d;font-weight:700;background:#e8ecf4;border-left-color:#37425d;}
+    .page-nav{display:flex;justify-content:space-between;align-items:center;margin:36px 0 0;padding-top:16px;border-top:1px solid #ddd;font-size:14px;}
+    .page-nav a{color:#58A;text-decoration:none;display:flex;align-items:center;gap:6px;max-width:42%;}
+    .page-nav a:hover{text-decoration:underline;}
+    .page-nav .pn-label{font-size:11px;color:#aaa;text-transform:uppercase;display:block;}
+    .page-nav .pn-title{display:block;}
+    .page-nav .prev{text-align:left;} .page-nav .next{text-align:right;}
+  
+    .snav-children{display:block;list-style:none;padding:2px 0 4px 10px;margin:1px 0 0;border-left:2px solid #dde3ee;}
+    .snav-subitem{margin-bottom:1px;}
+    .snav-subitem a{font-size:12px;color:#888;text-decoration:none;display:block;padding:2px 4px 2px 8px;border-left:2px solid transparent;border-radius:0 3px 3px 0;transition:color .12s,background .12s,border-color .12s;}
+    .snav-subitem a:hover{color:#37425d;background:#f0f2f5;border-left-color:#c0cad8;}
+    .snav-subitem.active a{color:#37425d;font-weight:700;background:#e8ecf4;border-left-color:#37425d;}  </style>
+</head>
+<body>
+<button id="lang-btn" onclick="toggleLang()"><span lang="en">中文</span><span lang="zh">English</span></button>
+<div id="wrapper">
+<nav id="sidebar">
+  <div id="series-nav">
+    <span class="snav-label"><span lang="en">Series</span><span lang="zh">系列</span></span>
+    <ol>
+
+      <li class="snav-ch"><span lang="en">00 Overview</span><span lang="zh">00 概述</span>
+        <ol>
+          <li class="snav-item"><a href="../00-overview/introduction.html"><span lang="en">Introduction</span><span lang="zh">系列简介</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">01 Rendering Pipeline</span><span lang="zh">01 渲染管线</span>
+        <ol>
+          <li class="snav-item"><a href="../01-rendering-pipeline/deferred-shading.html"><span lang="en">Deferred Rendering</span><span lang="zh">延迟渲染</span></a></li>
+          <li class="snav-item"><a href="../01-rendering-pipeline/forward-shading.html"><span lang="en">Forward Rendering</span><span lang="zh">前向渲染</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">02 Engine Infrastructure</span><span lang="zh">02 引擎基础设施</span>
+        <ol>
+          <li class="snav-item"><a href="../02-engine-infrastructure/rdg-compiler.html"><span lang="en">RDG — Render Dependency Graph</span><span lang="zh">RDG 渲染依赖图</span></a></li>
+          <li class="snav-item"><a href="../02-engine-infrastructure/thread-concurrency.html"><span lang="en">Thread Concurrency</span><span lang="zh">线程并发</span></a></li>
+          <li class="snav-item"><a href="../02-engine-infrastructure/virtual-texture.html"><span lang="en">Virtual Texture Streaming</span><span lang="zh">虚拟纹理流送</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">03 Lighting &amp; Shadows</span><span lang="zh">03 光照与阴影</span>
+        <ol>
+          <li class="snav-item active"><a href="../03-lighting-shadows/lighting-architecture.html"><span lang="en">Lighting Architecture</span><span lang="zh">光照架构</span></a></li>
+          <li class="snav-item"><a href="../03-lighting-shadows/virtual-shadow-maps.html"><span lang="en">Virtual Shadow Maps</span><span lang="zh">虚拟阴影贴图</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">04 Material &amp; Shader System</span><span lang="zh">04 材质与着色器系统</span>
+        <ol>
+          <li class="snav-item"><a href="../04-material-shader/material-translation.html"><span lang="en">Shader Compilation &amp; Architecture</span><span lang="zh">着色器编译与架构</span></a></li>
+          <li class="snav-item"><a href="../04-material-shader/shading-models-reference.html"><span lang="en">Shading Models Reference</span><span lang="zh">着色模型参考</span></a></li>
+          <li class="snav-item"><a href="../04-material-shader/usf-hlsl-guide.html"><span lang="en">USF / HLSL Writing Guide</span><span lang="zh">USF / HLSL 编写指南</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">05 UE5 Core Technologies</span><span lang="zh">05 UE5 核心技术</span>
+        <ol>
+          <li class="snav-item"><a href="../05-ue5-core/nanite-rasterizer.html"><span lang="en">Nanite — Virtual Geometry</span><span lang="zh">Nanite 虚拟几何</span></a></li>
+          <li class="snav-item"><a href="../05-ue5-core/lumen-raytracing.html"><span lang="en">Lumen — Dynamic GI</span><span lang="zh">Lumen 动态全局光照</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">06 Post-Processing &amp; Effects</span><span lang="zh">06 后处理与屏幕效果</span>
+        <ol>
+          <li class="snav-item"><a href="../06-post-processing/post-processing.html"><span lang="en">Post-Processing Pipeline</span><span lang="zh">后处理管线</span></a></li>
+          <li class="snav-item"><a href="../06-post-processing/screen-space-effects.html"><span lang="en">Screen Space Effects</span><span lang="zh">屏幕空间效果</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">07 Specialized Rendering</span><span lang="zh">07 专项渲染</span>
+        <ol>
+          <li class="snav-item"><a href="../07-specialized-rendering/volumetric-atmosphere.html"><span lang="en">Volumetric Fog &amp; Atmosphere</span><span lang="zh">体积雾与大气</span></a></li>
+          <li class="snav-item"><a href="../07-specialized-rendering/water-rendering.html"><span lang="en">Water Rendering</span><span lang="zh">水体渲染</span></a></li>
+          <li class="snav-item"><a href="../07-specialized-rendering/hair-groom-rendering.html"><span lang="en">Hair &amp; Groom</span><span lang="zh">毛发渲染</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">08 Engine Customization</span><span lang="zh">08 引擎定制</span>
+        <ol>
+          <li class="snav-item"><a href="../08-engine-customization/custom-shading-model.html"><span lang="en">Custom Shading Model</span><span lang="zh">自定义着色模型</span></a></li>
+          <li class="snav-item"><a href="../08-engine-customization/niagara-gpu-compute.html"><span lang="en">Niagara GPU Compute</span><span lang="zh">Niagara GPU 计算</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">09 Performance &amp; Profiling</span><span lang="zh">09 性能与分析</span>
+        <ol>
+          <li class="snav-item"><a href="../09-profiling/hardware-profiling.html"><span lang="en">Hardware Profiling</span><span lang="zh">硬件性能分析</span></a></li>
+        </ol>
+      </li>
+
+    </ol>
+  </div>
+  <h2><span lang="en">Contents</span><span lang="zh">目录</span></h2>
+  <ol>
+    <li><a href="#s1"><span lang="en">Light Evaluation Overview</span><span lang="zh">光照计算概览</span></a></li>
+    <li><a href="#s2"><span lang="en">Light Classification</span><span lang="zh">灯光分类</span></a></li>
+    <li><a href="#s3"><span lang="en">Light Grid — Froxels</span><span lang="zh">灯光网格 — Froxel</span></a></li>
+    <li><a href="#s4"><span lang="en">Clustered Deferred Pass</span><span lang="zh">集群延迟光照通道</span></a></li>
+    <li><a href="#s5"><span lang="en">MegaLights</span><span lang="zh">MegaLights</span></a></li>
+    <li><a href="#s6"><span lang="en">Light Functions &amp; IES</span><span lang="zh">灯光函数与 IES</span></a></li>
+    <li><a href="#s7"><span lang="en">Forward Light Loop</span><span lang="zh">前向灯光循环</span></a></li>
+    <li><a href="#s8"><span lang="en">Stochastic Lighting</span><span lang="zh">随机光照</span></a></li>
+    <li><a href="#s9"><span lang="en">Performance Tuning</span><span lang="zh">性能调优</span></a></li>
+    <li><a href="#s10"><span lang="en">Source Navigation</span><span lang="zh">源码导航</span></a></li>
+  </ol>
+</nav>
+
+<main id="content">
+  <div class="page-header">
+    <div class="crumb">Unreal Engine 5.6 &middot; Pipeline Paradigms &middot; Part 01-C</div>
+    <h1><span lang="en">Lighting Architecture — Clustered Deferred, Froxels &amp; MegaLights</span><span lang="zh">光照架构 — 集群延迟光照、Froxel 与 MegaLights</span></h1>
+    <div class="subtitle">Renderer/Private/ClusteredDeferredShadingPass.cpp &middot; LightGridInjection.cpp &middot; MegaLights/MegaLights.cpp</div>
+  </div>
+
+  <!-- s1 -->
+  <h2 id="s1"><span lang="en">Light Evaluation Overview — The Three-Tier System</span><span lang="zh">光照计算概览 — 三层系统</span></h2>
+  <p lang="en">
+    UE5's deferred renderer evaluates local lights (point, spot, rect) in a <span class="def">layered architecture</span>
+    that separates lights by type, count, and quality requirement. Understanding this is essential
+    for performance work — "too many lights" is almost always a problem in a specific tier, not globally.
+  </p>
+  <p lang="zh">
+    UE5 的延迟渲染器以<span class="def">分层架构</span>计算局部灯光（点光、聚光、矩形光），
+    按类型、数量和质量需求分离灯光。理解这一点对性能工作至关重要——
+    "灯光太多"几乎总是某个特定层级的问题，而非全局性问题。
+  </p>
+
+  <div class="diagram">
+UE5 Lighting Evaluation Tiers (executed in this order):
+
+Tier 1 — Directional Lights (always deferred, up to 4)
+  └── DeferredLightingCommon.usf → SimpleDynamicLighting path
+      Special-cased: cascaded shadow maps, sky light, atmosphere
+
+Tier 2 — Clustered Deferred (all local lights via light grid)
+  └── ClusteredDeferredShadingPass.cpp
+      ├── Light grid injection (LightGridInjection.cpp)
+      │    CPU culls lights → GPU froxel assignment compute
+      └── Shading pass: for each pixel, iterate only lights in its froxel
+          Handles: point, spot, rect lights
+          Shadows: pre-rendered shadowmaps (VSM or conventional)
+
+Tier 3 — MegaLights (UE 5.5+ GPU ray-traced many-light, optional)
+  └── MegaLights/MegaLights.cpp
+      Stochastic sampling of a large light pool via 1 ray/pixel/light
+      Enables hundreds of shadow-casting lights at acceptable cost</div>
+
+  <!-- s2 -->
+  <h2 id="s2"><span lang="en">Light Classification — CPU Culling Before GPU</span><span lang="zh">灯光分类 — GPU 前的 CPU 剔除</span></h2>
+  <p lang="en">
+    Before any GPU work happens, the CPU culls lights against the view frustum and sorts them by type.
+    This happens in <code>FDeferredShadingSceneRenderer::GatherLightsAndComputeVisibility()</code>.
+    Each visible light is placed into one of several buckets:
+  </p>
+  <p lang="zh">
+    在任何 GPU 工作发生之前，CPU 针对视图锥体剔除灯光并按类型排序。
+    这在 <code>FDeferredShadingSceneRenderer::GatherLightsAndComputeVisibility()</code> 中发生。
+    每个可见灯光被放入以下几个桶之一：
+  </p>
+
+  <div class="table-wrap"><table>
+    <thead><tr>
+      <th><span lang="en">Bucket</span><span lang="zh">桶</span></th>
+      <th><span lang="en">Content</span><span lang="zh">内容</span></th>
+      <th><span lang="en">Rendered via</span><span lang="zh">渲染方式</span></th>
+    </tr></thead>
+    <tbody>
+      <tr><td>DirectionalLights</td><td><span lang="en">Up to 4 directional lights, Skylight</span><span lang="zh">最多 4 个方向光、天空光</span></td><td><span lang="en">Full-screen quad per light</span><span lang="zh">每个灯光全屏四边形</span></td></tr>
+      <tr><td>SimpleLights</td><td><span lang="en">CPU particle lights (no shadow)</span><span lang="zh">CPU 粒子灯光（无阴影）</span></td><td><span lang="en">Injected into light grid, clustered pass</span><span lang="zh">注入灯光网格，集群通道</span></td></tr>
+      <tr><td>ClusteredLights</td><td><span lang="en">All local lights: point/spot/rect</span><span lang="zh">所有局部灯光：点/聚/矩形</span></td><td><span lang="en">Clustered deferred pass via froxel grid</span><span lang="zh">通过 Froxel 网格的集群延迟通道</span></td></tr>
+      <tr><td>ShadowedLights</td><td><span lang="en">Local lights with shadow maps</span><span lang="zh">带阴影贴图的局部灯光</span></td><td><span lang="en">Shadow rendered first, then combined in clustered pass</span><span lang="zh">先渲染阴影，再在集群通道中合并</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <pre><span class="cm">// FSceneRenderer::PrepareViewStateForCapture (simplified concept)</span>
+<span class="cm">// Actual: GatherLightsAndComputeVisibility in DeferredShadingRenderer.cpp</span>
+
+<span class="kw">for</span> (<span class="kw">auto</span>& LightProxy : Scene-&gt;Lights)
+{
+    <span class="kw">if</span> (!LightProxy.<span class="fn">AffectsBounds</span>(ViewFrustum)) <span class="kw">continue</span>; <span class="cm">// frustum cull</span>
+
+    <span class="kw">if</span> (LightProxy.LightType == LightType_Directional)
+        DirectionalLights.<span class="fn">Add</span>(LightProxy);
+    <span class="kw">else if</span> (LightProxy.<span class="fn">ShouldRenderWithMegaLights</span>())
+        MegaLightsPool.<span class="fn">Add</span>(LightProxy);     <span class="cm">// UE 5.5+</span>
+    <span class="kw">else</span>
+        ClusteredLights.<span class="fn">Add</span>(LightProxy);    <span class="cm">// goes into froxel grid</span>
+}</pre>
+
+  <!-- s3 -->
+  <h2 id="s3"><span lang="en">Light Grid — Frustum Voxels (Froxels)</span><span lang="zh">灯光网格 — 视锥体体素（Froxel）</span></h2>
+  <p lang="en">
+    The <span class="def">light grid</span> is the acceleration structure that prevents the GPU from evaluating
+    every light for every pixel. The camera frustum is divided into a 3D grid of <strong>froxels</strong>
+    (frustum voxels). For each cell, a compute shader determines which lights overlap it. During shading,
+    each pixel only iterates the lights in its froxel — not all lights in the scene.
+  </p>
+  <p lang="zh">
+    <span class="def">灯光网格</span>是防止 GPU 对每个像素计算每个灯光的加速结构。
+    相机视锥体被划分为<strong>Froxel</strong>（视锥体体素）的 3D 网格。
+    对于每个单元格，计算 Shader 确定哪些灯光与之重叠。
+    着色时，每个像素只迭代其 Froxel 中的灯光——而不是场景中的所有灯光。
+  </p>
+
+  <div class="note">
+    <span lang="en"><strong>Why "froxels" and not a uniform grid?</strong> A uniform 3D world grid wastes resolution near the camera (where you need the most detail) and lacks resolution far away. Froxels are frustum-aligned: they are small near the camera and larger in the distance, matching the perspective projection and giving better light assignment granularity where it matters most.</span>
+    <span lang="zh"><strong>为什么是"Froxel"而不是均匀网格？</strong>均匀 3D 世界网格在相机附近浪费分辨率（这里你需要最多细节），在远处又缺乏分辨率。Froxel 与视锥体对齐：在相机附近小，在远处大，与透视投影匹配，在最重要的地方提供更好的灯光分配粒度。</span>
+  </div>
+
+  <div class="diagram">
+Light Grid Structure (LightGridInjection.cpp):
+
+  Froxel grid dimensions (default): 16 × 16 × 32 cells
+  ┌──────────────────────────────────────────────────┐
+  │  Screen X: 16 tiles (each ~120px at 1920 wide)   │
+  │  Screen Y: 16 tiles                               │
+  │  Depth Z : 32 slices (logarithmic distribution)  │
+  │            — Slice 0: near plane (0.1m)           │
+  │            — Slice 31: far plane (e.g., 10km)     │
+  │            — Each slice 2× deeper than previous  │
+  └──────────────────────────────────────────────────┘
+
+  Per-froxel: list of light indices (up to 32 lights/cell)
+  Stored in: RWStructuredBuffer<uint> LightGrid (on GPU)
+
+  Step 1: CullLightsCS — for each light sphere/cone, 
+          determine which froxels it overlaps (AABB test)
+  Step 2: BuildLightListCS — write light indices into froxel lists
+  Step 3: Shading pixel reads: 
+          uint Start, Count = LightGrid[FroxelIndex];
+          for (i in [Start, Start+Count]) evaluate Light[i]</div>
+
+  <pre><span class="cm">// LightGridInjection.cpp — ComputeLightGrid() overview</span>
+
+<span class="cm">// Pass 1: Clear the light grid (per-froxel count buffer)</span>
+<span class="fn">AddClearUAVPass</span>(GraphBuilder, LightGridBuffer, <span class="num">0</span>);
+
+<span class="cm">// Pass 2: CullLightsCS — determine which lights touch which froxels</span>
+<span class="cm">// Each thread = one froxel. Tests each light's AABB/sphere vs. froxel.</span>
+TShaderMapRef&lt;FCullLightsCS&gt; CullShader(...);
+GraphBuilder.<span class="fn">AddPass</span>(RDG_EVENT_NAME(<span class="str">"LightGridCull"</span>), Params,
+    ERDGPassFlags::Compute, [=](<span class="kw">auto</span>& RHICmdList) {
+        FComputeShaderUtils::<span class="fn">Dispatch</span>(RHICmdList, CullShader, *Params,
+            FIntVector(GridX, GridY, GridZ)); <span class="cm">// one thread per froxel</span>
+    });
+
+<span class="cm">// Pass 3: Build light lists — scatter light indices into froxel list buffer</span>
+TShaderMapRef&lt;FBuildLightListCS&gt; BuildShader(...);
+<span class="cm">// Output: LightGrid[froxelIdx] = (offset, count) into LightList[]</span></pre>
+
+  <!-- s4 -->
+  <h2 id="s4"><span lang="en">Clustered Deferred Shading Pass</span><span lang="zh">集群延迟着色通道</span></h2>
+  <p lang="en">
+    Once the light grid is built, the <span class="def">clustered deferred shading pass</span> iterates every
+    pixel of the GBuffer and applies all lights in that pixel's froxel. This is a single compute dispatch
+    that replaces the old approach of rendering a sphere/cone mesh for every light.
+  </p>
+  <p lang="zh">
+    一旦灯光网格建立，<span class="def">集群延迟着色通道</span>遍历 GBuffer 的每个像素，
+    并应用该像素 Froxel 中的所有灯光。这是一次单一的计算调度，
+    取代了以前为每个灯光渲染球体/锥体网格的旧方法。
+  </p>
+
+  <pre><span class="cm">// ClusteredDeferredShadingPass.cpp — RenderClusteredDeferredLighting()</span>
+
+<span class="kw">void</span> FDeferredShadingSceneRenderer::<span class="fn">RenderClusteredDeferredLighting</span>(
+    FRDGBuilder& GraphBuilder,
+    FSceneTextures& SceneTextures,
+    FRDGBufferRef LightGridBuffer, FRDGBufferRef LightList)
+{
+    <span class="kw">auto</span>* PassParams = GraphBuilder.<span class="fn">AllocParameters</span>&lt;FClusteredShadingCS::FParameters&gt;();
+    PassParams->GBufferA       = SceneTextures.GBufferA;   <span class="cm">// normal + shading model</span>
+    PassParams->GBufferB       = SceneTextures.GBufferB;   <span class="cm">// roughness, metallic</span>
+    PassParams->SceneDepth     = SceneTextures.Depth;
+    PassParams->LightGrid      = GraphBuilder.<span class="fn">CreateSRV</span>(LightGridBuffer);
+    PassParams->LightDataBuffer= GraphBuilder.<span class="fn">CreateSRV</span>(LightDataBuffer);
+    PassParams->OutDiffuseColor= GraphBuilder.<span class="fn">CreateUAV</span>(SceneColor);
+
+    <span class="cm">// One thread per pixel, grouped 8×8</span>
+    FComputeShaderUtils::<span class="fn">AddFullscreenPass</span>(
+        GraphBuilder, ShaderMap,
+        RDG_EVENT_NAME(<span class="str">"ClusteredDeferredLighting"</span>),
+        Shader, PassParams,
+        FIntVector(FMath::<span class="fn">DivideAndRoundUp</span>(Width, <span class="num">8</span>),
+                   FMath::<span class="fn">DivideAndRoundUp</span>(Height, <span class="num">8</span>), <span class="num">1</span>));
+}
+
+<span class="cm">// Inside the shader (ClusteredDeferredShadingCommon.usf):</span>
+<span class="cm">// uint FroxelIdx = ComputeFroxelIndex(PixelPos, Depth);</span>
+<span class="cm">// uint LightOffset, LightCount = LightGrid[FroxelIdx];</span>
+<span class="cm">// for (uint i = 0; i &lt; LightCount; ++i) {</span>
+<span class="cm">//     FDeferredLightData Light = LightDataBuffer[LightList[LightOffset + i]];</span>
+<span class="cm">//     Lighting += EvaluateLight(GBuffer, Light, ShadowMap);</span>
+<span class="cm">// }</span></pre>
+
+  <!-- s5 -->
+  <h2 id="s5"><span lang="en">MegaLights — GPU Ray-Traced Many-Light System (UE 5.5+)</span><span lang="zh">MegaLights — GPU 光追多灯光系统（UE 5.5+）</span></h2>
+  <p lang="en">
+    <span class="def">MegaLights</span> is a new system introduced in UE 5.5 that extends the lighting architecture
+    to support <strong>hundreds or thousands of shadow-casting local lights</strong> in a scene — something previously
+    impossible without unacceptable frame time. It uses <strong>stochastic sampling</strong>: instead of evaluating
+    all N lights per pixel, each pixel traces 1 ray toward a <em>probabilistically sampled</em> light,
+    and the result is denoised over multiple frames.
+  </p>
+  <p lang="zh">
+    <span class="def">MegaLights</span> 是 UE 5.5 中引入的新系统，将光照架构扩展为支持场景中
+    <strong>数百甚至数千个投影局部灯光</strong>——这在之前以可接受的帧时间是不可能实现的。
+    它使用<strong>随机采样</strong>：不是对每个像素计算所有 N 个灯光，
+    而是每个像素向一个<em>概率采样</em>的灯光追踪 1 条光线，结果在多帧上降噪。
+  </p>
+
+  <div class="diagram">
+MegaLights Pipeline (MegaLights/MegaLights.cpp):
+
+  1. Build candidate light list per pixel (importance sampling):
+     - Sample N candidate lights based on luminance × solid angle
+     - Use ReSTIR: Reservoir-based Spatio-Temporal Resampling
+       → keeps statistically good samples across frames
+
+  2. Trace shadow ray for chosen candidate (1 ray/pixel):
+     - Hardware RT: trace against TLAS  (most accurate)
+     - Software:   stochastic shadow map lookup (fallback)
+
+  3. Accumulate in reservoir buffer (temporal history)
+     - Spatial reuse: share reservoirs with 4 neighbors
+     - Temporal reuse: reproject previous frame reservoirs
+
+  4. Denoise → integrate into scene color
+     - SVGF-style spatiotemporal filter
+     - Result: stable, low-noise many-light illumination</div>
+
+  <p lang="en">
+    MegaLights integrates with <strong>Virtual Shadow Maps</strong>: each MegaLight automatically gets a VSM
+    page allocation so that shadows are correct and cached. The key enabling technology is that VSM already
+    caches static geometry shadows, so MegaLights only needs to re-evaluate light pages when something moves.
+  </p>
+  <p lang="zh">
+    MegaLights 与<strong>虚拟阴影贴图</strong>集成：每个 MegaLight 自动获得 VSM 页面分配以使阴影正确并被缓存。
+    关键使能技术是 VSM 已经缓存了静态几何体阴影，所以 MegaLights 只需在有物体移动时重新计算灯光页面。
+  </p>
+
+  <pre><span class="cm">// Enabling MegaLights (Project Settings or per-light):</span>
+
+<span class="cm">// Project Settings → Rendering → MegaLights</span>
+r.MegaLights=1                       <span class="cm">// Enable MegaLights globally</span>
+r.MegaLights.ShadowsEnabled=1        <span class="cm">// Enable shadow casting for MegaLights</span>
+r.MegaLights.SamplesPerPixel=1       <span class="cm">// Rays per pixel (1 = default, 2 = higher quality)</span>
+r.MegaLights.UseHardwareRayTracing=1 <span class="cm">// Use HWRT for shadow rays (more accurate)</span>
+
+<span class="cm">// Per-light in Blueprint/details panel:</span>
+<span class="cm">// PointLight → Details → "Mega Lights" → Enable for this light</span>
+<span class="cm">// Only lights marked as MegaLights participate in the many-light pool</span>
+
+<span class="cm">// stat MegaLights — shows light pool size, rays/frame, denoiser cost</span></pre>
+
+  <div class="warning">
+    <span lang="en"><strong>MegaLights vs. Lumen:</strong> MegaLights is a <em>direct lighting</em> system — it evaluates the primary illumination from many lights. Lumen is an <em>indirect lighting</em> system — it computes the light that has bounced. They are complementary: MegaLights handles the "many direct lights" case; Lumen handles the "indirect bounced light" case. Both can be active simultaneously.</span>
+    <span lang="zh"><strong>MegaLights 与 Lumen 的区别：</strong>MegaLights 是<em>直接光照</em>系统——它计算来自多个灯光的主要照明。Lumen 是<em>间接光照</em>系统——它计算已经反弹的光线。它们是互补的：MegaLights 处理"多个直接灯光"的情况；Lumen 处理"间接反弹光"的情况。两者可以同时激活。</span>
+  </div>
+
+  <!-- s6 -->
+  <h2 id="s6"><span lang="en">Light Functions &amp; IES Profiles</span><span lang="zh">灯光函数与 IES 配置文件</span></h2>
+  <p lang="en">
+    <span class="def">Light Functions</span> let you mask or modulate a light's intensity using a Material — think of
+    a stained-glass window casting colored shadows, a flickering fire light, or a flashlight with a
+    non-circular beam. <span class="def">IES Profiles</span> are measured real-world light distribution curves
+    that define how light falls off in different directions.
+  </p>
+  <p lang="zh">
+    <span class="def">灯光函数</span>让你用材质遮罩或调制灯光强度——想象彩色玻璃窗投射的彩色阴影、
+    闪烁的火焰灯光，或具有非圆形光束的手电筒。
+    <span class="def">IES 配置文件</span>是测量的真实世界灯光分布曲线，定义灯光在不同方向上的衰减方式。
+  </p>
+
+  <h3><span lang="en">Light Function Atlas (UE 5.2+)</span><span lang="zh">灯光函数图集（UE 5.2+）</span></h3>
+  <p lang="en">
+    Prior to the Light Function Atlas, each light function material required a separate full-screen render pass.
+    With the atlas system (<code>LightFunctionAtlas.h/.cpp</code>), all light functions are rendered into a shared
+    2D texture atlas, and the clustered shading pass reads them in a single indirection. This enables dozens
+    of lights with unique light functions at nearly zero per-light overhead.
+  </p>
+  <p lang="zh">
+    在灯光函数图集之前，每个灯光函数材质需要单独的全屏渲染通道。
+    有了图集系统（<code>LightFunctionAtlas.h/.cpp</code>），所有灯光函数被渲染到共享的 2D 纹理图集中，
+    集群着色通道通过单次间接访问读取它们。这使得具有独特灯光函数的数十个灯光的每灯光开销几乎为零。
+  </p>
+
+  <pre><span class="cm">// LightFunctionRendering.cpp — RenderLightFunctionForMaterial()</span>
+<span class="cm">// Each unique light function material → rendered into an atlas tile</span>
+<span class="cm">// Atlas tile UV is stored in the light data buffer</span>
+
+<span class="cm">// IES profile → stored as a 1D texture (luminous intensity vs angle)</span>
+<span class="cm">// IESTextureManager.cpp: manages the IES texture array (up to 64 profiles)</span>
+<span class="cm">// Clustered shading reads: LightData.IESTextureIndex → sample IES texture</span>
+
+<span class="cm">// Usage in Blueprint/Editor:</span>
+<span class="cm">// PointLight → Details → Light → Light Function Material (any Material)</span>
+<span class="cm">// PointLight → Details → Light → IES Texture (import .ies file)</span>
+
+<span class="cm">// Console: r.LightFunctionAtlas=1 (default enabled in 5.2+)</span></pre>
+
+  <!-- s7 -->
+  <h2 id="s7"><span lang="en">Forward Light Loop (Desktop &amp; Mobile)</span><span lang="zh">前向灯光循环（桌面端与移动端）</span></h2>
+  <p lang="en">
+    For forward-rendered objects (translucent materials, forward renderer on mobile), the light loop
+    works differently. Instead of a deferred pass, the surface shader itself loops over lights.
+    UE5 uses the same froxel grid to supply lights to the forward loop, so complexity is still O(lights-in-froxel)
+    not O(all-lights).
+  </p>
+  <p lang="zh">
+    对于前向渲染的对象（半透明材质、移动端前向渲染器），灯光循环的工作方式不同。
+    不是延迟通道，而是表面 Shader 本身循环遍历灯光。
+    UE5 使用相同的 Froxel 网格为前向循环提供灯光，
+    因此复杂度仍然是 O(froxel 中的灯光数量)，而不是 O(所有灯光)。
+  </p>
+
+  <pre><span class="cm">// ForwardLightingCommon.ush — Desktop forward lighting loop</span>
+
+float3 <span class="fn">GetForwardDirectLighting</span>(FMaterialPixelParameters Params, ...)
+{
+    float3 Color = <span class="num">0</span>;
+
+    <span class="cm">// Get froxel index for this pixel</span>
+    uint FroxelIndex = <span class="fn">ComputeFroxelIndex</span>(Params.SvPosition, Params.ScreenPosition.w);
+
+    <span class="cm">// Read light count and offset from the grid</span>
+    uint LightDataOffset, LocalLightCount;
+    <span class="fn">GetLocalLightCountAndOffset</span>(FroxelIndex, LightDataOffset, LocalLightCount);
+
+    <span class="cm">// Evaluate each local light in this froxel</span>
+    LOOP <span class="kw">for</span> (uint i = <span class="num">0</span>; i &lt; LocalLightCount &amp;&amp; i &lt; MAX_LIGHTS_PER_PIXEL; ++i)
+    {
+        FDeferredLightData LightData = <span class="fn">LoadLocalLightData</span>(LightDataOffset + i);
+        Color += <span class="fn">EvaluateLocalLight</span>(Params, LightData);
+    }
+
+    <span class="cm">// Also evaluate directional lights (always applied)</span>
+    Color += <span class="fn">EvaluateDirectionalLight</span>(Params, DirectionalLightData);
+    <span class="kw">return</span> Color;
+}</pre>
+
+  <!-- s8 -->
+  <h2 id="s8"><span lang="en">Stochastic Lighting — Dynamic Indirect Many-Light</span><span lang="zh">随机光照 — 动态间接多灯光</span></h2>
+  <p lang="en">
+    <span class="def">Stochastic Lighting</span> (<code>StochasticLighting/</code>) is a complementary system to MegaLights
+    focused on <em>indirect</em> many-light illumination. Where Lumen provides physically-based GI from surfaces,
+    Stochastic Lighting uses a ReSTIR-based approach to evaluate indirect illumination from a large pool of
+    dynamic lights, including emissive materials. This handles scenarios like a scene lit mostly by Niagara
+    particle emitters or dense light grids.
+  </p>
+  <p lang="zh">
+    <span class="def">随机光照</span>（<code>StochasticLighting/</code>）是 MegaLights 的补充系统，
+    专注于<em>间接</em>多灯光照明。Lumen 从表面提供基于物理的 GI，
+    而随机光照使用基于 ReSTIR 的方法，从大量动态灯光池（包括自发光材质）计算间接照明。
+    这处理了主要由 Niagara 粒子发射器或密集灯光网格照亮的场景。
+  </p>
+
+  <!-- s9 -->
+  <h2 id="s9"><span lang="en">Performance Tuning</span><span lang="zh">性能调优</span></h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>CVar</th><th><span lang="en">Effect</span><span lang="zh">效果</span></th></tr></thead>
+    <tbody>
+      <tr><td>r.TiledDeferredShading=1</td><td><span lang="en">Enable tiled/clustered deferred (should always be 1)</span><span lang="zh">启用分块/集群延迟（应始终为 1）</span></td></tr>
+      <tr><td>r.TiledDeferredShading.MinimumCount</td><td><span lang="en">Min lights to switch from per-light pass to clustered (default 80)</span><span lang="zh">从逐灯光通道切换到集群的最小灯光数（默认 80）</span></td></tr>
+      <tr><td>r.LightFunctionAtlas</td><td><span lang="en">Use light function atlas (1 = enabled, reduces render passes)</span><span lang="zh">使用灯光函数图集（1 = 启用，减少渲染通道数）</span></td></tr>
+      <tr><td>r.MegaLights</td><td><span lang="en">Enable MegaLights for many shadow-casting lights</span><span lang="zh">为大量投影灯光启用 MegaLights</span></td></tr>
+      <tr><td>r.MegaLights.SamplesPerPixel</td><td><span lang="en">1 = fastest, 2 = better quality but 2× cost</span><span lang="zh">1 = 最快，2 = 质量更好但成本翻倍</span></td></tr>
+      <tr><td>r.CapsuleShadows</td><td><span lang="en">Enable capsule contact shadows from skeletal meshes</span><span lang="zh">从骨骼网格启用胶囊体接触阴影</span></td></tr>
+      <tr><td>showflag.LightGrid=1</td><td><span lang="en">Visualize the froxel light grid in viewport</span><span lang="zh">在视口中可视化 Froxel 灯光网格</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="note">
+    <span lang="en"><strong>Practical tip — "Why is my scene slow with 100 lights?"</strong> Use <code>stat SceneRendering</code> to identify whether the bottleneck is in LightGrid injection, the clustered shading pass, or shadow map rendering. Often the real bottleneck is shadow maps, not the shading math — consider using <code>MegaLights</code> + VSM caching for scenes with many shadow-casting lights.</span>
+    <span lang="zh"><strong>实用技巧 — "为什么 100 个灯光让我的场景变慢？"</strong>使用 <code>stat SceneRendering</code> 识别瓶颈是在灯光网格注入、集群着色通道还是阴影贴图渲染中。通常真正的瓶颈是阴影贴图而不是着色数学——对于有很多投影灯光的场景，考虑使用 <code>MegaLights</code> + VSM 缓存。</span>
+  </div>
+
+  <!-- s10 -->
+  <h2 id="s10"><span lang="en">Source Navigation</span><span lang="zh">源码导航</span></h2>
+  <p lang="en">All paths relative to <code>Engine/Source/Runtime/Renderer/Private/</code></p>
+  <p lang="zh">所有路径相对于 <code>Engine/Source/Runtime/Renderer/Private/</code></p>
+  <ul class="file-list">
+    <li><span class="fp">LightGridInjection.cpp</span><span class="fd"><span lang="en">Froxel grid construction: culling lights into froxel cells</span><span lang="zh">Froxel 网格构建：将灯光剔除到 Froxel 单元格中</span></span></li>
+    <li><span class="fp">Froxel/Froxel.h/.cpp</span><span class="fd"><span lang="en">Froxel math, frustum voxel parameterization</span><span lang="zh">Froxel 数学，视锥体体素参数化</span></span></li>
+    <li><span class="fp">ClusteredDeferredShadingPass.cpp</span><span class="fd"><span lang="en">Main clustered deferred dispatch: GBuffer → scene color</span><span lang="zh">主集群延迟调度：GBuffer → 场景颜色</span></span></li>
+    <li><span class="fp">LightRendering.cpp</span><span class="fd"><span lang="en">Directional light full-screen passes, simple light batching</span><span lang="zh">方向光全屏通道，简单灯光批处理</span></span></li>
+    <li><span class="fp">MegaLights/MegaLights.cpp</span><span class="fd"><span lang="en">MegaLights orchestrator: light pool, ReSTIR sampling, denoising</span><span lang="zh">MegaLights 协调器：灯光池、ReSTIR 采样、降噪</span></span></li>
+    <li><span class="fp">MegaLights/MegaLightsRayTracing.cpp</span><span class="fd"><span lang="en">HWRT shadow ray dispatches for MegaLights</span><span lang="zh">MegaLights 的 HWRT 阴影光线调度</span></span></li>
+    <li><span class="fp">LightFunctionRendering.cpp</span><span class="fd"><span lang="en">Light function material rendering</span><span lang="zh">灯光函数材质渲染</span></span></li>
+    <li><span class="fp">LightFunctionAtlas.h/.cpp</span><span class="fd"><span lang="en">Light function atlas management (all functions into one atlas)</span><span lang="zh">灯光函数图集管理（所有函数合并到一个图集）</span></span></li>
+    <li><span class="fp">IESTextureManager.h/.cpp</span><span class="fd"><span lang="en">IES profile texture array, loading, index management</span><span lang="zh">IES 配置文件纹理数组、加载、索引管理</span></span></li>
+    <li><span class="fp">StochasticLighting/StochasticLighting.cpp</span><span class="fd"><span lang="en">ReSTIR-based dynamic indirect many-light illumination</span><span lang="zh">基于 ReSTIR 的动态间接多灯光照明</span></span></li>
+  </ul>
+
+  <footer>Unreal Engine 5.6 &middot; Engine/Source/Runtime/Renderer/Private/<br>Source analysis &middot; For learning purposes</footer>
+
+  <div class="page-nav">
+    <a href="../01-rendering-pipeline/forward-shading.html" class="prev"><span class="pn-label">&larr; Prev</span><span class="pn-title"><span lang="en">Forward Shading</span><span lang="zh">前向渲染</span></span></a>
+    <a href="../02-engine-infrastructure/rdg-compiler.html" class="next"><span class="pn-label">Next &rarr;</span><span class="pn-title"><span lang="en">RDG — Render Dependency Graph</span><span lang="zh">RDG 渲染依赖图</span></span></a>
+  </div>
+</main>
+</div>
+
+<script>
+function toggleLang(){var h=document.documentElement;if(h.classList.contains('lang-zh')){h.classList.remove('lang-zh');h.lang='en';document.title='Lighting Architecture';localStorage.setItem('ue-doc-lang','en');}else{h.classList.add('lang-zh');h.lang='zh-CN';document.title='光照架构';localStorage.setItem('ue-doc-lang','zh');}}
+if(document.documentElement.classList.contains('lang-zh'))document.title='光照架构';
+</script>
+</body>
+</html>

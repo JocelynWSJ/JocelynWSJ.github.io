@@ -1,0 +1,485 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Volumetric &amp; Atmosphere — Fog, Clouds &amp; Sky</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Gudea">
+  <script>(function(){if(localStorage.getItem('ue-doc-lang')==='zh'){document.documentElement.classList.add('lang-zh');document.documentElement.lang='zh-CN';}})();</script>
+  <style>
+    html:not(.lang-zh) [lang="zh"]{display:none;} html.lang-zh [lang="en"]{display:none;}
+    #lang-btn{position:fixed;top:16px;right:20px;z-index:999;background:#37425d;color:#fff;border:none;border-radius:4px;padding:5px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:Gudea,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.2);transition:background .15s;} #lang-btn:hover{background:#4a5a7a;}
+    *{box-sizing:border-box;margin:0;padding:0;} body{font-family:Gudea,sans-serif;font-size:16px;line-height:1.8;color:#111;background:#eee;}
+    #wrapper{max-width:1100px;margin:0 auto;display:flex;align-items:flex-start;padding:40px 24px;gap:36px;}
+    #sidebar{width:240px;flex-shrink:0;font-size:13px;}
+    #sidebar h2{font-size:12px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;border:none;padding:0;}
+    #sidebar > ol{list-style:none !important;padding:0;} #sidebar > ol > li{list-style:none !important;margin-bottom:5px;}
+    #sidebar > ol > li a{color:#555;text-decoration:none;display:block;padding:2px 0;transition:color .12s;} #sidebar > ol > li a:hover{color:#58A;} #sidebar > ol > li a::before{content:none;}
+    #content{flex:1;min-width:0;}
+    .page-header{margin-bottom:32px;padding-bottom:20px;border-bottom:1px solid #ddd;}
+    .page-header .crumb{font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
+    .page-header h1{font-size:1.8rem;font-weight:900;color:#303236;margin-bottom:8px;line-height:1.25;}
+    .page-header .subtitle{font-family:'Courier New',monospace;font-size:13px;color:#777;}
+    h2{color:#37425d;font-size:22px;margin:36px 0 10px;} h3{color:#633739;font-size:17px;margin:24px 0 8px;}
+    p{margin-bottom:14px;} a{color:#58A;text-decoration:none;} a:hover{text-decoration:underline;} strong{color:#222;}
+    .fun{font-family:'Courier New',monospace;color:#2a6496;} .def{color:green;font-weight:600;}
+    code{font-family:'Courier New',monospace;font-size:14px;background:#ddd;border-radius:3px;padding:1px 5px;}
+    pre{background:#282c34;color:#abb2bf;border-radius:5px;padding:16px 18px;overflow-x:auto;margin:14px 0 18px;font-family:'Courier New',monospace;font-size:13.5px;line-height:1.6;}
+    pre code{background:none;padding:0;color:inherit;} .kw{color:#c678dd;} .fn{color:#61afef;} .cm{color:#5c6370;font-style:italic;} .str{color:#98c379;} .num{color:#d19a66;} .type{color:#e5c07b;}
+    .note{display:block;margin:18px 0;padding:15px;background:#D8F5D8;color:#444;border-radius:5px;border:2px solid #AFDFAF;font-size:15px;line-height:1.7;}
+    .warning{display:block;margin:18px 0;padding:15px;background:#FFD2D2;color:#444;border-radius:5px;border:2px solid #E0B3B3;font-size:15px;line-height:1.7;}
+    ul,ol{padding-left:22px;margin-bottom:14px;} li{margin-bottom:5px;}
+    .table-wrap{overflow-x:auto;margin:14px 0;} table{border-collapse:collapse;font-size:14px;width:100%;}
+    th,td{padding:8px 12px;border-bottom:1px solid #aaa;text-align:left;} th{border-bottom:2px solid #888;font-weight:700;background:#ddd;} tr:nth-child(even) td{background:#e8e8e8;}
+    td:first-child{font-family:'Courier New',monospace;font-size:13px;color:#2a6496;white-space:nowrap;}
+    .diagram{background:#fff;border:1px solid #ccc;border-radius:5px;padding:20px;margin:16px 0;font-family:'Courier New',monospace;font-size:13px;line-height:1.8;overflow-x:auto;white-space:pre;}
+    .file-list{list-style:none;padding:0;margin:12px 0;} .file-list li{padding:6px 0;border-bottom:1px solid #ccc;display:flex;align-items:baseline;gap:10px;font-size:14px;} .file-list li:last-child{border-bottom:none;} .file-list .fp{font-family:'Courier New',monospace;font-size:13px;color:#58A;min-width:300px;} .file-list .fd{color:#555;}
+    footer{margin-top:48px;padding-top:16px;border-top:1px solid #ccc;font-size:12px;color:#aaa;text-align:center;}
+    @media(max-width:800px){#wrapper{flex-direction:column;padding:20px 16px;}#sidebar{width:100%;position:static;max-height:none;margin-bottom:24px;}}
+    #series-nav{margin-bottom:24px;} #series-nav ol,#series-nav li{list-style:none;padding-left:0;}
+    .snav-label{font-size:11px;font-weight:800;color:#37425d;text-transform:uppercase;letter-spacing:.14em;display:block;margin-bottom:10px;padding-bottom:4px;border-bottom:2px solid #37425d;}
+    #series-nav > ol{list-style:none;padding:0;margin:0;} #series-nav ol{list-style:none;padding:0;margin:0;}
+    .snav-ch{margin-bottom:10px;}
+    .snav-ch > span{font-size:11px;font-weight:800;letter-spacing:.06em;color:#fff;background:#5a6a80;display:block;padding:3px 7px 3px 6px;border-radius:3px;margin-bottom:3px;text-transform:uppercase;}
+    .snav-ch > ol{padding-left:0;margin-top:0;}
+    .snav-item{margin-bottom:1px;}
+    .snav-item a{font-size:13.5px;color:#666;text-decoration:none;display:block;padding:3px 6px;border-left:3px solid transparent;border-radius:0 3px 3px 0;transition:color .12s,background .12s,border-color .12s;}
+    .snav-item a:hover{color:#37425d;background:#f0f2f5;border-left-color:#c0cad8;}
+    .snav-item.active a{color:#37425d;font-weight:700;background:#e8ecf4;border-left-color:#37425d;}
+    .page-nav{display:flex;justify-content:space-between;align-items:center;margin:36px 0 0;padding-top:16px;border-top:1px solid #ddd;font-size:14px;}
+    .page-nav a{color:#58A;text-decoration:none;display:flex;align-items:center;gap:6px;max-width:42%;}
+    .page-nav a:hover{text-decoration:underline;}
+    .page-nav .pn-label{font-size:11px;color:#aaa;text-transform:uppercase;display:block;}
+    .page-nav .pn-title{display:block;} .page-nav .prev{text-align:left;} .page-nav .next{text-align:right;}
+  
+    .snav-children{display:block;list-style:none;padding:2px 0 4px 10px;margin:1px 0 0;border-left:2px solid #dde3ee;}
+    .snav-subitem{margin-bottom:1px;}
+    .snav-subitem a{font-size:12px;color:#888;text-decoration:none;display:block;padding:2px 4px 2px 8px;border-left:2px solid transparent;border-radius:0 3px 3px 0;transition:color .12s,background .12s,border-color .12s;}
+    .snav-subitem a:hover{color:#37425d;background:#f0f2f5;border-left-color:#c0cad8;}
+    .snav-subitem.active a{color:#37425d;font-weight:700;background:#e8ecf4;border-left-color:#37425d;}  </style>
+</head>
+<body>
+<button id="lang-btn" onclick="toggleLang()"><span lang="en">中文</span><span lang="zh">English</span></button>
+<div id="wrapper">
+<nav id="sidebar">
+  <div id="series-nav">
+    <span class="snav-label"><span lang="en">Series</span><span lang="zh">系列</span></span>
+    <ol>
+
+      <li class="snav-ch"><span lang="en">00 Overview</span><span lang="zh">00 概述</span>
+        <ol>
+          <li class="snav-item"><a href="../00-overview/introduction.html"><span lang="en">Introduction</span><span lang="zh">系列简介</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">01 Rendering Pipeline</span><span lang="zh">01 渲染管线</span>
+        <ol>
+          <li class="snav-item"><a href="../01-rendering-pipeline/deferred-shading.html"><span lang="en">Deferred Rendering</span><span lang="zh">延迟渲染</span></a></li>
+          <li class="snav-item"><a href="../01-rendering-pipeline/forward-shading.html"><span lang="en">Forward Rendering</span><span lang="zh">前向渲染</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">02 Engine Infrastructure</span><span lang="zh">02 引擎基础设施</span>
+        <ol>
+          <li class="snav-item"><a href="../02-engine-infrastructure/rdg-compiler.html"><span lang="en">RDG — Render Dependency Graph</span><span lang="zh">RDG 渲染依赖图</span></a></li>
+          <li class="snav-item"><a href="../02-engine-infrastructure/thread-concurrency.html"><span lang="en">Thread Concurrency</span><span lang="zh">线程并发</span></a></li>
+          <li class="snav-item"><a href="../02-engine-infrastructure/virtual-texture.html"><span lang="en">Virtual Texture Streaming</span><span lang="zh">虚拟纹理流送</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">03 Lighting &amp; Shadows</span><span lang="zh">03 光照与阴影</span>
+        <ol>
+          <li class="snav-item"><a href="../03-lighting-shadows/lighting-architecture.html"><span lang="en">Lighting Architecture</span><span lang="zh">光照架构</span></a></li>
+          <li class="snav-item"><a href="../03-lighting-shadows/virtual-shadow-maps.html"><span lang="en">Virtual Shadow Maps</span><span lang="zh">虚拟阴影贴图</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">04 Material &amp; Shader System</span><span lang="zh">04 材质与着色器系统</span>
+        <ol>
+          <li class="snav-item"><a href="../04-material-shader/material-translation.html"><span lang="en">Shader Compilation &amp; Architecture</span><span lang="zh">着色器编译与架构</span></a></li>
+          <li class="snav-item"><a href="../04-material-shader/shading-models-reference.html"><span lang="en">Shading Models Reference</span><span lang="zh">着色模型参考</span></a></li>
+          <li class="snav-item"><a href="../04-material-shader/usf-hlsl-guide.html"><span lang="en">USF / HLSL Writing Guide</span><span lang="zh">USF / HLSL 编写指南</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">05 UE5 Core Technologies</span><span lang="zh">05 UE5 核心技术</span>
+        <ol>
+          <li class="snav-item"><a href="../05-ue5-core/nanite-rasterizer.html"><span lang="en">Nanite — Virtual Geometry</span><span lang="zh">Nanite 虚拟几何</span></a></li>
+          <li class="snav-item"><a href="../05-ue5-core/lumen-raytracing.html"><span lang="en">Lumen — Dynamic GI</span><span lang="zh">Lumen 动态全局光照</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">06 Post-Processing &amp; Effects</span><span lang="zh">06 后处理与屏幕效果</span>
+        <ol>
+          <li class="snav-item"><a href="../06-post-processing/post-processing.html"><span lang="en">Post-Processing Pipeline</span><span lang="zh">后处理管线</span></a></li>
+          <li class="snav-item"><a href="../06-post-processing/screen-space-effects.html"><span lang="en">Screen Space Effects</span><span lang="zh">屏幕空间效果</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">07 Specialized Rendering</span><span lang="zh">07 专项渲染</span>
+        <ol>
+          <li class="snav-item active"><a href="../07-specialized-rendering/volumetric-atmosphere.html"><span lang="en">Volumetric Fog &amp; Atmosphere</span><span lang="zh">体积雾与大气</span></a></li>
+          <li class="snav-item"><a href="../07-specialized-rendering/water-rendering.html"><span lang="en">Water Rendering</span><span lang="zh">水体渲染</span></a></li>
+          <li class="snav-item"><a href="../07-specialized-rendering/hair-groom-rendering.html"><span lang="en">Hair &amp; Groom</span><span lang="zh">毛发渲染</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">08 Engine Customization</span><span lang="zh">08 引擎定制</span>
+        <ol>
+          <li class="snav-item"><a href="../08-engine-customization/custom-shading-model.html"><span lang="en">Custom Shading Model</span><span lang="zh">自定义着色模型</span></a></li>
+          <li class="snav-item"><a href="../08-engine-customization/niagara-gpu-compute.html"><span lang="en">Niagara GPU Compute</span><span lang="zh">Niagara GPU 计算</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">09 Performance &amp; Profiling</span><span lang="zh">09 性能与分析</span>
+        <ol>
+          <li class="snav-item"><a href="../09-profiling/hardware-profiling.html"><span lang="en">Hardware Profiling</span><span lang="zh">硬件性能分析</span></a></li>
+        </ol>
+      </li>
+
+    </ol>
+  </div>
+  <h2><span lang="en">Contents</span><span lang="zh">目录</span></h2>
+  <ol>
+    <li><a href="#s1"><span lang="en">The Atmosphere Stack</span><span lang="zh">大气栈</span></a></li>
+    <li><a href="#s2"><span lang="en">Exponential Height Fog</span><span lang="zh">指数高度雾</span></a></li>
+    <li><a href="#s3"><span lang="en">Volumetric Fog — 3D Froxel Grid</span><span lang="zh">体积雾 — 3D Froxel 网格</span></a></li>
+    <li><a href="#s4"><span lang="en">Local Fog Volumes</span><span lang="zh">局部雾体积</span></a></li>
+    <li><a href="#s5"><span lang="en">Volumetric Clouds</span><span lang="zh">体积云</span></a></li>
+    <li><a href="#s6"><span lang="en">Sky Atmosphere — Bruneton Model</span><span lang="zh">天空大气 — Bruneton 模型</span></a></li>
+    <li><a href="#s7"><span lang="en">How They Interact</span><span lang="zh">相互作用</span></a></li>
+    <li><a href="#s8"><span lang="en">Performance Tuning</span><span lang="zh">性能调优</span></a></li>
+    <li><a href="#s9"><span lang="en">Source Navigation</span><span lang="zh">源码导航</span></a></li>
+  </ol>
+</nav>
+
+<main id="content">
+  <div class="page-header">
+    <div class="crumb">Unreal Engine 5.6 &middot; Next-Gen Hardware &middot; Part 04-D</div>
+    <h1><span lang="en">Volumetric &amp; Atmosphere — Fog, Clouds &amp; Sky</span><span lang="zh">体积与大气 — 雾、云与天空</span></h1>
+    <div class="subtitle">Renderer/Private/VolumetricFog.cpp &middot; VolumetricCloudRendering.cpp &middot; SkyAtmosphereRendering.cpp</div>
+  </div>
+
+  <!-- s1 -->
+  <h2 id="s1"><span lang="en">The Atmosphere Stack — Four Layered Systems</span><span lang="zh">大气栈 — 四个分层系统</span></h2>
+  <p lang="en">
+    UE5's atmosphere rendering is composed of four independent but complementary systems, each handling
+    a different scale and physical phenomenon. They are designed to work together: the sky atmosphere
+    provides the background color, clouds float in that atmosphere, volumetric fog fills the near-camera
+    region, and height fog provides a cheap baseline fallback.
+  </p>
+  <p lang="zh">
+    UE5 的大气渲染由四个独立但互补的系统组成，每个系统处理不同尺度和物理现象。
+    它们被设计为协同工作：天空大气提供背景颜色，云在大气中飘浮，
+    体积雾填充相机附近区域，高度雾提供廉价的基础回退。
+  </p>
+  <div class="diagram">
+Atmosphere Rendering Stack (from far to near):
+
+  ┌─────────────────────────────────────────────────────┐
+  │  Sky Atmosphere (SkyAtmosphereRendering.cpp)         │
+  │  → Physically-based sky color via Bruneton LUTs      │
+  │  → Rayleigh + Mie scattering across planet-scale     │
+  │  Rendered to: SkyAtmosphereTexture (full-screen quad)│
+  ├─────────────────────────────────────────────────────┤
+  │  Volumetric Clouds (VolumetricCloudRendering.cpp)    │
+  │  → Ray-marched density field at 6–20km altitude      │
+  │  → Temporal accumulation (renders at 1/4 resolution) │
+  ├─────────────────────────────────────────────────────┤
+  │  Volumetric Fog (VolumetricFog.cpp)                  │
+  │  → 3D froxel grid (frustum-aligned), up to ~2km      │
+  │  → Full light scattering (directional + local lights)│
+  ├─────────────────────────────────────────────────────┤
+  │  Exponential Height Fog (FogRendering.cpp)           │
+  │  → Analytical formula (no per-voxel compute)         │
+  │  → Very cheap, unlimited range fallback              │
+  └─────────────────────────────────────────────────────┘</div>
+
+  <!-- s2 -->
+  <h2 id="s2"><span lang="en">Exponential Height Fog — The Cheap Baseline</span><span lang="zh">指数高度雾 — 廉价基础方案</span></h2>
+  <p lang="en">
+    <span class="def">Exponential Height Fog</span> applies an analytical fog formula during the final
+    lighting composite. It uses no 3D volume and no ray marching — just a per-pixel formula based on
+    view ray length and altitude. Cost: near-zero (a few ALU ops per pixel in the final composition pass).
+  </p>
+  <p lang="zh">
+    <span class="def">指数高度雾</span>在最终光照合成期间应用解析雾公式。
+    它不使用 3D 体积，也不使用光线步进——只是基于视线长度和高度的逐像素公式。
+    成本：接近零（最终合成通道中每像素几个 ALU 操作）。
+  </p>
+  <pre><span class="cm">// FogRendering.cpp — analytical exponential height fog</span>
+
+<span class="cm">// Fog density decreases exponentially with altitude:</span>
+<span class="cm">// ρ(h) = FogDensity × exp(-FogHeightFalloff × (h - FogHeight))</span>
+
+<span class="cm">// Optical depth integral along view ray from camera to fragment:</span>
+float <span class="fn">ComputeExponentialFogIntegral</span>(
+    float3 ViewOrigin, float3 ViewDir, float RayLength,
+    float FogDensity, float FogHeight, float FogHeightFalloff)
+{
+    float StartH = ViewOrigin.z - FogHeight;
+    float DeltaH = ViewDir.z * RayLength;
+
+    <span class="kw">if</span> (<span class="fn">abs</span>(DeltaH) &lt; <span class="num">0.001f</span>)  <span class="cm">// nearly horizontal ray</span>
+        <span class="kw">return</span> FogDensity * RayLength * <span class="fn">exp</span>(-FogHeightFalloff * StartH);
+
+    <span class="cm">// Analytical integral of exp(-k*h) over the ray:</span>
+    <span class="cm">// = (exp(-k*H_start) - exp(-k*H_end)) / (k * DeltaH/RayLength)</span>
+    float k = FogHeightFalloff;
+    <span class="kw">return</span> FogDensity * RayLength
+         * (<span class="fn">exp</span>(-k * StartH) - <span class="fn">exp</span>(-k * (StartH + DeltaH)))
+         / (k * DeltaH);
+}
+
+<span class="cm">// Apply: OutColor = lerp(FogColor, SceneColor, exp(-OpticalDepth))</span></pre>
+
+  <p lang="en"><strong>Key parameters:</strong> <code>Fog Density</code>, <code>Fog Height</code> (world Z where fog is thickest), <code>Fog Height Falloff</code> (how quickly density drops with altitude), <code>Fog Cutoff Distance</code> (no fog beyond this — useful for indoor scenes), <code>Directional Inscattering</code> (sun glow direction inside fog).</p>
+  <p lang="zh"><strong>关键参数：</strong><code>Fog Density</code>，<code>Fog Height</code>（雾最浓的世界 Z 高度），<code>Fog Height Falloff</code>（密度随高度下降的速度），<code>Fog Cutoff Distance</code>（超过此距离无雾——对室内场景有用），<code>Directional Inscattering</code>（雾内太阳光晕方向）。</p>
+
+  <!-- s3 -->
+  <h2 id="s3"><span lang="en">Volumetric Fog — 3D Froxel Grid with Full Light Scattering</span><span lang="zh">体积雾 — 带完整光散射的 3D Froxel 网格</span></h2>
+  <p lang="en">
+    <span class="def">Volumetric Fog</span> is UE5's physically accurate near-camera fog system.
+    It uses the same froxel grid as the light culling system (see <a href="../03-lighting-shadows/lighting-architecture.html">Lighting Architecture</a>),
+    but this time each voxel stores <strong>in-scattering radiance</strong> — the light scattered
+    into the voxel from all scene lights. View rays are then integrated through this voxel radiance
+    to produce the final volumetric appearance.
+  </p>
+  <p lang="zh">
+    <span class="def">体积雾</span>是 UE5 物理精确的近相机雾系统。
+    它使用与灯光剔除系统相同的 Froxel 网格（见<a href="../03-lighting-shadows/lighting-architecture.html">光照架构</a>），
+    但这次每个体素存储<strong>内散射辐射率</strong>——从所有场景灯光散射进体素的光线。
+    视线光线然后通过这个体素辐射率进行积分以产生最终的体积外观。
+  </p>
+
+  <div class="diagram">
+Volumetric Fog Pipeline (VolumetricFog.cpp):
+
+  Step 1: VolumetricFogMaterialSetup
+    → Evaluate fog material per froxel (density, albedo, emissive)
+    → Write to FogDensityGrid (3D texture, e.g., 160×90×64 voxels)
+
+  Step 2: LightScatteringCS (ComputeLightScatteringCS.usf)
+    → For each froxel, integrate all lights that overlap it (from light grid)
+    → Directional light: shadow map lookup to determine if froxel is lit
+    → Local lights: attenuated by distance, modulated by light function
+    → Phase function: Henyey-Greenstein (controls forward/back scatter)
+    → Write: InScatteringGrid (3D texture)
+
+  Step 3: IntegrateVolumetricFogCS
+    → Integrate in-scattering along view ray from near to far
+    → Each froxel: Color += InScattering × Transmittance;
+                   Transmittance *= exp(-Density × VoxelDepth);
+    → Write: IntegratedFogTexture (RGB + alpha = transmittance)
+
+  Step 4: Apply to scene
+    → Composite: SceneColor = SceneColor × Transmittance + InScattering</div>
+
+  <pre><span class="cm">// VolumetricFog.cpp — key froxel grid parameters</span>
+
+<span class="cm">// Grid resolution (typical defaults)</span>
+<span class="kw">const int</span> FogGridSizeX = <span class="num">160</span>; <span class="cm">// screen-aligned columns</span>
+<span class="kw">const int</span> FogGridSizeY =  <span class="num">90</span>; <span class="cm">// screen-aligned rows</span>
+<span class="kw">const int</span> FogGridSizeZ =  <span class="num">64</span>; <span class="cm">// depth slices (logarithmic)</span>
+
+<span class="cm">// Depth distribution: near=dense slices, far=sparse</span>
+<span class="cm">// Slice 0 = near plane (~0.5m)</span>
+<span class="cm">// Slice 63 = VolumetricFogDistance (~2000m by default)</span>
+
+<span class="cm">// Voxel world size at slice z:</span>
+<span class="cm">// depth = exp(z / FogGridSizeZ * log(FarDist/NearDist)) * NearDist</span></pre>
+
+  <p lang="en">
+    The froxel grid is <strong>temporally reprojected</strong> each frame — previous frame's voxels are
+    reprojeced using camera motion and blended with the current frame. This gives the appearance of
+    high quality (low noise) fog with very few samples per voxel per frame.
+  </p>
+  <p lang="zh">
+    Froxel 网格每帧被<strong>时域重投影</strong>——上一帧的体素使用相机运动重投影并与当前帧混合。
+    这使得每体素每帧极少样本就能呈现高质量（低噪声）的雾效果。
+  </p>
+
+  <!-- s4 -->
+  <h2 id="s4"><span lang="en">Local Fog Volumes — Bounded Volumetric Regions</span><span lang="zh">局部雾体积 — 有界体积区域</span></h2>
+  <p lang="en">
+    <span class="def">Local Fog Volumes</span> (<code>LocalFogVolumeRendering.h/.cpp</code>) allow placing
+    bounded fog in specific world regions — useful for smoke, magic spells, swamp mist, or any effect
+    requiring localized volumetric density. A Local Fog Volume actor defines a sphere or box region with
+    its own density and material, injected into the main froxel grid during the volumetric fog pipeline.
+  </p>
+  <p lang="zh">
+    <span class="def">局部雾体积</span>（<code>LocalFogVolumeRendering.h/.cpp</code>）允许在特定世界区域放置有界的雾——
+    对烟雾、魔法法术、沼泽迷雾或任何需要局部体积密度的效果都很有用。
+    局部雾体积 Actor 定义具有自己密度和材质的球形或盒形区域，
+    在体积雾管线期间被注入主 Froxel 网格。
+  </p>
+
+  <!-- s5 -->
+  <h2 id="s5"><span lang="en">Volumetric Clouds — Real-Time Ray-Marched Cloud Layer</span><span lang="zh">体积云 — 实时光线步进云层</span></h2>
+  <p lang="en">
+    Volumetric Clouds use a full ray-marching approach through a user-defined cloud density field
+    (typically computed via a Material). The cloud layer exists at a configurable altitude range
+    (default 6–12km). Each view ray is marched through this altitude range, accumulating
+    scattering and absorption from the cloud density material.
+  </p>
+  <p lang="zh">
+    体积云通过用户定义的云密度场（通常通过材质计算）使用完整的光线步进方法。
+    云层存在于可配置的高度范围内（默认 6–12km）。
+    每条视线光线步进穿过这个高度范围，从云密度材质累积散射和吸收。
+  </p>
+
+  <h3><span lang="en">Cloud Material Architecture</span><span lang="zh">云材质架构</span></h3>
+  <pre><span class="cm">// Volumetric Cloud material (special domain: "Volume" in Material Editor)</span>
+
+<span class="cm">// The material outputs Extinction (density) — not color directly</span>
+<span class="cm">// Inputs available inside a cloud material shader:</span>
+
+float3 WorldPos;        <span class="cm">// current ray position being evaluated</span>
+float  ViewSampleMipBias;<span class="cm">// mip bias for noise textures (use for LOD)</span>
+
+<span class="cm">// Example cloud density shader logic:</span>
+<span class="cm">// 1. Basic layered noise (Worley + Perlin)</span>
+float BaseShape = Texture3DSampleLevel(CloudBaseShape, UV * 0.5, MipBias).r;
+float Detail    = Texture3DSampleLevel(CloudDetail, UV * 2.0, MipBias).r;
+
+<span class="cm">// 2. Height gradient (clouds thin at base and top)</span>
+float HeightFrac = saturate((WorldPos.z - CloudBaseAlt) / CloudLayerThickness);
+float HeightGrad  = saturate(remap(HeightFrac, 0.0, 0.1, 0, 1))   <span class="cm">// ramp up</span>
+                  * saturate(remap(HeightFrac, 0.3, 1.0, 1, 0));   <span class="cm">// ramp down</span>
+
+<span class="cm">// 3. Weather map (coverage, precipitation)</span>
+float Coverage = WeatherTexture.Sample(Sampler, WorldPos.xy / 100000.0).r;
+
+<span class="cm">// 4. Final density</span>
+float Density = max(0, (BaseShape - (1 - Coverage)) * Detail) * HeightGrad;
+
+<span class="cm">// Output to Extinction pin (controls how opaque the cloud is)</span>
+<span class="kw">return</span> Density * ExtinctionScale;</pre>
+
+  <p lang="en">
+    Clouds render at <strong>quarter resolution</strong> by default and use <strong>temporal upscaling</strong>
+    (reprojection from previous frames) to reach full resolution. Direct sunlight on clouds uses a
+    <strong>multi-scattering approximation</strong>: a few "pseudo-scattering" cone samples to simulate
+    light bouncing inside the cloud mass (producing the characteristic silver lining).
+  </p>
+  <p lang="zh">
+    云默认以<strong>四分之一分辨率</strong>渲染，并使用<strong>时域升采样</strong>
+    （从前几帧重投影）达到全分辨率。云上的直射阳光使用<strong>多散射近似</strong>：
+    几个"伪散射"锥形样本来模拟光线在云团内的反弹（产生特有的银边效果）。
+  </p>
+
+  <!-- s6 -->
+  <h2 id="s6"><span lang="en">Sky Atmosphere — Bruneton Physically-Based Sky</span><span lang="zh">天空大气 — Bruneton 基于物理的天空</span></h2>
+  <p lang="en">
+    The Sky Atmosphere component uses the <strong>Bruneton (2008/2017) atmospheric scattering model</strong>,
+    which accurately simulates Rayleigh scattering (molecules — blue sky) and Mie scattering
+    (aerosols/dust — white haze near horizon). Unlike a simple sky texture, it responds physically
+    to sun elevation: correct red sunrise/sunset, accurate zenith-to-horizon color gradient.
+  </p>
+  <p lang="zh">
+    Sky Atmosphere 组件使用 <strong>Bruneton（2008/2017）大气散射模型</strong>，
+    精确模拟瑞利散射（分子——蓝天）和 Mie 散射（气溶胶/尘埃——地平线附近的白雾）。
+    与简单的天空纹理不同，它物理响应太阳高度角：正确的红色日出/日落，精确的天顶到地平线颜色渐变。
+  </p>
+
+  <h3><span lang="en">LUT-Based Precomputation</span><span lang="zh">基于 LUT 的预计算</span></h3>
+  <div class="diagram">
+Sky Atmosphere LUT Pipeline (SkyAtmosphereRendering.cpp):
+
+  Precomputed LUTs (computed once, cached):
+  ┌───────────────────────────────────────────────────────┐
+  │  TransmittanceLUT  (256×64)                           │
+  │  → How much light survives from each height/angle     │
+  │                                                       │
+  │  MultiScatteringLUT  (32×32)                          │
+  │  → Second+ scattering orders (sky looks realistic)    │
+  │                                                       │
+  │  SkyViewLUT  (192×108, updated per frame)             │
+  │  → Fast-path sky color lookup per view direction      │
+  │  → Avoids per-pixel full LUT evaluation               │
+  └───────────────────────────────────────────────────────┘
+
+  Per-frame rendering:
+  1. Update SkyViewLUT   (if sun moved or parameters changed)
+  2. Render SkyAtmosphere full-screen quad:
+     → For each pixel: look up SkyViewLUT by view direction
+     → Also: aerial perspective (inscattering on distant geometry)
+  3. Apply aerial perspective to scene depth buffer:
+     → Objects at distance >1km get atmospheric haze</div>
+
+  <p lang="en">
+    Sky Atmosphere also generates the <strong>Aerial Perspective</strong> pass: a 3D LUT (camera frustum-aligned)
+    that contains the accumulated inscattering and transmittance along view rays to distant objects.
+    This makes mountains and distant geometry correctly "disappear" into atmospheric haze — physically accurate,
+    no artist intervention needed.
+  </p>
+  <p lang="zh">
+    天空大气还生成<strong>空中透视</strong>通道：一个 3D LUT（与相机视锥体对齐），
+    包含沿视线光线到远处物体的累积内散射和透射率。
+    这使山脉和远处几何体正确地"消失"在大气霾中——物理精确，无需美术人员干预。
+  </p>
+
+  <!-- s7 -->
+  <h2 id="s7"><span lang="en">How the Systems Interact</span><span lang="zh">系统如何相互作用</span></h2>
+  <div class="table-wrap"><table>
+    <thead><tr>
+      <th><span lang="en">System</span><span lang="zh">系统</span></th>
+      <th><span lang="en">Range</span><span lang="zh">范围</span></th>
+      <th><span lang="en">Uses Sky Atmosphere?</span><span lang="zh">使用天空大气？</span></th>
+      <th><span lang="en">Rendered After Opaque?</span><span lang="zh">在不透明后渲染？</span></th>
+    </tr></thead>
+    <tbody>
+      <tr><td>Exponential Height Fog</td><td><span lang="en">Unlimited</span><span lang="zh">无限</span></td><td><span lang="en">Can sample SkyAtmosphere color for fog tint</span><span lang="zh">可采样天空大气颜色用于雾色调</span></td><td>Yes</td></tr>
+      <tr><td>Volumetric Fog</td><td><span lang="en">Near camera (~2km)</span><span lang="zh">相机附近（约 2km）</span></td><td><span lang="en">Inherits lighting from all scene lights</span><span lang="zh">继承所有场景灯光的光照</span></td><td>Yes</td></tr>
+      <tr><td>Volumetric Clouds</td><td><span lang="en">Planetary (6–20km)</span><span lang="zh">行星级（6–20km）</span></td><td><span lang="en">Receives inscattering from Sky Atmosphere</span><span lang="zh">从天空大气接收内散射</span></td><td><span lang="en">Before translucency</span><span lang="zh">在半透明之前</span></td></tr>
+      <tr><td>Sky Atmosphere</td><td><span lang="en">Planetary (100km+)</span><span lang="zh">行星级（100km+）</span></td><td>N/A (is the sky)</td><td><span lang="en">Background (behind everything)</span><span lang="zh">背景（在所有物体后面）</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <!-- s8 -->
+  <h2 id="s8"><span lang="en">Performance Tuning</span><span lang="zh">性能调优</span></h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>CVar / Setting</th><th><span lang="en">Effect</span><span lang="zh">效果</span></th></tr></thead>
+    <tbody>
+      <tr><td>r.VolumetricFog</td><td><span lang="en">0=disable, 1=enable. Most expensive single atmosphere feature (~2–5ms).</span><span lang="zh">0=禁用，1=启用。最昂贵的单一大气特性（约 2–5ms）。</span></td></tr>
+      <tr><td>r.VolumetricFog.GridPixelSize</td><td><span lang="en">Froxel tile size in pixels. Default=8. Increase to 16 for 4× speedup (lower quality).</span><span lang="zh">Froxel 瓦片像素大小。默认=8。增到 16 可加速 4×（质量降低）。</span></td></tr>
+      <tr><td>r.VolumetricFog.GridSizeZ</td><td><span lang="en">Number of depth slices. Default=64. Reduce to 32 for 2× speedup.</span><span lang="zh">深度切片数。默认=64。减少到 32 可加速 2×。</span></td></tr>
+      <tr><td>r.VolumetricFog.Distance</td><td><span lang="en">Max fog distance. Reduce for performance (less volume to integrate).</span><span lang="zh">最大雾距离。减小以提高性能（更少体积需要积分）。</span></td></tr>
+      <tr><td>r.Cloud.ShadowReflectionCapture</td><td><span lang="en">0=disable cloud shadows in reflections (major performance saving)</span><span lang="zh">0=禁用反射中的云阴影（显著性能节省）</span></td></tr>
+      <tr><td>r.VolumetricCloud.RenderResolutionFraction</td><td><span lang="en">Default=0.25 (quarter res). Can set to 0.5 for better quality at cost.</span><span lang="zh">默认=0.25（四分之一分辨率）。可设为 0.5 以提高质量但增加成本。</span></td></tr>
+      <tr><td>r.SkyAtmosphere.AerialPerspective.StartDepth</td><td><span lang="en">Distance before aerial perspective kicks in (default ~100m)</span><span lang="zh">空中透视开始生效的距离（默认约 100m）</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="note">
+    <span lang="en"><strong>Combining systems efficiently:</strong> For most games, the recommended stack is: Sky Atmosphere (always, near-zero cost after LUT precompute) + Exponential Height Fog (cheap, handles unlimited distance) + Volumetric Fog only within a small zone (e.g., indoor scenes, swamps) + Volumetric Clouds only when the sky is prominent. Avoid enabling all four at once on console targets.</span>
+    <span lang="zh"><strong>高效组合系统：</strong>对于大多数游戏，推荐的栈是：天空大气（始终，LUT 预计算后成本接近零）+ 指数高度雾（廉价，处理无限距离）+ 仅在小范围区域内的体积雾（如室内场景、沼泽）+ 仅在天空显著时的体积云。避免在主机目标上同时启用全部四个。</span>
+  </div>
+
+  <!-- s9 -->
+  <h2 id="s9"><span lang="en">Source Navigation</span><span lang="zh">源码导航</span></h2>
+  <ul class="file-list">
+    <li><span class="fp">FogRendering.h/.cpp</span><span class="fd"><span lang="en">Exponential height fog: analytical formula, apply to scene</span><span lang="zh">指数高度雾：解析公式，应用到场景</span></span></li>
+    <li><span class="fp">VolumetricFog.h/.cpp</span><span class="fd"><span lang="en">3D froxel grid setup, light scattering compute, integration pass</span><span lang="zh">3D Froxel 网格设置、光散射计算、积分通道</span></span></li>
+    <li><span class="fp">VolumetricFogVoxelization.cpp</span><span class="fd"><span lang="en">Fog material injection: voxelize material density into the froxel grid</span><span lang="zh">雾材质注入：将材质密度体素化到 Froxel 网格</span></span></li>
+    <li><span class="fp">VolumetricFogLightFunction.cpp</span><span class="fd"><span lang="en">Light function evaluation inside the fog volume</span><span lang="zh">雾体积内的灯光函数计算</span></span></li>
+    <li><span class="fp">LocalFogVolumeRendering.h/.cpp</span><span class="fd"><span lang="en">Bounded fog volumes: actor-placed fog regions injected into froxel grid</span><span lang="zh">有界雾体积：Actor 放置的雾区域，注入到 Froxel 网格</span></span></li>
+    <li><span class="fp">VolumetricCloudRendering.h/.cpp</span><span class="fd"><span lang="en">Cloud ray-marching orchestrator, temporal reprojection, multi-scattering approx</span><span lang="zh">云光线步进协调器、时域重投影、多散射近似</span></span></li>
+    <li><span class="fp">SkyAtmosphereRendering.h/.cpp</span><span class="fd"><span lang="en">Bruneton LUT precompute, sky view LUT update, aerial perspective pass</span><span lang="zh">Bruneton LUT 预计算、天空视图 LUT 更新、空中透视通道</span></span></li>
+    <li><span class="fp">Shaders/Private/SkyAtmosphereCommon.ush</span><span class="fd"><span lang="en">Rayleigh + Mie phase functions, transmittance/inscattering LUT sampling</span><span lang="zh">瑞利 + Mie 相位函数，透射率/内散射 LUT 采样</span></span></li>
+    <li><span class="fp">Shaders/Private/VolumetricFog.usf</span><span class="fd"><span lang="en">Froxel light scattering compute shader</span><span lang="zh">Froxel 光散射计算 Shader</span></span></li>
+  </ul>
+
+  <footer>Unreal Engine 5.6 &middot; Engine/Source/Runtime/Renderer/Private/<br>Source analysis &middot; For learning purposes</footer>
+
+  <div class="page-nav">
+    <a href="../03-lighting-shadows/virtual-shadow-maps.html" class="prev"><span class="pn-label">&larr; Prev</span><span class="pn-title"><span lang="en">Virtual Shadow Maps</span><span lang="zh">虚拟阴影贴图</span></span></a>
+    <a href="../08-engine-customization/custom-shading-model.html" class="next"><span class="pn-label">Next &rarr;</span><span class="pn-title"><span lang="en">Custom Shading Model</span><span lang="zh">自定义着色模型</span></span></a>
+  </div>
+</main>
+</div>
+<script>
+function toggleLang(){var h=document.documentElement;if(h.classList.contains('lang-zh')){h.classList.remove('lang-zh');h.lang='en';document.title='Volumetric & Atmosphere';localStorage.setItem('ue-doc-lang','en');}else{h.classList.add('lang-zh');h.lang='zh-CN';document.title='体积与大气';localStorage.setItem('ue-doc-lang','zh');}}
+if(document.documentElement.classList.contains('lang-zh'))document.title='体积与大气';
+</script>
+</body>
+</html>

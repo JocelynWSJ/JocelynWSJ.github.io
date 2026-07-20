@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -90,58 +90,94 @@
     .page-nav .prev { text-align: left; }
     .page-nav .next { text-align: right; }
     .page-nav .spacer { flex: 1; }
-  </style>
+  
+    .snav-children{display:block;list-style:none;padding:2px 0 4px 10px;margin:1px 0 0;border-left:2px solid #dde3ee;}
+    .snav-subitem{margin-bottom:1px;}
+    .snav-subitem a{font-size:12px;color:#888;text-decoration:none;display:block;padding:2px 4px 2px 8px;border-left:2px solid transparent;border-radius:0 3px 3px 0;transition:color .12s,background .12s,border-color .12s;}
+    .snav-subitem a:hover{color:#37425d;background:#f0f2f5;border-left-color:#c0cad8;}
+    .snav-subitem.active a{color:#37425d;font-weight:700;background:#e8ecf4;border-left-color:#37425d;}  </style>
 </head>
 <body>
 <button id="lang-btn" onclick="toggleLang()"><span lang="en">中文</span><span lang="zh">English</span></button>
 <div id="wrapper">
 <nav id="sidebar">
     <div id="series-nav">
-      <span class="snav-label"><span lang="en">Series</span><span lang="zh">系列</span></span>
-      <ol>
-      <li class="snav-ch"><span lang="en">00 Introduction</span><span lang="zh">00 简介</span>
+    <span class="snav-label"><span lang="en">Series</span><span lang="zh">系列</span></span>
+    <ol>
+
+      <li class="snav-ch"><span lang="en">00 Overview</span><span lang="zh">00 概述</span>
         <ol>
-          <li class="snav-item"><a href="../00-introduction/introduction.html"><span lang="en">Introduction</span><span lang="zh">简介</span></a></li>
+          <li class="snav-item"><a href="../00-overview/introduction.html"><span lang="en">Introduction</span><span lang="zh">系列简介</span></a></li>
         </ol>
       </li>
-        <li class="snav-ch"><span lang="en">01 Pipeline Paradigms</span><span lang="zh">01 管线范式</span>
-          <ol>
-            <li class="snav-item"><a href="../01-pipeline-paradigms/deferred-shading.html"><span lang="en">Deferred Rendering</span><span lang="zh">延迟渲染</span></a></li>
-            <li class="snav-item"><a href="../01-pipeline-paradigms/forward-shading.html"><span lang="en">Forward Shading</span><span lang="zh">前向渲染</span></a></li>
-          </ol>
-        </li>
-        <li class="snav-ch"><span lang="en">02 Infrastructure & Graph</span><span lang="zh">02 基础设施与图</span>
-          <ol>
-            <li class="snav-item"><a href="../02-infrastructure-graph/rdg-compiler.html"><span lang="en">RDG — Render Dependency Graph</span><span lang="zh">RDG 渲染依赖图</span></a></li>
-            <li class="snav-item"><a href="../02-infrastructure-graph/thread-concurrency.html"><span lang="en">Thread Concurrency</span><span lang="zh">线程并发</span></a></li>
-          </ol>
-        </li>
-        <li class="snav-ch"><span lang="en">03 Shader Architecture</span><span lang="zh">03 Shader 架构</span>
-          <ol>
-            <li class="snav-item"><a href="../03-shader-architecture/material-translation.html"><span lang="en">Shader Architecture</span><span lang="zh">Shader 架构</span></a></li>
-          <li class="snav-item"><a href="../03-shader-architecture/post-processing.html"><span lang="en">Post-Processing Pipeline</span><span lang="zh">后处理管线</span></a></li>
-          </ol>
-        </li>
-        <li class="snav-ch"><span lang="en">04 Next-Gen Hardware</span><span lang="zh">04 次世代硬件</span>
-          <ol>
-            <li class="snav-item"><a href="../04-next-gen-hardware/nanite-rasterizer.html"><span lang="en">Nanite</span><span lang="zh">Nanite 虚拟几何</span></a></li>
-            <li class="snav-item"><a href="../04-next-gen-hardware/lumen-raytracing.html"><span lang="en">Lumen</span><span lang="zh">Lumen GI</span></a></li>
-            <li class="snav-item"><a href="../04-next-gen-hardware/virtual-resources.html"><span lang="en">Virtual Shadow Maps</span><span lang="zh">虚拟阴影贴图</span></a></li>
-          </ol>
-        </li>
-        <li class="snav-ch"><span lang="en">05 Engine Modding</span><span lang="zh">05 引擎魔改</span>
-          <ol>
-            <li class="snav-item"><a href="../05-engine-modding/shading-model-hack.html"><span lang="en">Custom Shading Model</span><span lang="zh">自定义着色模型</span></a></li>
-            <li class="snav-item active"><a href="../05-engine-modding/niagara-gpu-compute.html"><span lang="en">Niagara GPU Compute</span><span lang="zh">Niagara GPU 计算</span></a></li>
-          </ol>
-        </li>
-        <li class="snav-ch"><span lang="en">06 Profiling</span><span lang="zh">06 性能分析</span>
-          <ol>
-            <li class="snav-item"><a href="../06-profiling-deep-dives/hardware-profiling.html"><span lang="en">Profiling</span><span lang="zh">性能分析</span></a></li>
-          </ol>
-        </li>
-      </ol>
-    </div>
+
+      <li class="snav-ch"><span lang="en">01 Rendering Pipeline</span><span lang="zh">01 渲染管线</span>
+        <ol>
+          <li class="snav-item"><a href="../01-rendering-pipeline/deferred-shading.html"><span lang="en">Deferred Rendering</span><span lang="zh">延迟渲染</span></a></li>
+          <li class="snav-item"><a href="../01-rendering-pipeline/forward-shading.html"><span lang="en">Forward Rendering</span><span lang="zh">前向渲染</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">02 Engine Infrastructure</span><span lang="zh">02 引擎基础设施</span>
+        <ol>
+          <li class="snav-item"><a href="../02-engine-infrastructure/rdg-compiler.html"><span lang="en">RDG — Render Dependency Graph</span><span lang="zh">RDG 渲染依赖图</span></a></li>
+          <li class="snav-item"><a href="../02-engine-infrastructure/thread-concurrency.html"><span lang="en">Thread Concurrency</span><span lang="zh">线程并发</span></a></li>
+          <li class="snav-item"><a href="../02-engine-infrastructure/virtual-texture.html"><span lang="en">Virtual Texture Streaming</span><span lang="zh">虚拟纹理流送</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">03 Lighting &amp; Shadows</span><span lang="zh">03 光照与阴影</span>
+        <ol>
+          <li class="snav-item"><a href="../03-lighting-shadows/lighting-architecture.html"><span lang="en">Lighting Architecture</span><span lang="zh">光照架构</span></a></li>
+          <li class="snav-item"><a href="../03-lighting-shadows/virtual-shadow-maps.html"><span lang="en">Virtual Shadow Maps</span><span lang="zh">虚拟阴影贴图</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">04 Material &amp; Shader System</span><span lang="zh">04 材质与着色器系统</span>
+        <ol>
+          <li class="snav-item"><a href="../04-material-shader/material-translation.html"><span lang="en">Shader Compilation &amp; Architecture</span><span lang="zh">着色器编译与架构</span></a></li>
+          <li class="snav-item"><a href="../04-material-shader/shading-models-reference.html"><span lang="en">Shading Models Reference</span><span lang="zh">着色模型参考</span></a></li>
+          <li class="snav-item"><a href="../04-material-shader/usf-hlsl-guide.html"><span lang="en">USF / HLSL Writing Guide</span><span lang="zh">USF / HLSL 编写指南</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">05 UE5 Core Technologies</span><span lang="zh">05 UE5 核心技术</span>
+        <ol>
+          <li class="snav-item"><a href="../05-ue5-core/nanite-rasterizer.html"><span lang="en">Nanite — Virtual Geometry</span><span lang="zh">Nanite 虚拟几何</span></a></li>
+          <li class="snav-item"><a href="../05-ue5-core/lumen-raytracing.html"><span lang="en">Lumen — Dynamic GI</span><span lang="zh">Lumen 动态全局光照</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">06 Post-Processing &amp; Effects</span><span lang="zh">06 后处理与屏幕效果</span>
+        <ol>
+          <li class="snav-item"><a href="../06-post-processing/post-processing.html"><span lang="en">Post-Processing Pipeline</span><span lang="zh">后处理管线</span></a></li>
+          <li class="snav-item"><a href="../06-post-processing/screen-space-effects.html"><span lang="en">Screen Space Effects</span><span lang="zh">屏幕空间效果</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">07 Specialized Rendering</span><span lang="zh">07 专项渲染</span>
+        <ol>
+          <li class="snav-item"><a href="../07-specialized-rendering/volumetric-atmosphere.html"><span lang="en">Volumetric Fog &amp; Atmosphere</span><span lang="zh">体积雾与大气</span></a></li>
+          <li class="snav-item"><a href="../07-specialized-rendering/water-rendering.html"><span lang="en">Water Rendering</span><span lang="zh">水体渲染</span></a></li>
+          <li class="snav-item"><a href="../07-specialized-rendering/hair-groom-rendering.html"><span lang="en">Hair &amp; Groom</span><span lang="zh">毛发渲染</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">08 Engine Customization</span><span lang="zh">08 引擎定制</span>
+        <ol>
+          <li class="snav-item"><a href="../08-engine-customization/custom-shading-model.html"><span lang="en">Custom Shading Model</span><span lang="zh">自定义着色模型</span></a></li>
+          <li class="snav-item active"><a href="../08-engine-customization/niagara-gpu-compute.html"><span lang="en">Niagara GPU Compute</span><span lang="zh">Niagara GPU 计算</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">09 Performance &amp; Profiling</span><span lang="zh">09 性能与分析</span>
+        <ol>
+          <li class="snav-item"><a href="../09-profiling/hardware-profiling.html"><span lang="en">Hardware Profiling</span><span lang="zh">硬件性能分析</span></a></li>
+        </ol>
+      </li>
+
+    </ol>
+  </div>
 
   <h2><span lang="en">Contents</span><span lang="zh">目录</span></h2>
   <ol>
@@ -308,8 +344,8 @@ UCLASS()
   <footer>Unreal Engine 5.6 &middot; Engine/Plugins/FX/Niagara/<br>Source analysis &middot; For learning purposes</footer>
 
   <div class="page-nav">
-      <a href="../05-engine-modding/shading-model-hack.html" class="prev"><span class="pn-label">&larr; Prev</span><span class="pn-title"><span lang="en">Custom Shading Model</span><span lang="zh">自定义着色模型</span></span></a>
-      <a href="../06-profiling-deep-dives/hardware-profiling.html" class="next"><span class="pn-label">Next &rarr;</span><span class="pn-title"><span lang="en">Profiling</span><span lang="zh">性能分析</span></span></a>
+      <a href="../08-engine-customization/custom-shading-model.html" class="prev"><span class="pn-label">&larr; Prev</span><span class="pn-title"><span lang="en">Custom Shading Model</span><span lang="zh">自定义着色模型</span></span></a>
+      <a href="../09-profiling/hardware-profiling.html" class="next"><span class="pn-label">Next &rarr;</span><span class="pn-title"><span lang="en">Profiling</span><span lang="zh">性能分析</span></span></a>
   </div>
 </main>
 </div>

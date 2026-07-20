@@ -1,0 +1,725 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shading Models Reference — Built-in BRDFs &amp; Custom Models</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Gudea">
+  <script>(function(){if(localStorage.getItem('ue-doc-lang')==='zh'){document.documentElement.classList.add('lang-zh');document.documentElement.lang='zh-CN';}})();</script>
+  <style>
+    html:not(.lang-zh) [lang="zh"]{display:none;} html.lang-zh [lang="en"]{display:none;}
+    #lang-btn{position:fixed;top:16px;right:20px;z-index:999;background:#37425d;color:#fff;border:none;border-radius:4px;padding:5px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:Gudea,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.2);transition:background .15s;} #lang-btn:hover{background:#4a5a7a;}
+    *{box-sizing:border-box;margin:0;padding:0;} body{font-family:Gudea,sans-serif;font-size:16px;line-height:1.8;color:#111;background:#eee;}
+    #wrapper{max-width:1100px;margin:0 auto;display:flex;align-items:flex-start;padding:40px 24px;gap:36px;}
+    #sidebar{width:240px;flex-shrink:0;font-size:13px;}
+    #sidebar h2{font-size:12px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;border:none;padding:0;}
+    #sidebar > ol{list-style:none !important;padding:0;} #sidebar > ol > li{list-style:none !important;margin-bottom:5px;}
+    #sidebar > ol > li a{color:#555;text-decoration:none;display:block;padding:2px 0;transition:color .12s;} #sidebar > ol > li a:hover{color:#58A;} #sidebar > ol > li a::before{content:none;}
+    #content{flex:1;min-width:0;}
+    .page-header{margin-bottom:32px;padding-bottom:20px;border-bottom:1px solid #ddd;}
+    .page-header .crumb{font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
+    .page-header h1{font-size:1.8rem;font-weight:900;color:#303236;margin-bottom:8px;line-height:1.25;}
+    .page-header .subtitle{font-family:'Courier New',monospace;font-size:13px;color:#777;}
+    h2{color:#37425d;font-size:22px;margin:36px 0 10px;} h3{color:#633739;font-size:17px;margin:24px 0 8px;}
+    p{margin-bottom:14px;} a{color:#58A;text-decoration:none;} a:hover{text-decoration:underline;} strong{color:#222;}
+    .fun{font-family:'Courier New',monospace;color:#2a6496;} .def{color:green;font-weight:600;}
+    code{font-family:'Courier New',monospace;font-size:14px;background:#ddd;border-radius:3px;padding:1px 5px;}
+    pre{background:#282c34;color:#abb2bf;border-radius:5px;padding:16px 18px;overflow-x:auto;margin:14px 0 18px;font-family:'Courier New',monospace;font-size:13.5px;line-height:1.6;}
+    pre code{background:none;padding:0;color:inherit;} .kw{color:#c678dd;} .fn{color:#61afef;} .cm{color:#5c6370;font-style:italic;} .str{color:#98c379;} .num{color:#d19a66;} .type{color:#e5c07b;}
+    .note{display:block;margin:18px 0;padding:15px;background:#D8F5D8;color:#444;border-radius:5px;border:2px solid #AFDFAF;font-size:15px;line-height:1.7;}
+    .warning{display:block;margin:18px 0;padding:15px;background:#FFD2D2;color:#444;border-radius:5px;border:2px solid #E0B3B3;font-size:15px;line-height:1.7;}
+    ul,ol{padding-left:22px;margin-bottom:14px;} li{margin-bottom:5px;}
+    .table-wrap{overflow-x:auto;margin:14px 0;} table{border-collapse:collapse;font-size:14px;width:100%;}
+    th,td{padding:8px 12px;border-bottom:1px solid #aaa;text-align:left;} th{border-bottom:2px solid #888;font-weight:700;background:#ddd;} tr:nth-child(even) td{background:#e8e8e8;}
+    td:first-child{font-family:'Courier New',monospace;font-size:13px;color:#2a6496;white-space:nowrap;}
+    .diagram{background:#fff;border:1px solid #ccc;border-radius:5px;padding:20px;margin:16px 0;font-family:'Courier New',monospace;font-size:13px;line-height:1.8;overflow-x:auto;white-space:pre;}
+    .sm-card{background:#fff;border:1px solid #ccc;border-radius:6px;padding:18px 22px;margin:18px 0;}
+    .sm-card h3{margin-top:0;} .sm-card .sm-meta{font-size:13px;color:#888;margin-bottom:10px;}
+    .sm-card .sm-id{display:inline-block;font-family:'Courier New',monospace;font-size:11px;background:#37425d;color:#fff;padding:2px 8px;border-radius:3px;margin-right:8px;}
+    .sm-card .sm-cost{display:inline-block;font-size:11px;padding:2px 8px;border-radius:3px;font-weight:700;}
+    .cost-low{background:#d4edda;color:#155724;} .cost-med{background:#fff3cd;color:#856404;} .cost-high{background:#f8d7da;color:#721c24;}
+    .file-list{list-style:none;padding:0;margin:12px 0;} .file-list li{padding:6px 0;border-bottom:1px solid #ccc;display:flex;align-items:baseline;gap:10px;font-size:14px;} .file-list li:last-child{border-bottom:none;} .file-list .fp{font-family:'Courier New',monospace;font-size:13px;color:#58A;min-width:320px;} .file-list .fd{color:#555;}
+    footer{margin-top:48px;padding-top:16px;border-top:1px solid #ccc;font-size:12px;color:#aaa;text-align:center;}
+    @media(max-width:800px){#wrapper{flex-direction:column;padding:20px 16px;}#sidebar{width:100%;position:static;max-height:none;margin-bottom:24px;}}
+    #series-nav{margin-bottom:24px;} #series-nav ol,#series-nav li{list-style:none;padding-left:0;}
+    .snav-label{font-size:11px;font-weight:800;color:#37425d;text-transform:uppercase;letter-spacing:.14em;display:block;margin-bottom:10px;padding-bottom:4px;border-bottom:2px solid #37425d;}
+    #series-nav > ol{list-style:none;padding:0;margin:0;} #series-nav ol{list-style:none;padding:0;margin:0;}
+    .snav-ch{margin-bottom:10px;}
+    .snav-ch > span{font-size:11px;font-weight:800;letter-spacing:.06em;color:#fff;background:#5a6a80;display:block;padding:3px 7px 3px 6px;border-radius:3px;margin-bottom:3px;text-transform:uppercase;}
+    .snav-ch > ol{padding-left:0;margin-top:0;}
+    .snav-item{margin-bottom:1px;}
+    .snav-item a{font-size:13.5px;color:#666;text-decoration:none;display:block;padding:3px 6px;border-left:3px solid transparent;border-radius:0 3px 3px 0;transition:color .12s,background .12s,border-color .12s;}
+    .snav-item a:hover{color:#37425d;background:#f0f2f5;border-left-color:#c0cad8;}
+    .snav-item.active a{color:#37425d;font-weight:700;background:#e8ecf4;border-left-color:#37425d;}
+    .page-nav{display:flex;justify-content:space-between;align-items:center;margin:36px 0 0;padding-top:16px;border-top:1px solid #ddd;font-size:14px;}
+    .page-nav a{color:#58A;text-decoration:none;display:flex;align-items:center;gap:6px;max-width:42%;}
+    .page-nav a:hover{text-decoration:underline;}
+    .page-nav .pn-label{font-size:11px;color:#aaa;text-transform:uppercase;display:block;}
+    .page-nav .pn-title{display:block;}
+    .page-nav .prev{text-align:left;} .page-nav .next{text-align:right;}
+  
+    .snav-children{display:block;list-style:none;padding:2px 0 4px 10px;margin:1px 0 0;border-left:2px solid #dde3ee;}
+    .snav-subitem{margin-bottom:1px;}
+    .snav-subitem a{font-size:12px;color:#888;text-decoration:none;display:block;padding:2px 4px 2px 8px;border-left:2px solid transparent;border-radius:0 3px 3px 0;transition:color .12s,background .12s,border-color .12s;}
+    .snav-subitem a:hover{color:#37425d;background:#f0f2f5;border-left-color:#c0cad8;}
+    .snav-subitem.active a{color:#37425d;font-weight:700;background:#e8ecf4;border-left-color:#37425d;}  </style>
+</head>
+<body>
+<button id="lang-btn" onclick="toggleLang()"><span lang="en">中文</span><span lang="zh">English</span></button>
+<div id="wrapper">
+<nav id="sidebar">
+  <div id="series-nav">
+    <span class="snav-label"><span lang="en">Series</span><span lang="zh">系列</span></span>
+    <ol>
+
+      <li class="snav-ch"><span lang="en">00 Overview</span><span lang="zh">00 概述</span>
+        <ol>
+          <li class="snav-item"><a href="../00-overview/introduction.html"><span lang="en">Introduction</span><span lang="zh">系列简介</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">01 Rendering Pipeline</span><span lang="zh">01 渲染管线</span>
+        <ol>
+          <li class="snav-item"><a href="../01-rendering-pipeline/deferred-shading.html"><span lang="en">Deferred Rendering</span><span lang="zh">延迟渲染</span></a></li>
+          <li class="snav-item"><a href="../01-rendering-pipeline/forward-shading.html"><span lang="en">Forward Rendering</span><span lang="zh">前向渲染</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">02 Engine Infrastructure</span><span lang="zh">02 引擎基础设施</span>
+        <ol>
+          <li class="snav-item"><a href="../02-engine-infrastructure/rdg-compiler.html"><span lang="en">RDG — Render Dependency Graph</span><span lang="zh">RDG 渲染依赖图</span></a></li>
+          <li class="snav-item"><a href="../02-engine-infrastructure/thread-concurrency.html"><span lang="en">Thread Concurrency</span><span lang="zh">线程并发</span></a></li>
+          <li class="snav-item"><a href="../02-engine-infrastructure/virtual-texture.html"><span lang="en">Virtual Texture Streaming</span><span lang="zh">虚拟纹理流送</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">03 Lighting &amp; Shadows</span><span lang="zh">03 光照与阴影</span>
+        <ol>
+          <li class="snav-item"><a href="../03-lighting-shadows/lighting-architecture.html"><span lang="en">Lighting Architecture</span><span lang="zh">光照架构</span></a></li>
+          <li class="snav-item"><a href="../03-lighting-shadows/virtual-shadow-maps.html"><span lang="en">Virtual Shadow Maps</span><span lang="zh">虚拟阴影贴图</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">04 Material &amp; Shader System</span><span lang="zh">04 材质与着色器系统</span>
+        <ol>
+          <li class="snav-item"><a href="../04-material-shader/material-translation.html"><span lang="en">Shader Compilation &amp; Architecture</span><span lang="zh">着色器编译与架构</span></a></li>
+          <li class="snav-item active"><a href="../04-material-shader/shading-models-reference.html"><span lang="en">Shading Models Reference</span><span lang="zh">着色模型参考</span></a></li>
+          <li class="snav-item"><a href="../04-material-shader/usf-hlsl-guide.html"><span lang="en">USF / HLSL Writing Guide</span><span lang="zh">USF / HLSL 编写指南</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">05 UE5 Core Technologies</span><span lang="zh">05 UE5 核心技术</span>
+        <ol>
+          <li class="snav-item"><a href="../05-ue5-core/nanite-rasterizer.html"><span lang="en">Nanite — Virtual Geometry</span><span lang="zh">Nanite 虚拟几何</span></a></li>
+          <li class="snav-item"><a href="../05-ue5-core/lumen-raytracing.html"><span lang="en">Lumen — Dynamic GI</span><span lang="zh">Lumen 动态全局光照</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">06 Post-Processing &amp; Effects</span><span lang="zh">06 后处理与屏幕效果</span>
+        <ol>
+          <li class="snav-item"><a href="../06-post-processing/post-processing.html"><span lang="en">Post-Processing Pipeline</span><span lang="zh">后处理管线</span></a></li>
+          <li class="snav-item"><a href="../06-post-processing/screen-space-effects.html"><span lang="en">Screen Space Effects</span><span lang="zh">屏幕空间效果</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">07 Specialized Rendering</span><span lang="zh">07 专项渲染</span>
+        <ol>
+          <li class="snav-item"><a href="../07-specialized-rendering/volumetric-atmosphere.html"><span lang="en">Volumetric Fog &amp; Atmosphere</span><span lang="zh">体积雾与大气</span></a></li>
+          <li class="snav-item"><a href="../07-specialized-rendering/water-rendering.html"><span lang="en">Water Rendering</span><span lang="zh">水体渲染</span></a></li>
+          <li class="snav-item"><a href="../07-specialized-rendering/hair-groom-rendering.html"><span lang="en">Hair &amp; Groom</span><span lang="zh">毛发渲染</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">08 Engine Customization</span><span lang="zh">08 引擎定制</span>
+        <ol>
+          <li class="snav-item"><a href="../08-engine-customization/custom-shading-model.html"><span lang="en">Custom Shading Model</span><span lang="zh">自定义着色模型</span></a></li>
+          <li class="snav-item"><a href="../08-engine-customization/niagara-gpu-compute.html"><span lang="en">Niagara GPU Compute</span><span lang="zh">Niagara GPU 计算</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">09 Performance &amp; Profiling</span><span lang="zh">09 性能与分析</span>
+        <ol>
+          <li class="snav-item"><a href="../09-profiling/hardware-profiling.html"><span lang="en">Hardware Profiling</span><span lang="zh">硬件性能分析</span></a></li>
+        </ol>
+      </li>
+
+    </ol>
+  </div>
+  <h2><span lang="en">Contents</span><span lang="zh">目录</span></h2>
+  <ol>
+    <li><a href="#s1"><span lang="en">What is a Shading Model?</span><span lang="zh">什么是着色模型？</span></a></li>
+    <li><a href="#s2"><span lang="en">Default Lit — GGX PBR</span><span lang="zh">Default Lit — GGX PBR</span></a></li>
+    <li><a href="#s3"><span lang="en">Unlit</span><span lang="zh">Unlit 无光照</span></a></li>
+    <li><a href="#s4"><span lang="en">Subsurface</span><span lang="zh">Subsurface 次表面</span></a></li>
+    <li><a href="#s5"><span lang="en">PreIntegrated Skin</span><span lang="zh">PreIntegrated Skin</span></a></li>
+    <li><a href="#s6"><span lang="en">Subsurface Profile</span><span lang="zh">Subsurface Profile</span></a></li>
+    <li><a href="#s7"><span lang="en">Clear Coat</span><span lang="zh">Clear Coat 清漆</span></a></li>
+    <li><a href="#s8"><span lang="en">Two-Sided Foliage</span><span lang="zh">Two-Sided Foliage 双面植被</span></a></li>
+    <li><a href="#s9"><span lang="en">Hair — Marschner BRDF</span><span lang="zh">Hair — Marschner BRDF</span></a></li>
+    <li><a href="#s10"><span lang="en">Cloth — Ashikhmin Velvet</span><span lang="zh">Cloth — Ashikhmin 绒布</span></a></li>
+    <li><a href="#s11"><span lang="en">Eye</span><span lang="zh">Eye 眼睛</span></a></li>
+    <li><a href="#s12"><span lang="en">Single Layer Water</span><span lang="zh">Single Layer Water 单层水体</span></a></li>
+    <li><a href="#s13"><span lang="en">Thin Translucent</span><span lang="zh">Thin Translucent 薄半透明</span></a></li>
+    <li><a href="#s14"><span lang="en">Substrate — Layered BSDF</span><span lang="zh">Substrate — 分层 BSDF</span></a></li>
+    <li><a href="#s15"><span lang="en">Quick Comparison Table</span><span lang="zh">快速对比表</span></a></li>
+    <li><a href="#s16"><span lang="en">Source Navigation</span><span lang="zh">源码导航</span></a></li>
+  </ol>
+</nav>
+
+<main id="content">
+  <div class="page-header">
+    <div class="crumb">Unreal Engine 5.6 &middot; Shader Architecture &middot; Part 03-D</div>
+    <h1><span lang="en">Shading Models Reference — Built-in BRDFs &amp; Custom Models</span><span lang="zh">着色模型参考 — 内置 BRDF 与自定义模型</span></h1>
+    <div class="subtitle">Engine/Shaders/Private/ShadingModels.ush &middot; ShadingCommon.ush &middot; DeferredLightingCommon.ush</div>
+  </div>
+
+  <!-- s1 -->
+  <h2 id="s1"><span lang="en">What is a Shading Model in UE5?</span><span lang="zh">什么是 UE5 中的着色模型？</span></h2>
+  <p lang="en">
+    A <span class="def">shading model</span> (or BRDF model) defines how a surface responds to light —
+    specifically, the mathematical function that computes the ratio of outgoing radiance to incoming irradiance
+    for a given surface point. In UE5, each pixel in the GBuffer stores a <strong>shading model ID</strong>
+    (packed in GBufferA.a as a 4-bit integer). The deferred lighting pass reads this ID and dispatches to the
+    correct BRDF evaluation code.
+  </p>
+  <p lang="zh">
+    <span class="def">着色模型</span>（或 BRDF 模型）定义了表面如何响应光照——
+    具体来说，是计算给定表面点处出射辐射率与入射辐照度之比的数学函数。
+    在 UE5 中，GBuffer 中的每个像素存储一个<strong>着色模型 ID</strong>
+    （以 4 位整数打包在 GBufferA.a 中）。延迟光照通道读取这个 ID 并分发到正确的 BRDF 计算代码。
+  </p>
+
+  <div class="diagram">
+Shading Model IDs in UE5 (ShadingCommon.ush):
+
+  MSM_Unlit              = 0   MSM_DefaultLit         = 1
+  MSM_Subsurface         = 2   MSM_PreintegratedSkin  = 3
+  MSM_ClearCoat          = 4   MSM_SubsurfaceProfile  = 5
+  MSM_TwoSidedFoliage    = 6   MSM_Hair               = 7
+  MSM_Cloth              = 8   MSM_Eye                = 9
+  MSM_SingleLayerWater   = 10  MSM_ThinTranslucent    = 11
+  MSM_Strata             = 12  MSM_FromMaterial       = 128
+
+Deferred Lighting dispatch (DeferredLightingCommon.usf):
+  switch (ShadingModelID) {
+    case MSM_DefaultLit:        return DefaultLitBxDF(...);
+    case MSM_Subsurface:        return SubsurfaceBxDF(...);
+    case MSM_ClearCoat:         return ClearCoatBxDF(...);
+    case MSM_Hair:              return HairBxDF(...);
+    ...
+  }</div>
+
+  <p lang="en">
+    Every shading model maps to a set of <strong>GBuffer slots</strong>. UE packs multiple values
+    per render target channel (e.g., roughness + metallic + specular into GBufferB). Different shading
+    models <em>repurpose</em> these slots for their own parameters. This is why switching a material's
+    shading model changes what inputs are visible in the Material Editor.
+  </p>
+  <p lang="zh">
+    每个着色模型映射到一组 <strong>GBuffer 槽位</strong>。UE 将多个值打包进每个渲染目标通道
+    （例如，将粗糙度 + 金属度 + 高光度打包到 GBufferB）。不同的着色模型<em>重新用途化</em>这些槽位
+    用于各自的参数。这就是为什么更改材质着色模型会改变材质编辑器中可见输入项的原因。
+  </p>
+
+  <!-- s2 -->
+  <h2 id="s2"><span lang="en">Default Lit — Industry-Standard PBR</span><span lang="zh">Default Lit — 行业标准 PBR</span></h2>
+  <div class="sm-card">
+    <div class="sm-meta">
+      <span class="sm-id">MSM_DefaultLit = 1</span>
+      <span class="sm-cost cost-low">Low Cost</span>
+    </div>
+    <p lang="en">
+      The standard physically-based rendering (PBR) model used for the vast majority of surfaces:
+      metals, plastics, stone, painted surfaces, etc. It combines a <strong>Lambertian diffuse</strong>
+      (or Burley normalized diffuse for more accurate energy conservation) with a
+      <strong>GGX specular BRDF</strong> using the Smith masking-shadowing function and Schlick Fresnel.
+    </p>
+    <p lang="zh">
+      用于绝大多数表面（金属、塑料、石材、涂漆表面等）的标准基于物理的渲染（PBR）模型。
+      它将 <strong>Lambert 漫反射</strong>（或 Burley 归一化漫反射以获得更精确的能量守恒）
+      与使用 Smith 掩蔽-遮蔽函数和 Schlick Fresnel 的 <strong>GGX 镜面 BRDF</strong> 结合。
+    </p>
+
+    <h3><span lang="en">The Math</span><span lang="zh">数学原理</span></h3>
+    <pre><span class="cm">// GGX (Trowbridge-Reitz) Normal Distribution Function</span>
+<span class="cm">// Probability that microfacets are oriented exactly toward H (half-vector)</span>
+<span class="cm">// α = Roughness² (Disney remapping — more linear perceptual response)</span>
+float <span class="fn">D_GGX</span>(float α, float NoH)
+{
+    float a2 = α * α;
+    float d  = (NoH * a2 - NoH) * NoH + <span class="num">1.0</span>;  <span class="cm">// = (NoH²(a2-1)+1)</span>
+    <span class="kw">return</span> a2 / (PI * d * d);
+}
+
+<span class="cm">// Smith Joint Masking-Shadowing (height-correlated, GGX variant)</span>
+<span class="cm">// Accounts for the probability that the ray from L and V are not occluded</span>
+float <span class="fn">Vis_SmithJointApprox</span>(float α, float NoV, float NoL)
+{
+    float a  = α;
+    float LambdaV = NoL * (NoV * (<span class="num">1</span> - a) + a);
+    float LambdaL = NoV * (NoL * (<span class="num">1</span> - a) + a);
+    <span class="kw">return</span> <span class="num">0.5f</span> * rcp(LambdaV + LambdaL);
+}
+
+<span class="cm">// Schlick Fresnel Approximation</span>
+<span class="cm">// F0 = specular reflectance at normal incidence</span>
+<span class="cm">// For dielectrics: F0 ≈ ((IOR-1)/(IOR+1))²  (water=0.02, glass=0.04)</span>
+<span class="cm">// For metals:      F0 = BaseColor (tinted specular)</span>
+float3 <span class="fn">F_Schlick</span>(float3 F0, float VoH)
+{
+    float Fc = <span class="fn">pow5</span>(<span class="num">1</span> - VoH);
+    <span class="kw">return</span> Fc + (<span class="num">1</span> - Fc) * F0;
+}
+
+<span class="cm">// Full Specular BRDF: f_spec = D · Vis · F</span>
+<span class="cm">// (where Vis already includes the 1/(4·NoL·NoV) denominator)</span>
+float3 <span class="fn">SpecularGGX</span>(float Roughness, float3 SpecColor, BxDFContext Context)
+{
+    float  α   = Roughness * Roughness;
+    float  D   = <span class="fn">D_GGX</span>(α, Context.NoH);
+    float  Vis = <span class="fn">Vis_SmithJointApprox</span>(α, Context.NoV, Context.NoL);
+    float3 F   = <span class="fn">F_Schlick</span>(SpecColor, Context.VoH);
+    <span class="kw">return</span> (D * Vis) * F;
+}
+
+<span class="cm">// Full Default Lit BRDF:</span>
+<span class="cm">// f = Diffuse_Lambert(BaseColor * (1-Metallic)) + SpecularGGX(F0, Roughness)</span>
+<span class="cm">// where F0 = lerp(0.04, BaseColor, Metallic)</span></pre>
+
+    <h3><span lang="en">Key Material Inputs</span><span lang="zh">关键材质输入</span></h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th><span lang="en">Input</span><span lang="zh">输入</span></th><th><span lang="en">Meaning &amp; Range</span><span lang="zh">含义与范围</span></th></tr></thead>
+      <tbody>
+        <tr><td>Base Color</td><td><span lang="en">Albedo (diffuse color for dielectrics, specular tint for metals). RGB [0–1], avoid values below 0.05 or above 0.95.</span><span lang="zh">反照率（电介质的漫反射颜色，金属的镜面色调）。RGB [0–1]，避免低于 0.05 或高于 0.95 的值。</span></td></tr>
+        <tr><td>Metallic</td><td><span lang="en">0 = dielectric (plastic/stone), 1 = conductor (gold/chrome). Binary in practice; avoid intermediate values except blended surfaces.</span><span lang="zh">0 = 电介质（塑料/石材），1 = 导体（金/铬）。实际使用中为二值；除混合表面外避免中间值。</span></td></tr>
+        <tr><td>Roughness</td><td><span lang="en">0 = perfect mirror, 1 = fully diffuse. Controls GGX α (internally squared). Perceptually linear.</span><span lang="zh">0 = 完美镜面，1 = 完全漫射。控制 GGX α（内部平方）。感知线性。</span></td></tr>
+        <tr><td>Specular</td><td><span lang="en">F0 scale for dielectrics only [0–1] → remapped to [0–0.08]. Default 0.5 = F0 of 0.04 = most plastics. Do not use to darken metals.</span><span lang="zh">仅用于电介质的 F0 缩放 [0–1] → 重映射到 [0–0.08]。默认 0.5 = F0 为 0.04 = 大多数塑料。不要用于使金属变暗。</span></td></tr>
+        <tr><td>Normal</td><td><span lang="en">Tangent-space normal map. Perturbs the shading normal N, affecting both diffuse and specular.</span><span lang="zh">切线空间法线贴图。扰动着色法线 N，同时影响漫射和镜面。</span></td></tr>
+      </tbody>
+    </table></div>
+  </div>
+
+  <!-- s3 -->
+  <h2 id="s3"><span lang="en">Unlit — No Lighting Evaluation</span><span lang="zh">Unlit — 无光照计算</span></h2>
+  <div class="sm-card">
+    <div class="sm-meta"><span class="sm-id">MSM_Unlit = 0</span><span class="sm-cost cost-low">Cheapest</span></div>
+    <p lang="en">The surface emits exactly its <strong>Emissive Color</strong> value with no BRDF computation at all. No diffuse, no specular, no shadows applied. Ideal for: holographic displays, neon signs, fire/explosion particles, sky domes, any surface that should not respond to scene lighting. The GBuffer stores only the emissive value and the pixel bypasses the entire deferred lighting pass.</p>
+    <p lang="zh">表面发射其 <strong>Emissive Color</strong> 值，完全不进行 BRDF 计算。没有漫射、没有镜面、不应用阴影。适用于：全息显示、霓虹灯、火焰/爆炸粒子、天穹、任何不应响应场景光照的表面。GBuffer 仅存储自发光值，像素完全跳过延迟光照通道。</p>
+  </div>
+
+  <!-- s4 -->
+  <h2 id="s4"><span lang="en">Subsurface — Simple Wrap Lighting SSS</span><span lang="zh">Subsurface — 简单包裹光照次表面散射</span></h2>
+  <div class="sm-card">
+    <div class="sm-meta"><span class="sm-id">MSM_Subsurface = 2</span><span class="sm-cost cost-low">Low (+wrap term)</span></div>
+    <p lang="en">
+      A cheap approximation of <strong>subsurface scattering (SSS)</strong> using a modified diffuse term
+      that "wraps" around the terminator (the shadow boundary). Real skin, wax, marble, and jade all
+      scatter light that enters the surface back out from nearby points — this model fakes that by
+      softening the shadow boundary and adding a tinted subsurface color on the shadow side.
+    </p>
+    <p lang="zh">
+      使用修改后的漫射项（"包裹"明暗交界线）对<strong>次表面散射（SSS）</strong>进行廉价近似。
+      真实皮肤、蜡、大理石和玉石都会散射进入表面的光线并从附近点射出——
+      此模型通过软化阴影边界并在阴影侧添加有色次表面颜色来模拟这一现象。
+    </p>
+    <pre><span class="cm">// SubsurfaceBxDF (ShadingModels.ush) — simplified</span>
+float3 <span class="fn">SubsurfaceBxDF</span>(FGBufferData GBuffer, float3 L, float3 V, FAreaLight AreaLight)
+{
+    <span class="cm">// Standard PBR specular (same as Default Lit)</span>
+    float3 Spec = <span class="fn">SpecularGGX</span>(GBuffer.Roughness, GBuffer.SpecularColor, Context);
+
+    <span class="cm">// Wrap diffuse: extends the diffuse lit region past the terminator</span>
+    <span class="cm">// WrapAmount in [0,1]: 0 = Lambert, 1 = full wrap (backlit)</span>
+    float WrapNoL = <span class="fn">saturate</span>((NoL + WrapAmount) / (<span class="num">1</span> + WrapAmount));
+
+    float3 DiffuseLighting = Diffuse_Lambert(GBuffer.DiffuseColor) * WrapNoL;
+
+    <span class="cm">// Subsurface contribution: tinted by SubsurfaceColor, blended on shadow side</span>
+    <span class="cm">// SubsurfaceColor stored in GBuffer.CustomData.rgb</span>
+    float SubsurfaceContrib = <span class="fn">saturate</span>(-NoL * <span class="num">0.5</span> + <span class="num">0.5</span>);  <span class="cm">// peaks at back-lit</span>
+    float3 Subsurface = GBuffer.SubsurfaceColor * SubsurfaceContrib;
+
+    <span class="kw">return</span> (DiffuseLighting + Subsurface + Spec) * LightColor * NoL_clamped;
+}</pre>
+    <p lang="en"><strong>When to use:</strong> Candles, wax, plastic, gemstones, stylized skin where you want hint of SSS without the cost of a screen-space blur. For hero character skin, use Subsurface Profile instead.</p>
+    <p lang="zh"><strong>适用场景：</strong>蜡烛、蜡、塑料、宝石、需要 SSS 效果但不想付出屏幕空间模糊代价的风格化皮肤。对于英雄角色皮肤，请改用 Subsurface Profile。</p>
+  </div>
+
+  <!-- s5 -->
+  <h2 id="s5"><span lang="en">PreIntegrated Skin — LUT-Based Fast SSS</span><span lang="zh">PreIntegrated Skin — 基于 LUT 的快速 SSS</span></h2>
+  <div class="sm-card">
+    <div class="sm-meta"><span class="sm-id">MSM_PreintegratedSkin = 3</span><span class="sm-cost cost-low">Low (+LUT lookup)</span></div>
+    <p lang="en">
+      A step up from Subsurface: instead of a simple wrap formula, it looks up a pre-baked 2D LUT
+      (<code>PreIntegratedSkinBRDF.tga</code>) indexed by <code>(curvature × NdotL)</code>. The LUT
+      encodes the integrated diffuse response of a Gaussian scattering profile for skin.
+      It produces a characteristic warm red scatter at the shadow boundary without any screen-space pass.
+    </p>
+    <p lang="zh">
+      比 Subsurface 更进一步：不是简单的包裹公式，而是查找以 <code>(曲率 × NdotL)</code> 为索引的
+      预烘焙 2D LUT（<code>PreIntegratedSkinBRDF.tga</code>）。LUT 编码了皮肤高斯散射剖面的积分漫射响应。
+      它在阴影边界产生特有的暖红色散射，无需任何屏幕空间通道。
+    </p>
+    <p lang="en"><strong>When to use:</strong> NPC/background characters that need believable skin at lower cost than Subsurface Profile. Good for mobile targets where the screen-space blur pass of Subsurface Profile is too expensive.</p>
+    <p lang="zh"><strong>适用场景：</strong>需要可信皮肤但成本低于 Subsurface Profile 的 NPC/背景角色。对于 Subsurface Profile 的屏幕空间模糊通道过于昂贵的移动端目标来说是好选择。</p>
+  </div>
+
+  <!-- s6 -->
+  <h2 id="s6"><span lang="en">Subsurface Profile — High-Quality Burley SSS</span><span lang="zh">Subsurface Profile — 高质量 Burley SSS</span></h2>
+  <div class="sm-card">
+    <div class="sm-meta"><span class="sm-id">MSM_SubsurfaceProfile = 5</span><span class="sm-cost cost-high">High (screen-space blur pass)</span></div>
+    <p lang="en">
+      The highest-quality SSS in UE5. It uses a <strong>Burley normalized diffusion profile</strong>
+      combined with a <strong>screen-space separable Gaussian blur</strong> to simulate the actual
+      transport of light through skin, wax, or marble. The scatter radius and color tint are defined
+      by a <strong>Subsurface Profile asset</strong> — a data asset that specifies the scatter falloff
+      per color channel (red scatters furthest in skin, ~5–10mm; green ~2–3mm; blue ~1mm).
+    </p>
+    <p lang="zh">
+      UE5 中最高质量的 SSS。它使用 <strong>Burley 归一化扩散剖面</strong>结合
+      <strong>屏幕空间可分离高斯模糊</strong>来模拟光线穿过皮肤、蜡或大理石的实际传输。
+      散射半径和颜色色调由 <strong>Subsurface Profile 资产</strong>定义——
+      该数据资产按颜色通道指定散射衰减（红色在皮肤中散射最远，约 5–10mm；绿色约 2–3mm；蓝色约 1mm）。
+    </p>
+    <div class="diagram">
+Subsurface Profile rendering pipeline:
+
+1. GBuffer Base Pass (normal):
+   → Surface renders to GBufferA/B/C as usual
+   → CustomData (GBuffer slot C) stores: Curvature, ProfileID
+
+2. Deferred Lighting:
+   → SSS transmittance evaluated for back-facing direct light
+   → Separable blur output = sum of weighted Gaussian blurs
+     (different radius per RGB channel)
+
+3. PostProcessSubsurface.cpp:
+   → Horizontal blur pass (X direction)
+   → Vertical blur pass  (Y direction)
+   → Recombine: merge blurred subsurface with sharp specular
+     (specular must NOT be blurred)</div>
+    <p lang="en"><strong>When to use:</strong> Hero characters (faces, hands), high-quality skin rendering, marble/jade/wax where scatter pattern matters. Requires assigning a SubsurfaceProfile asset to the material. Create one in Content Browser: right-click → Materials → Subsurface Profile.</p>
+    <p lang="zh"><strong>适用场景：</strong>英雄角色（面部、手部）、高质量皮肤渲染、散射图案重要的大理石/玉石/蜡。需要为材质分配 SubsurfaceProfile 资产。在内容浏览器中创建：右键 → Materials → Subsurface Profile。</p>
+  </div>
+
+  <!-- s7 -->
+  <h2 id="s7"><span lang="en">Clear Coat — Two-Layer Lacquered Surface</span><span lang="zh">Clear Coat — 双层清漆表面</span></h2>
+  <div class="sm-card">
+    <div class="sm-meta"><span class="sm-id">MSM_ClearCoat = 4</span><span class="sm-cost cost-med">Medium (+second specular lobe)</span></div>
+    <p lang="en">
+      Models surfaces with a transparent coating over a different base material — car paint (clear lacquer
+      over colored pigment), lacquered wood, phone screens, carbon fiber. It evaluates <strong>two specular
+      BRDFs</strong>: one for the smooth coating layer (always low roughness) and one for the base material.
+      Critically, it also handles the <strong>energy transfer</strong> between layers — the coating
+      partially absorbs the light that reaches the base.
+    </p>
+    <p lang="zh">
+      模拟不同基础材质上有透明涂层的表面——汽车油漆（有色颜料上的清漆）、漆木、手机屏幕、碳纤维。
+      它计算<strong>两个镜面 BRDF</strong>：一个用于光滑涂层（始终低粗糙度），一个用于基础材质。
+      关键是，它还处理层之间的<strong>能量传递</strong>——涂层部分吸收到达基础层的光。
+    </p>
+    <pre><span class="cm">// ClearCoatBxDF (ShadingModels.ush)</span>
+float3 <span class="fn">ClearCoatBxDF</span>(FGBufferData G, ...)
+{
+    <span class="cm">// Clear coat layer (always smooth, ~Roughness=0.01–0.1)</span>
+    float ClearCoat         = G.CustomData.x;   <span class="cm">// [0,1] coat thickness</span>
+    float ClearCoatRoughness= G.CustomData.y;   <span class="cm">// coat roughness</span>
+    float3 CoatSpec = <span class="fn">SpecularGGX</span>(ClearCoatRoughness, <span class="num">0.04</span>, Context);
+
+    <span class="cm">// Energy loss to the base: coat absorbs some light</span>
+    float3 CoatAttenuation = <span class="num">1</span> - ClearCoat * CoatSpec;
+
+    <span class="cm">// Base layer (full GGX with material Roughness + BaseColor)</span>
+    float3 BaseSpec = <span class="fn">SpecularGGX</span>(G.Roughness, G.SpecularColor, Context);
+    float3 BaseDiff = Diffuse_Lambert(G.DiffuseColor);
+
+    <span class="kw">return</span> CoatSpec * ClearCoat                  <span class="cm">// coat specular</span>
+         + (BaseSpec + BaseDiff) * CoatAttenuation;  <span class="cm">// base, attenuated</span>
+}</pre>
+    <p lang="en"><strong>Additional inputs:</strong> <code>Clear Coat</code> (intensity 0–1), <code>Clear Coat Roughness</code> (usually 0.01–0.1), <code>Clear Coat Bottom Normal</code> (separate normal for the base layer — e.g., brushed metal direction under paint).</p>
+    <p lang="zh"><strong>附加输入：</strong><code>Clear Coat</code>（强度 0–1）、<code>Clear Coat Roughness</code>（通常 0.01–0.1）、<code>Clear Coat Bottom Normal</code>（基础层单独法线——例如油漆下的拉丝金属方向）。</p>
+  </div>
+
+  <!-- s8 -->
+  <h2 id="s8"><span lang="en">Two-Sided Foliage — Transmission Through Thin Leaves</span><span lang="zh">Two-Sided Foliage — 薄叶片透射</span></h2>
+  <div class="sm-card">
+    <div class="sm-meta"><span class="sm-id">MSM_TwoSidedFoliage = 6</span><span class="sm-cost cost-low">Low</span></div>
+    <p lang="en">
+      Designed for thin geometry like leaves and flower petals. It adds a <strong>transmission term</strong>
+      to the back face: when lit from behind, light "bleeds through" the leaf tinted by the
+      <strong>Subsurface Color</strong> (typically a bright green/yellow). The transmission is a function
+      of the back-face NoL — maximum when the light is directly behind the surface.
+    </p>
+    <p lang="zh">
+      专为叶片和花瓣等薄几何体设计。它在背面添加<strong>透射项</strong>：
+      从背面照射时，光线以 <strong>Subsurface Color</strong>（通常是明亮的绿/黄色）着色"透过"叶片。
+      透射是背面 NoL 的函数——当光线直接在表面后方时最大。
+    </p>
+    <p lang="en"><strong>Key inputs:</strong> <code>Subsurface Color</code> = transmission tint (bright green for leaves). <code>Opacity</code> controls alpha masking. Unlike real SSS, there is no screen-space blur — the transmission is purely per-pixel in the lighting shader.</p>
+    <p lang="zh"><strong>关键输入：</strong><code>Subsurface Color</code> = 透射色调（叶片用明亮绿色）。<code>Opacity</code> 控制 Alpha 遮罩。与真实 SSS 不同，没有屏幕空间模糊——透射完全在光照 Shader 中逐像素计算。</p>
+  </div>
+
+  <!-- s9 -->
+  <h2 id="s9"><span lang="en">Hair — Marschner Multi-Lobe Fiber BRDF</span><span lang="zh">Hair — Marschner 多叶瓣纤维 BRDF</span></h2>
+  <div class="sm-card">
+    <div class="sm-meta"><span class="sm-id">MSM_Hair = 7</span><span class="sm-cost cost-high">High (3-lobe BRDF + deep shadow)</span></div>
+    <p lang="en">
+      Hair fibers are cylindrical, not flat — so a planar BRDF is fundamentally wrong for them.
+      UE5 uses the <strong>Marschner model</strong>, which treats each strand as a transparent cylinder
+      and computes three separate scattering lobes based on how light interacts with the fiber geometry.
+    </p>
+    <p lang="zh">
+      头发纤维是圆柱形的，而不是平面的——因此平面 BRDF 对它们从根本上就是错误的。
+      UE5 使用 <strong>Marschner 模型</strong>，将每根发丝视为透明圆柱体，
+      并根据光线与纤维几何体的交互方式计算三个独立的散射叶瓣。
+    </p>
+    <div class="diagram">
+Marschner Hair BRDF — Three Lobes:
+
+  R lobe  (Reflect):
+    Light reflects off the outer cuticle surface.
+    → Sharp highlight, slightly shifted toward tip
+    → Tinted by: none (white-ish for blonde, grey for brown)
+    → Controlled by: Roughness (longitudinal spread)
+
+  TT lobe (Transmit-Transmit):
+    Light enters the fiber, refracts, exits the other side.
+    → Soft forward-scatter visible when backlit (halo effect)
+    → Tinted by: hair pigment color (melanin absorption)
+    → Controlled by: Scatter (how much light passes through)
+
+  TRT lobe (Transmit-Reflect-Transmit):
+    Light enters, bounces off inner surface, exits on same side.
+    → Wide, warm highlight (main colored sheen)
+    → Tinted by: hair pigment (typically warm amber/red)
+    → This is the dominant lobe for dark hair in direct light
+
+  Total BRDF = weight_R * R + weight_TT * TT + weight_TRT * TRT</div>
+    <pre><span class="cm">// HairBxDF (ShadingModels.ush) — conceptual structure</span>
+float3 <span class="fn">HairBxDF</span>(FGBufferData G, float3 L, float3 V, float3 T <span class="cm">/*fiber tangent*/</span>)
+{
+    <span class="cm">// Strand tangent is stored in GBuffer instead of normal</span>
+    float SinThetaL = <span class="fn">dot</span>(T, L);   <span class="cm">// longitudinal angle</span>
+    float SinThetaV = <span class="fn">dot</span>(T, V);
+
+    <span class="cm">// Longitudinal scattering (Gaussian, parametric β_M)</span>
+    float Beta_M = G.Roughness;           <span class="cm">// longitudinal roughness</span>
+    float Beta_N = G.CustomData.x;        <span class="cm">// azimuthal roughness</span>
+
+    <span class="cm">// Compute per-lobe weights from pigmentation</span>
+    float3 Absorption = G.BaseColor;      <span class="cm">// melanin absorption</span>
+
+    float3 R_lobe   = <span class="fn">Hair_R</span>(Beta_M, SinThetaL, SinThetaV, ...);
+    float3 TT_lobe  = <span class="fn">Hair_TT</span>(Beta_M, Beta_N, Absorption, ...);
+    float3 TRT_lobe = <span class="fn">Hair_TRT</span>(Beta_M, Beta_N, Absorption, ...);
+
+    <span class="kw">return</span> R_lobe + TT_lobe + TRT_lobe;
+}</pre>
+    <p lang="en"><strong>Key inputs:</strong> <code>Base Color</code> = melanin pigment (blonde = light yellow, black = near black). <code>Roughness</code> = longitudinal roughness (how broad the highlight is along the fiber). <code>Scatter</code> (CustomData) = how translucent the fiber is. Note: the <em>normal</em> input is ignored — the model uses the <em>tangent</em> (fiber direction) instead.</p>
+    <p lang="zh"><strong>关键输入：</strong><code>Base Color</code> = 黑色素色素（金发 = 浅黄色，黑发 = 接近黑色）。<code>Roughness</code> = 纵向粗糙度（高光沿纤维的宽度）。<code>Scatter</code>（CustomData）= 纤维的半透明程度。注意：<em>法线</em>输入被忽略——模型使用<em>切线</em>（纤维方向）代替。</p>
+  </div>
+
+  <!-- s10 -->
+  <h2 id="s10"><span lang="en">Cloth — Ashikhmin Retro-Reflective Velvet</span><span lang="zh">Cloth — Ashikhmin 逆反射绒布</span></h2>
+  <div class="sm-card">
+    <div class="sm-meta"><span class="sm-id">MSM_Cloth = 8</span><span class="sm-cost cost-med">Medium</span></div>
+    <p lang="en">
+      Cloth fibers create a unique appearance: strong <strong>retro-reflection</strong> (light bounces back
+      toward the source) and a characteristic <strong>limb brightening</strong> at grazing angles (velvet sheen).
+      The Cloth model replaces the GGX specular with the <strong>Ashikhmin-Shirley velvet distribution</strong>
+      and adds a <strong>FuzzColor</strong> for the sheen tint.
+    </p>
+    <p lang="zh">
+      布料纤维产生独特外观：强烈的<strong>逆反射</strong>（光线反弹回光源方向）和
+      在掠射角处特有的<strong>边缘增亮</strong>（绒面光泽）。
+      Cloth 模型将 GGX 镜面替换为 <strong>Ashikhmin-Shirley 绒布分布</strong>，
+      并添加 <strong>FuzzColor</strong> 用于光泽色调。
+    </p>
+    <pre><span class="cm">// Cloth velvet distribution (Ashikhmin 2000)</span>
+<span class="cm">// Peaks at grazing angles, back-scatters toward light source</span>
+float <span class="fn">D_Cloth</span>(float Roughness, float NoH)
+{
+    float CosH2 = NoH * NoH;
+    float SinH2 = <span class="num">1</span> - CosH2;
+    float α2    = Roughness * Roughness;
+    <span class="kw">return</span> (<span class="num">1</span> + <span class="num">4</span> * exp(-SinH2 / (CosH2 * α2))) / (PI * (<span class="num">1</span> + <span class="num">4</span> * α2));
+}
+
+<span class="cm">// Cloth BRDF = D_Cloth(velvet) + modified diffuse with FuzzColor</span>
+<span class="cm">// FuzzColor stored in GBuffer.CustomData.rgb</span>
+<span class="cm">// SubsurfaceColor = underlying cloth color (contributes to diffuse)</span></pre>
+    <p lang="en"><strong>Key inputs:</strong> <code>Base Color</code> = underlying woven fabric color. <code>FuzzColor</code> = the sheen tint (often lighter/desaturated version of Base Color). <code>Roughness</code> = how broad the sheen is. <strong>Do not use high Metallic</strong> — cloth is always dielectric.</p>
+    <p lang="zh"><strong>关键输入：</strong><code>Base Color</code> = 底层织物颜色。<code>FuzzColor</code> = 光泽色调（通常是 Base Color 的更亮/更不饱和版本）。<code>Roughness</code> = 光泽的宽度。<strong>不要使用高 Metallic</strong>——布料始终是电介质。</p>
+  </div>
+
+  <!-- s11 -->
+  <h2 id="s11"><span lang="en">Eye — Cornea Refraction &amp; Iris</span><span lang="zh">Eye — 角膜折射与虹膜</span></h2>
+  <div class="sm-card">
+    <div class="sm-meta"><span class="sm-id">MSM_Eye = 9</span><span class="sm-cost cost-high">High (refraction + SSS)</span></div>
+    <p lang="en">
+      The Eye shading model accurately simulates the layered structure of the human eye:
+      a smooth <strong>cornea</strong> (IOR ≈ 1.376) that refracts the view ray into the
+      <strong>iris plane</strong>, parallax from the iris depth, and the sclera (white of the eye)
+      with subsurface scattering. The cornea produces a wet, glassy highlight.
+    </p>
+    <p lang="zh">
+      Eye 着色模型精确模拟人眼的分层结构：光滑的<strong>角膜</strong>（IOR ≈ 1.376）
+      将视线光线折射到<strong>虹膜平面</strong>、来自虹膜深度的视差，以及具有次表面散射的巩膜（眼白）。
+      角膜产生湿润的玻璃质高光。
+    </p>
+    <p lang="en"><strong>Key inputs:</strong> <code>Iris Mask</code> separates iris from sclera. <code>Iris Distance</code> controls parallax depth. <code>Cornea Roughness</code> = 0 for fresh eyes, 0.1+ for dry/stylized. The iris texture should be authored from a top-down projection. Sclera uses Subsurface Profile for veins and blood-shot effects.</p>
+    <p lang="zh"><strong>关键输入：</strong><code>Iris Mask</code> 将虹膜与巩膜分开。<code>Iris Distance</code> 控制视差深度。<code>Cornea Roughness</code> = 0 用于清澈眼睛，0.1+ 用于干燥/风格化眼睛。虹膜纹理应从俯视投影创作。巩膜使用 Subsurface Profile 实现血管和充血效果。</p>
+  </div>
+
+  <!-- s12 -->
+  <h2 id="s12"><span lang="en">Single Layer Water — Absorption &amp; Refraction</span><span lang="zh">Single Layer Water — 水体吸收与折射</span></h2>
+  <div class="sm-card">
+    <div class="sm-meta"><span class="sm-id">MSM_SingleLayerWater = 10</span><span class="sm-cost cost-high">High (separate depth/absorption pass)</span></div>
+    <p lang="en">
+      A dedicated shading model for real-time water surfaces. It handles four phenomena that regular materials cannot:
+      <strong>depth-based absorption</strong> (water gets darker/more colored the deeper you look),
+      <strong>refraction</strong> (distortion of what's underwater), <strong>surface scattering</strong>
+      (Mie/Rayleigh scattering of volumetric water color), and <strong>integration with SSR/Lumen reflections</strong>.
+    </p>
+    <p lang="zh">
+      用于实时水面的专用着色模型。它处理普通材质无法处理的四种现象：
+      <strong>基于深度的吸收</strong>（越深水看起来越暗/颜色越深）、
+      <strong>折射</strong>（水下内容的扭曲）、<strong>表面散射</strong>（体积水色的 Mie/Rayleigh 散射），
+      以及<strong>与 SSR/Lumen 反射的集成</strong>。
+    </p>
+    <pre><span class="cm">// Key water material parameters (SingleLayerWaterShading.ush)</span>
+<span class="cm">// These are special material inputs only visible in SingleLayerWater shading model:</span>
+
+float3 WaterScatterColor;        <span class="cm">// color of scattered light in water body</span>
+float3 WaterAbsorptionColor;     <span class="cm">// what color gets absorbed (complement of visible color)</span>
+float  WaterPhaseG;              <span class="cm">// Henyey-Greenstein phase g [-1..1], 0=isotropic</span>
+float  WaterColorAbsorptionDepth;<span class="cm">// depth in cm at which absorption kicks in</span>
+float  WaterShoreline;           <span class="cm">// [0,1] mask for shoreline foam blending</span>
+
+<span class="cm">// Water depth computed from scene depth buffer:</span>
+<span class="cm">// float WaterDepth = (PixelWorldPos.z - BedWorldPos.z);</span>
+<span class="cm">// float3 Transmittance = exp(-WaterAbsorptionColor * WaterDepth / 100.0);</span></pre>
+    <p lang="en">See <a href="water-rendering.html">Water Rendering</a> for the complete material setup and rendering pipeline detail.</p>
+    <p lang="zh">完整材质设置和渲染管线详情请参见<a href="water-rendering.html">水体渲染</a>。</p>
+  </div>
+
+  <!-- s13 -->
+  <h2 id="s13"><span lang="en">Thin Translucent — Thin Glass &amp; Fabric</span><span lang="zh">Thin Translucent — 薄玻璃与织物</span></h2>
+  <div class="sm-card">
+    <div class="sm-meta"><span class="sm-id">MSM_ThinTranslucent = 11</span><span class="sm-cost cost-med">Medium</span></div>
+    <p lang="en">
+      Standard translucency in UE5 accumulates volume along the view ray — wrong for flat, thin surfaces like
+      window glass. Thin Translucent treats the surface as infinitely thin: it produces a sharp specular
+      on the front face and transmits the correct proportion of light through, tinted by
+      <code>Transmission Color</code>. The transmission fraction = 1 - (specular + diffuse).
+    </p>
+    <p lang="zh">
+      UE5 的标准半透明沿视线光线积累体积——对于窗玻璃等平坦薄表面来说是错误的。
+      Thin Translucent 将表面视为无限薄：它在正面产生清晰的镜面反射，
+      并以 <code>Transmission Color</code> 着色传输正确比例的光线。
+      透射比例 = 1 - (镜面 + 漫射)。
+    </p>
+    <p lang="en"><strong>When to use:</strong> Window glass, thin plastic sheets, stained glass, colored cellophane. NOT for volumetric translucent objects — use regular Translucent + Subsurface for those.</p>
+    <p lang="zh"><strong>适用场景：</strong>窗玻璃、薄塑料片、彩色玻璃、有色玻璃纸。不适用于体积半透明对象——对于那些请使用常规半透明 + 次表面。</p>
+  </div>
+
+  <!-- s14 -->
+  <h2 id="s14"><span lang="en">Substrate — Layered BSDF System (UE 5.3+)</span><span lang="zh">Substrate — 分层 BSDF 系统（UE 5.3+）</span></h2>
+  <div class="sm-card">
+    <div class="sm-meta"><span class="sm-id">MSM_Strata = 12</span><span class="sm-cost cost-high">High (variable per configuration)</span></div>
+    <p lang="en">
+      <span class="def">Substrate</span> (formerly Strata) is the next generation material system in UE5.
+      Instead of choosing a single fixed shading model, Substrate lets you <strong>layer any combination of
+      BSDFs</strong> using operators. Each BSDF <em>slab</em> is independently parameterized; slabs can be
+      blended with <code>over</code>, <code>add</code>, or <code>weight</code> operators.
+    </p>
+    <p lang="zh">
+      <span class="def">Substrate</span>（原名 Strata）是 UE5 的下一代材质系统。
+      不是选择单一固定着色模型，Substrate 允许你使用运算符<strong>以任意组合分层 BSDF</strong>。
+      每个 BSDF <em>Slab</em> 独立参数化；Slab 可以用 <code>over</code>、<code>add</code>
+      或 <code>weight</code> 运算符混合。
+    </p>
+    <pre><span class="cm">// Substrate material example: car paint with flakes</span>
+<span class="cm">// Material Editor: chain of Substrate nodes</span>
+
+SubstrateSlabBSDF(
+    DiffuseColor = BaseColor,
+    Roughness    = 0.3,
+    F0           = 0.04,          <span class="cm">// plastic</span>
+    Normal       = BumpNormal
+)
+<span class="cm">// "over" operator: coat layer on top of base</span>
+StrataLayering(
+    Top   = SubstrateSlabBSDF(Roughness=0.05, ...),  <span class="cm">// clear coat</span>
+    Base  = AboveSlabBSDF,
+    Thickness = CoatThicknessMap
+)
+
+<span class="cm">// Available BSDF node types in Substrate:</span>
+<span class="cm">// SubstrateSlabBSDF     — standard PBR slab (replaces Default Lit)</span>
+<span class="cm">// SubstrateHairBSDF     — Marschner for fibers</span>
+<span class="cm">// SubstrateEyeBSDF      — eye cornea/iris model</span>
+<span class="cm">// SubstrateVolumetricFogCloudBSDF — volumetric effects</span>
+<span class="cm">// SubstrateUnlit        — emission only</span>
+<span class="cm">// SubstrateCoatLayering — clear coat with proper energy transfer</span></pre>
+    <p lang="en">Enable Substrate in Project Settings → Rendering → Substrate. Note: Substrate is still evolving and has hardware-specific fallback paths. On hardware that supports 128+ byte GBuffers, full BSDF layering is preserved; older hardware uses a simplified "legacy" conversion.</p>
+    <p lang="zh">在"项目设置 → 渲染 → Substrate"中启用 Substrate。注意：Substrate 仍在演进中，并有特定于硬件的回退路径。在支持 128+ 字节 GBuffer 的硬件上，完整的 BSDF 分层被保留；较旧硬件使用简化的"传统"转换。</p>
+  </div>
+
+  <!-- s15 -->
+  <h2 id="s15"><span lang="en">Quick Comparison Table</span><span lang="zh">快速对比表</span></h2>
+  <div class="table-wrap"><table>
+    <thead><tr>
+      <th><span lang="en">Model</span><span lang="zh">模型</span></th>
+      <th><span lang="en">Best For</span><span lang="zh">最适合</span></th>
+      <th><span lang="en">GPU Cost</span><span lang="zh">GPU 开销</span></th>
+      <th><span lang="en">Extra Passes?</span><span lang="zh">额外通道？</span></th>
+    </tr></thead>
+    <tbody>
+      <tr><td>Unlit</td><td><span lang="en">Particles, holograms, emissive</span><span lang="zh">粒子、全息、自发光</span></td><td><span lang="en">Zero (skip lighting)</span><span lang="zh">零（跳过光照）</span></td><td><span lang="en">None</span><span lang="zh">无</span></td></tr>
+      <tr><td>Default Lit</td><td><span lang="en">Everything else (90% of assets)</span><span lang="zh">其他所有（90% 资产）</span></td><td><span lang="en">Baseline</span><span lang="zh">基准</span></td><td><span lang="en">None</span><span lang="zh">无</span></td></tr>
+      <tr><td>Subsurface</td><td><span lang="en">Stylized skin, wax, candles</span><span lang="zh">风格化皮肤、蜡、蜡烛</span></td><td><span lang="en">+10%</span><span lang="zh">+10%</span></td><td><span lang="en">None</span><span lang="zh">无</span></td></tr>
+      <tr><td>PreIntegrated Skin</td><td><span lang="en">Background characters</span><span lang="zh">背景角色</span></td><td><span lang="en">+5% (+LUT)</span><span lang="zh">+5%（+LUT）</span></td><td><span lang="en">None</span><span lang="zh">无</span></td></tr>
+      <tr><td>Subsurface Profile</td><td><span lang="en">Hero skin, marble</span><span lang="zh">英雄皮肤、大理石</span></td><td><span lang="en">High (+blur pass)</span><span lang="zh">高（+模糊通道）</span></td><td><span lang="en">2× blur passes</span><span lang="zh">2× 模糊通道</span></td></tr>
+      <tr><td>Clear Coat</td><td><span lang="en">Car paint, lacquer, phones</span><span lang="zh">汽车油漆、清漆、手机</span></td><td><span lang="en">+20% (2× specular)</span><span lang="zh">+20%（2× 镜面）</span></td><td><span lang="en">None</span><span lang="zh">无</span></td></tr>
+      <tr><td>Two-Sided Foliage</td><td><span lang="en">Leaves, petals</span><span lang="zh">叶片、花瓣</span></td><td><span lang="en">+5%</span><span lang="zh">+5%</span></td><td><span lang="en">None</span><span lang="zh">无</span></td></tr>
+      <tr><td>Hair</td><td><span lang="en">Strand-based hair</span><span lang="zh">发丝毛发</span></td><td><span lang="en">High (3 lobes)</span><span lang="zh">高（3 叶瓣）</span></td><td><span lang="en">Deep shadow maps</span><span lang="zh">深度阴影贴图</span></td></tr>
+      <tr><td>Cloth</td><td><span lang="en">Velvet, microfiber</span><span lang="zh">天鹅绒、超细纤维</span></td><td><span lang="en">+15%</span><span lang="zh">+15%</span></td><td><span lang="en">None</span><span lang="zh">无</span></td></tr>
+      <tr><td>Eye</td><td><span lang="en">Character eyes</span><span lang="zh">角色眼睛</span></td><td><span lang="en">High (refraction)</span><span lang="zh">高（折射）</span></td><td><span lang="en">None</span><span lang="zh">无</span></td></tr>
+      <tr><td>Single Layer Water</td><td><span lang="en">Water surfaces</span><span lang="zh">水面</span></td><td><span lang="en">Very High</span><span lang="zh">非常高</span></td><td><span lang="en">Depth + refraction passes</span><span lang="zh">深度+折射通道</span></td></tr>
+      <tr><td>Thin Translucent</td><td><span lang="en">Window glass, film</span><span lang="zh">窗玻璃、薄膜</span></td><td><span lang="en">+10%</span><span lang="zh">+10%</span></td><td><span lang="en">None</span><span lang="zh">无</span></td></tr>
+      <tr><td>Substrate</td><td><span lang="en">Complex layered materials</span><span lang="zh">复杂分层材质</span></td><td><span lang="en">Variable (config-dependent)</span><span lang="zh">可变（取决于配置）</span></td><td><span lang="en">Depends on layers</span><span lang="zh">取决于层数</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <!-- s16 -->
+  <h2 id="s16"><span lang="en">Source Navigation</span><span lang="zh">源码导航</span></h2>
+  <p lang="en">All shader paths relative to <code>Engine/Shaders/Private/</code></p>
+  <p lang="zh">所有 Shader 路径相对于 <code>Engine/Shaders/Private/</code></p>
+  <ul class="file-list">
+    <li><span class="fp">ShadingModels.ush</span><span class="fd"><span lang="en">Core: all BRDF functions. Switch on ShadingModelID dispatches here.</span><span lang="zh">核心：所有 BRDF 函数。ShadingModelID 的分发在此处进行。</span></span></li>
+    <li><span class="fp">ShadingCommon.ush</span><span class="fd"><span lang="en">MSM_* enum values, GBuffer packing helpers per model</span><span lang="zh">MSM_* 枚举值，每个模型的 GBuffer 打包辅助函数</span></span></li>
+    <li><span class="fp">DeferredLightingCommon.ush</span><span class="fd"><span lang="en">Main deferred lighting loop — reads GBuffer, calls BRDF functions</span><span lang="zh">主延迟光照循环——读取 GBuffer，调用 BRDF 函数</span></span></li>
+    <li><span class="fp">ClearCoatCommon.ush</span><span class="fd"><span lang="en">Clear coat two-layer evaluation</span><span lang="zh">清漆双层计算</span></span></li>
+    <li><span class="fp">HairBsdf.ush</span><span class="fd"><span lang="en">Marschner R/TT/TRT lobe implementations</span><span lang="zh">Marschner R/TT/TRT 叶瓣实现</span></span></li>
+    <li><span class="fp">ClothBsdf.ush</span><span class="fd"><span lang="en">Ashikhmin velvet distribution</span><span lang="zh">Ashikhmin 绒布分布</span></span></li>
+    <li><span class="fp">EyeCommon.ush</span><span class="fd"><span lang="en">Cornea refraction, iris parallax</span><span lang="zh">角膜折射、虹膜视差</span></span></li>
+    <li><span class="fp">SingleLayerWaterShading.ush</span><span class="fd"><span lang="en">Water depth absorption, Henyey-Greenstein scattering</span><span lang="zh">水体深度吸收、Henyey-Greenstein 散射</span></span></li>
+    <li><span class="fp">PostProcessSubsurface.usf</span><span class="fd"><span lang="en">Subsurface Profile screen-space blur (horizontal + vertical passes)</span><span lang="zh">Subsurface Profile 屏幕空间模糊（水平 + 垂直通道）</span></span></li>
+    <li><span class="fp">Substrate/Substrate.ush</span><span class="fd"><span lang="en">Substrate BSDF layer evaluation, slab parameters</span><span lang="zh">Substrate BSDF 层计算，Slab 参数</span></span></li>
+    <li><span class="fp">../../Runtime/Renderer/Private/Substrate/Substrate.cpp</span><span class="fd"><span lang="en">Substrate C++ runtime: GBuffer layout, fallback conversion</span><span lang="zh">Substrate C++ 运行时：GBuffer 布局、回退转换</span></span></li>
+  </ul>
+
+  <footer>Unreal Engine 5.6 &middot; Engine/Shaders/Private/ &middot; Engine/Source/Runtime/Renderer/Private/Substrate/<br>Source analysis &middot; For learning purposes</footer>
+
+  <div class="page-nav">
+    <a href="../06-post-processing/post-processing.html" class="prev"><span class="pn-label">&larr; Prev</span><span class="pn-title"><span lang="en">Post-Processing Pipeline</span><span lang="zh">后处理管线</span></span></a>
+    <a href="../04-material-shader/usf-hlsl-guide.html" class="next"><span class="pn-label">Next &rarr;</span><span class="pn-title"><span lang="en">USF / HLSL Guide</span><span lang="zh">USF / HLSL 编写指南</span></span></a>
+  </div>
+</main>
+</div>
+<script>
+function toggleLang(){var h=document.documentElement;if(h.classList.contains('lang-zh')){h.classList.remove('lang-zh');h.lang='en';document.title='Shading Models Reference';localStorage.setItem('ue-doc-lang','en');}else{h.classList.add('lang-zh');h.lang='zh-CN';document.title='着色模型参考';localStorage.setItem('ue-doc-lang','zh');}}
+if(document.documentElement.classList.contains('lang-zh'))document.title='着色模型参考';
+</script>
+</body>
+</html>

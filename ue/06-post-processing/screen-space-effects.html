@@ -1,0 +1,485 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Screen Space Effects — SSR, SSAO &amp; Contact Shadows</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Gudea">
+  <script>(function(){if(localStorage.getItem('ue-doc-lang')==='zh'){document.documentElement.classList.add('lang-zh');document.documentElement.lang='zh-CN';}})();</script>
+  <style>
+    html:not(.lang-zh) [lang="zh"]{display:none;} html.lang-zh [lang="en"]{display:none;}
+    #lang-btn{position:fixed;top:16px;right:20px;z-index:999;background:#37425d;color:#fff;border:none;border-radius:4px;padding:5px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:Gudea,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.2);transition:background .15s;} #lang-btn:hover{background:#4a5a7a;}
+    *{box-sizing:border-box;margin:0;padding:0;} body{font-family:Gudea,sans-serif;font-size:16px;line-height:1.8;color:#111;background:#eee;}
+    #wrapper{max-width:1100px;margin:0 auto;display:flex;align-items:flex-start;padding:40px 24px;gap:36px;}
+    #sidebar{width:240px;flex-shrink:0;font-size:13px;}
+    #sidebar h2{font-size:12px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;border:none;padding:0;}
+    #sidebar > ol{list-style:none !important;padding:0;} #sidebar > ol > li{list-style:none !important;margin-bottom:5px;}
+    #sidebar > ol > li a{color:#555;text-decoration:none;display:block;padding:2px 0;transition:color .12s;} #sidebar > ol > li a:hover{color:#58A;} #sidebar > ol > li a::before{content:none;}
+    #content{flex:1;min-width:0;}
+    .page-header{margin-bottom:32px;padding-bottom:20px;border-bottom:1px solid #ddd;}
+    .page-header .crumb{font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
+    .page-header h1{font-size:1.8rem;font-weight:900;color:#303236;margin-bottom:8px;line-height:1.25;}
+    .page-header .subtitle{font-family:'Courier New',monospace;font-size:13px;color:#777;}
+    h2{color:#37425d;font-size:22px;margin:36px 0 10px;} h3{color:#633739;font-size:17px;margin:24px 0 8px;}
+    p{margin-bottom:14px;} a{color:#58A;text-decoration:none;} a:hover{text-decoration:underline;} strong{color:#222;}
+    .fun{font-family:'Courier New',monospace;color:#2a6496;} .def{color:green;font-weight:600;}
+    code{font-family:'Courier New',monospace;font-size:14px;background:#ddd;border-radius:3px;padding:1px 5px;}
+    pre{background:#282c34;color:#abb2bf;border-radius:5px;padding:16px 18px;overflow-x:auto;margin:14px 0 18px;font-family:'Courier New',monospace;font-size:13.5px;line-height:1.6;}
+    pre code{background:none;padding:0;color:inherit;} .kw{color:#c678dd;} .fn{color:#61afef;} .cm{color:#5c6370;font-style:italic;} .str{color:#98c379;} .num{color:#d19a66;} .type{color:#e5c07b;}
+    .note{display:block;margin:18px 0;padding:15px;background:#D8F5D8;color:#444;border-radius:5px;border:2px solid #AFDFAF;font-size:15px;line-height:1.7;}
+    .warning{display:block;margin:18px 0;padding:15px;background:#FFD2D2;color:#444;border-radius:5px;border:2px solid #E0B3B3;font-size:15px;line-height:1.7;}
+    ul,ol{padding-left:22px;margin-bottom:14px;} li{margin-bottom:5px;}
+    .table-wrap{overflow-x:auto;margin:14px 0;} table{border-collapse:collapse;font-size:14px;width:100%;}
+    th,td{padding:8px 12px;border-bottom:1px solid #aaa;text-align:left;} th{border-bottom:2px solid #888;font-weight:700;background:#ddd;} tr:nth-child(even) td{background:#e8e8e8;}
+    td:first-child{font-family:'Courier New',monospace;font-size:13px;color:#2a6496;white-space:nowrap;}
+    .diagram{background:#fff;border:1px solid #ccc;border-radius:5px;padding:20px;margin:16px 0;font-family:'Courier New',monospace;font-size:13px;line-height:1.8;overflow-x:auto;white-space:pre;}
+    .file-list{list-style:none;padding:0;margin:12px 0;} .file-list li{padding:6px 0;border-bottom:1px solid #ccc;display:flex;align-items:baseline;gap:10px;font-size:14px;} .file-list li:last-child{border-bottom:none;} .file-list .fp{font-family:'Courier New',monospace;font-size:13px;color:#58A;min-width:300px;} .file-list .fd{color:#555;}
+    footer{margin-top:48px;padding-top:16px;border-top:1px solid #ccc;font-size:12px;color:#aaa;text-align:center;}
+    @media(max-width:800px){#wrapper{flex-direction:column;padding:20px 16px;}#sidebar{width:100%;position:static;max-height:none;margin-bottom:24px;}}
+    #series-nav{margin-bottom:24px;} #series-nav ol,#series-nav li{list-style:none;padding-left:0;}
+    .snav-label{font-size:11px;font-weight:800;color:#37425d;text-transform:uppercase;letter-spacing:.14em;display:block;margin-bottom:10px;padding-bottom:4px;border-bottom:2px solid #37425d;}
+    #series-nav > ol{list-style:none;padding:0;margin:0;} #series-nav ol{list-style:none;padding:0;margin:0;}
+    .snav-ch{margin-bottom:10px;}
+    .snav-ch > span{font-size:11px;font-weight:800;letter-spacing:.06em;color:#fff;background:#5a6a80;display:block;padding:3px 7px 3px 6px;border-radius:3px;margin-bottom:3px;text-transform:uppercase;}
+    .snav-ch > ol{padding-left:0;margin-top:0;}
+    .snav-item{margin-bottom:1px;}
+    .snav-item a{font-size:13.5px;color:#666;text-decoration:none;display:block;padding:3px 6px;border-left:3px solid transparent;border-radius:0 3px 3px 0;transition:color .12s,background .12s,border-color .12s;}
+    .snav-item a:hover{color:#37425d;background:#f0f2f5;border-left-color:#c0cad8;}
+    .snav-item.active a{color:#37425d;font-weight:700;background:#e8ecf4;border-left-color:#37425d;}
+    .page-nav{display:flex;justify-content:space-between;align-items:center;margin:36px 0 0;padding-top:16px;border-top:1px solid #ddd;font-size:14px;}
+    .page-nav a{color:#58A;text-decoration:none;display:flex;align-items:center;gap:6px;max-width:42%;}
+    .page-nav a:hover{text-decoration:underline;}
+    .page-nav .pn-label{font-size:11px;color:#aaa;text-transform:uppercase;display:block;}
+    .page-nav .pn-title{display:block;} .page-nav .prev{text-align:left;} .page-nav .next{text-align:right;}
+  
+    .snav-children{display:block;list-style:none;padding:2px 0 4px 10px;margin:1px 0 0;border-left:2px solid #dde3ee;}
+    .snav-subitem{margin-bottom:1px;}
+    .snav-subitem a{font-size:12px;color:#888;text-decoration:none;display:block;padding:2px 4px 2px 8px;border-left:2px solid transparent;border-radius:0 3px 3px 0;transition:color .12s,background .12s,border-color .12s;}
+    .snav-subitem a:hover{color:#37425d;background:#f0f2f5;border-left-color:#c0cad8;}
+    .snav-subitem.active a{color:#37425d;font-weight:700;background:#e8ecf4;border-left-color:#37425d;}  </style>
+</head>
+<body>
+<button id="lang-btn" onclick="toggleLang()"><span lang="en">中文</span><span lang="zh">English</span></button>
+<div id="wrapper">
+<nav id="sidebar">
+  <div id="series-nav">
+    <span class="snav-label"><span lang="en">Series</span><span lang="zh">系列</span></span>
+    <ol>
+
+      <li class="snav-ch"><span lang="en">00 Overview</span><span lang="zh">00 概述</span>
+        <ol>
+          <li class="snav-item"><a href="../00-overview/introduction.html"><span lang="en">Introduction</span><span lang="zh">系列简介</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">01 Rendering Pipeline</span><span lang="zh">01 渲染管线</span>
+        <ol>
+          <li class="snav-item"><a href="../01-rendering-pipeline/deferred-shading.html"><span lang="en">Deferred Rendering</span><span lang="zh">延迟渲染</span></a></li>
+          <li class="snav-item"><a href="../01-rendering-pipeline/forward-shading.html"><span lang="en">Forward Rendering</span><span lang="zh">前向渲染</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">02 Engine Infrastructure</span><span lang="zh">02 引擎基础设施</span>
+        <ol>
+          <li class="snav-item"><a href="../02-engine-infrastructure/rdg-compiler.html"><span lang="en">RDG — Render Dependency Graph</span><span lang="zh">RDG 渲染依赖图</span></a></li>
+          <li class="snav-item"><a href="../02-engine-infrastructure/thread-concurrency.html"><span lang="en">Thread Concurrency</span><span lang="zh">线程并发</span></a></li>
+          <li class="snav-item"><a href="../02-engine-infrastructure/virtual-texture.html"><span lang="en">Virtual Texture Streaming</span><span lang="zh">虚拟纹理流送</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">03 Lighting &amp; Shadows</span><span lang="zh">03 光照与阴影</span>
+        <ol>
+          <li class="snav-item"><a href="../03-lighting-shadows/lighting-architecture.html"><span lang="en">Lighting Architecture</span><span lang="zh">光照架构</span></a></li>
+          <li class="snav-item"><a href="../03-lighting-shadows/virtual-shadow-maps.html"><span lang="en">Virtual Shadow Maps</span><span lang="zh">虚拟阴影贴图</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">04 Material &amp; Shader System</span><span lang="zh">04 材质与着色器系统</span>
+        <ol>
+          <li class="snav-item"><a href="../04-material-shader/material-translation.html"><span lang="en">Shader Compilation &amp; Architecture</span><span lang="zh">着色器编译与架构</span></a></li>
+          <li class="snav-item"><a href="../04-material-shader/shading-models-reference.html"><span lang="en">Shading Models Reference</span><span lang="zh">着色模型参考</span></a></li>
+          <li class="snav-item"><a href="../04-material-shader/usf-hlsl-guide.html"><span lang="en">USF / HLSL Writing Guide</span><span lang="zh">USF / HLSL 编写指南</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">05 UE5 Core Technologies</span><span lang="zh">05 UE5 核心技术</span>
+        <ol>
+          <li class="snav-item"><a href="../05-ue5-core/nanite-rasterizer.html"><span lang="en">Nanite — Virtual Geometry</span><span lang="zh">Nanite 虚拟几何</span></a></li>
+          <li class="snav-item"><a href="../05-ue5-core/lumen-raytracing.html"><span lang="en">Lumen — Dynamic GI</span><span lang="zh">Lumen 动态全局光照</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">06 Post-Processing &amp; Effects</span><span lang="zh">06 后处理与屏幕效果</span>
+        <ol>
+          <li class="snav-item"><a href="../06-post-processing/post-processing.html"><span lang="en">Post-Processing Pipeline</span><span lang="zh">后处理管线</span></a></li>
+          <li class="snav-item active"><a href="../06-post-processing/screen-space-effects.html"><span lang="en">Screen Space Effects</span><span lang="zh">屏幕空间效果</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">07 Specialized Rendering</span><span lang="zh">07 专项渲染</span>
+        <ol>
+          <li class="snav-item"><a href="../07-specialized-rendering/volumetric-atmosphere.html"><span lang="en">Volumetric Fog &amp; Atmosphere</span><span lang="zh">体积雾与大气</span></a></li>
+          <li class="snav-item"><a href="../07-specialized-rendering/water-rendering.html"><span lang="en">Water Rendering</span><span lang="zh">水体渲染</span></a></li>
+          <li class="snav-item"><a href="../07-specialized-rendering/hair-groom-rendering.html"><span lang="en">Hair &amp; Groom</span><span lang="zh">毛发渲染</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">08 Engine Customization</span><span lang="zh">08 引擎定制</span>
+        <ol>
+          <li class="snav-item"><a href="../08-engine-customization/custom-shading-model.html"><span lang="en">Custom Shading Model</span><span lang="zh">自定义着色模型</span></a></li>
+          <li class="snav-item"><a href="../08-engine-customization/niagara-gpu-compute.html"><span lang="en">Niagara GPU Compute</span><span lang="zh">Niagara GPU 计算</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">09 Performance &amp; Profiling</span><span lang="zh">09 性能与分析</span>
+        <ol>
+          <li class="snav-item"><a href="../09-profiling/hardware-profiling.html"><span lang="en">Hardware Profiling</span><span lang="zh">硬件性能分析</span></a></li>
+        </ol>
+      </li>
+
+    </ol>
+  </div>
+  <h2><span lang="en">Contents</span><span lang="zh">目录</span></h2>
+  <ol>
+    <li><a href="#s1"><span lang="en">Screen Space Techniques Overview</span><span lang="zh">屏幕空间技术概览</span></a></li>
+    <li><a href="#s2"><span lang="en">SSR — Hi-Z Ray Marching</span><span lang="zh">SSR — Hi-Z 光线步进</span></a></li>
+    <li><a href="#s3"><span lang="en">SSR Tile Classification &amp; Denoising</span><span lang="zh">SSR 瓦片分类与降噪</span></a></li>
+    <li><a href="#s4"><span lang="en">SSAO — Horizon-Based AO</span><span lang="zh">SSAO — 基于水平线的 AO</span></a></li>
+    <li><a href="#s5"><span lang="en">Contact Shadows</span><span lang="zh">接触阴影</span></a></li>
+    <li><a href="#s6"><span lang="en">Screen Space Denoising</span><span lang="zh">屏幕空间降噪</span></a></li>
+    <li><a href="#s7"><span lang="en">When to Use SS vs Ray Tracing</span><span lang="zh">何时用 SS 而非光追</span></a></li>
+    <li><a href="#s8"><span lang="en">Performance Tuning</span><span lang="zh">性能调优</span></a></li>
+    <li><a href="#s9"><span lang="en">Source Navigation</span><span lang="zh">源码导航</span></a></li>
+  </ol>
+</nav>
+
+<main id="content">
+  <div class="page-header">
+    <div class="crumb">Unreal Engine 5.6 &middot; Shader Architecture &middot; Part 03-C</div>
+    <h1><span lang="en">Screen Space Effects — SSR, SSAO &amp; Contact Shadows</span><span lang="zh">屏幕空间效果 — SSR、SSAO 与接触阴影</span></h1>
+    <div class="subtitle">Renderer/Private/ScreenSpaceRayTracing.cpp &middot; PostProcessAmbientOcclusion.cpp &middot; ScreenSpaceShadows.cpp</div>
+  </div>
+
+  <!-- s1 -->
+  <h2 id="s1"><span lang="en">Screen Space Techniques — Why &amp; What</span><span lang="zh">屏幕空间技术 — 为什么以及是什么</span></h2>
+  <p lang="en">
+    Screen space techniques are a family of rendering algorithms that approximate global effects
+    (<em>reflections, ambient occlusion, contact shadows</em>) using only the data already rendered
+    in the current frame's GBuffer and depth buffer — no additional geometry traversal, no BVH,
+    no ray tracing hardware required. They trade <strong>physical accuracy for speed</strong>:
+    only surfaces visible on screen can contribute, and results break at screen edges.
+  </p>
+  <p lang="zh">
+    屏幕空间技术是一类渲染算法，仅使用当前帧 GBuffer 和深度缓冲区中已渲染的数据
+    来近似全局效果（<em>反射、环境光遮蔽、接触阴影</em>）——无需额外的几何体遍历，
+    无需 BVH，无需光线追踪硬件。它们以<strong>物理准确性换取速度</strong>：
+    只有屏幕上可见的表面才能贡献效果，在屏幕边缘结果会失效。
+  </p>
+
+  <div class="diagram">
+Screen Space Pipeline Position (in deferred rendering):
+
+  GBuffer Pass → Depth Buffer → ┬→ SSAO     (AO from depth + normals)
+                                 ├→ SSR      (reflections from depth + normals + color)
+                                 └→ Contact  (shadow from depth along light dir)
+
+  All three read:
+    - SceneDepth     (reconstruct world position)
+    - GBufferA.rgb   (world normal)
+    - GBufferB       (roughness for SSR importance)
+  SSR additionally reads:
+    - SceneColor     (the "mirror" image to reflect)</div>
+
+  <!-- s2 -->
+  <h2 id="s2"><span lang="en">SSR — Screen Space Reflections via Hi-Z Ray Marching</span><span lang="zh">SSR — 通过 Hi-Z 光线步进实现屏幕空间反射</span></h2>
+  <p lang="en">
+    <span class="def">Screen Space Reflections (SSR)</span> computes specular indirect lighting by tracing
+    reflection rays in screen space. Instead of tracing into a 3D scene, the ray marches through a
+    <strong>Hi-Z mipmap of the depth buffer</strong> — much faster than BVH traversal.
+  </p>
+  <p lang="zh">
+    <span class="def">屏幕空间反射（SSR）</span>通过在屏幕空间追踪反射光线来计算镜面间接光照。
+    不是追踪到 3D 场景，而是光线步进穿过<strong>深度缓冲区的 Hi-Z Mipmap</strong>——
+    比 BVH 遍历快得多。
+  </p>
+
+  <h3><span lang="en">Hi-Z Acceleration</span><span lang="zh">Hi-Z 加速</span></h3>
+  <p lang="en">
+    The Hi-Z (Hierarchical Z) buffer is a depth buffer mip chain where each level stores the
+    <strong>maximum depth</strong> of its 2×2 children. A ray step can first test against a coarse mip level —
+    if the ray is entirely in front of the maximum depth at that level, it cannot possibly intersect anything
+    in that region. This allows large empty regions to be skipped in one step.
+  </p>
+  <p lang="zh">
+    Hi-Z（分层 Z）缓冲区是深度缓冲区的 Mip 链，每个级别存储其 2×2 子像素的<strong>最大深度</strong>。
+    光线步进可以先针对粗糙的 Mip 级别进行测试——如果光线在该级别最大深度的完全前方，
+    它不可能与该区域的任何物体相交。这允许在一步中跳过大片空白区域。
+  </p>
+
+  <pre><span class="cm">// ScreenSpaceRayTracing.cpp — HiZ ray march (conceptual)</span>
+
+bool <span class="fn">CastSSRRay</span>(
+    float3 RayOrigin,    <span class="cm">// world space position of reflective pixel</span>
+    float3 ReflectDir,   <span class="cm">// mirror reflection direction</span>
+    out float2 HitUV,    <span class="cm">// screen UV of hit (if found)</span>
+    out float HitMask)   <span class="cm">// confidence [0,1]</span>
+{
+    <span class="cm">// Project ray into clip space for screen-space traversal</span>
+    float3 RayStartScreen = <span class="fn">WorldToScreen</span>(RayOrigin);
+    float3 RayDirScreen   = <span class="fn">normalize</span>(<span class="fn">WorldToScreen</span>(RayOrigin + ReflectDir) - RayStartScreen);
+
+    float3 RayPos = RayStartScreen;
+    <span class="kw">int</span> MipLevel = <span class="num">0</span>;
+
+    LOOP <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; MAX_STEPS &amp;&amp; MipLevel &gt;= <span class="num">0</span>; ++i)
+    {
+        <span class="cm">// Step size scales with current mip level (coarser = bigger step)</span>
+        float CellSize = <span class="fn">pow</span>(<span class="num">2.0f</span>, float(MipLevel)) * InvScreenSize;
+
+        <span class="cm">// Advance to next cell boundary</span>
+        RayPos += RayDirScreen * CellSize;
+
+        <span class="cm">// Read Hi-Z depth at current mip level</span>
+        float SceneDepth = HiZBuffer.<span class="fn">SampleLevel</span>(PointSampler, RayPos.xy, MipLevel);
+
+        <span class="kw">if</span> (RayPos.z &gt; SceneDepth)
+        {
+            <span class="cm">// Ray is behind scene — intersection found!</span>
+            <span class="kw">if</span> (MipLevel == <span class="num">0</span>) {
+                HitUV   = RayPos.xy;
+                HitMask = <span class="num">1.0f</span>;
+                <span class="kw">return true</span>;
+            }
+            MipLevel--;  <span class="cm">// refine at finer mip level</span>
+        }
+        <span class="kw">else</span>
+        {
+            MipLevel = <span class="fn">min</span>(MipLevel + <span class="num">1</span>, MAX_MIP);  <span class="cm">// advance at coarser mip</span>
+        }
+    }
+    <span class="kw">return false</span>;  <span class="cm">// no intersection found within max steps</span>
+}</pre>
+
+  <p lang="en">
+    Once a hit is found, UE5 applies a <strong>fade mask</strong> at screen edges (reflections that point
+    off-screen are invalid) and fades out reflections based on <code>roughness</code>
+    (rough surfaces = wide cone = SSR breaks down, fallback to reflection captures).
+  </p>
+  <p lang="zh">
+    一旦找到命中，UE5 在屏幕边缘应用<strong>衰退遮罩</strong>（指向屏幕外的反射无效），
+    并根据 <code>roughness</code> 使反射衰退
+    （粗糙表面 = 宽锥体 = SSR 失效，回退到反射捕获）。
+  </p>
+
+  <!-- s3 -->
+  <h2 id="s3"><span lang="en">SSR Tile Classification &amp; Temporal Denoising</span><span lang="zh">SSR 瓦片分类与时域降噪</span></h2>
+  <p lang="en">
+    The SSR pass uses <strong>tile classification</strong> (<code>ScreenSpaceReflectionTiles.h</code>)
+    to skip tiles that have no reflective pixels (roughness too high, or not in a reflective material).
+    This can save 30–60% of SSR compute on typical scenes where most surfaces are rough.
+  </p>
+  <p lang="zh">
+    SSR 通道使用<strong>瓦片分类</strong>（<code>ScreenSpaceReflectionTiles.h</code>）
+    跳过没有反射像素的瓦片（粗糙度过高或非反射材质）。
+    在大多数表面粗糙的典型场景中，这可以节省 30–60% 的 SSR 计算量。
+  </p>
+  <p lang="en">
+    SSR is inherently noisy at 1 sample/pixel. UE5 accumulates SSR results over multiple frames
+    using temporal reprojection (the same mechanism as TAA), storing a history buffer with the
+    previous frame's SSR. Pixels that fail temporal reprojection (disocclusion, fast-moving objects)
+    fall back to a lower-quality single-frame estimate.
+  </p>
+  <p lang="zh">
+    SSR 在每像素 1 个样本时本质上是有噪声的。UE5 使用时域重投影（与 TAA 相同的机制）
+    跨多帧累积 SSR 结果，存储包含上一帧 SSR 的历史缓冲区。
+    时域重投影失败的像素（遮挡、快速移动物体）回退到质量较低的单帧估计。
+  </p>
+
+  <!-- s4 -->
+  <h2 id="s4"><span lang="en">SSAO — Horizon-Based Ambient Occlusion</span><span lang="zh">SSAO — 基于水平线的环境光遮蔽</span></h2>
+  <p lang="en">
+    <span class="def">Screen Space Ambient Occlusion (SSAO)</span> approximates how much ambient light
+    a surface point receives — specifically, how much of its hemisphere of directions is occluded by
+    nearby geometry. It produces characteristic soft contact shadows in corners and crevices.
+  </p>
+  <p lang="zh">
+    <span class="def">屏幕空间环境光遮蔽（SSAO）</span>近似表面点接收多少环境光——
+    具体来说，其半球方向上有多少被附近几何体遮蔽。
+    它在角落和缝隙中产生特有的柔和接触阴影。
+  </p>
+
+  <h3><span lang="en">Algorithm: GTAO (Ground Truth AO approximation)</span><span lang="zh">算法：GTAO（地面真实 AO 近似）</span></h3>
+  <p lang="en">
+    UE5 uses GTAO (Ground Truth Ambient Occlusion), a horizon-based method that samples the depth buffer
+    in multiple directions around each pixel to find the maximum elevation angles (horizons).
+    The integral of blocked directions over the hemisphere gives the AO term.
+  </p>
+  <p lang="zh">
+    UE5 使用 GTAO（地面真实环境光遮蔽），这是一种基于水平线的方法，
+    在每个像素周围的多个方向上采样深度缓冲区以找到最大仰角（水平线）。
+    在半球上被遮挡方向的积分给出 AO 项。
+  </p>
+  <pre><span class="cm">// PostProcessAmbientOcclusion.cpp — GTAO concept</span>
+
+float <span class="fn">ComputeGTAO</span>(float2 PixelUV, float3 WorldPos, float3 WorldNormal)
+{
+    float AO = <span class="num">0</span>;
+    <span class="kw">const int</span> NumDirections = <span class="num">4</span>;    <span class="cm">// 4 slice directions around hemisphere</span>
+    <span class="kw">const int</span> NumStepsPerDir = <span class="num">4</span>;   <span class="cm">// 4 depth samples per direction</span>
+
+    LOOP <span class="kw">for</span> (<span class="kw">int</span> d = <span class="num">0</span>; d &lt; NumDirections; ++d)
+    {
+        <span class="cm">// Random rotation per pixel (blue noise to avoid structured patterns)</span>
+        float Angle = (float(d) + BlueNoise(PixelUV)) / float(NumDirections) * PI;
+        float2 SliceDir = float2(<span class="fn">cos</span>(Angle), <span class="fn">sin</span>(Angle));
+
+        <span class="cm">// Find max horizon angle in this slice direction</span>
+        float HorizonAngle = -PI / <span class="num">2.0f</span>;  <span class="cm">// start at -90°</span>
+
+        LOOP <span class="kw">for</span> (<span class="kw">int</span> s = <span class="num">1</span>; s &lt;= NumStepsPerDir; ++s)
+        {
+            float2 SampleUV = PixelUV + SliceDir * float(s) * AORadius * InvScreenSize;
+            float3 SamplePos = <span class="fn">ReconstructWorldPos</span>(SampleUV);
+            float3 HorizonVec = SamplePos - WorldPos;
+            float  HorizonAngleCandidate = <span class="fn">atan2</span>(HorizonVec.z,
+                                                   <span class="fn">length</span>(HorizonVec.xy));
+            HorizonAngle = <span class="fn">max</span>(HorizonAngle, HorizonAngleCandidate);
+        }
+
+        <span class="cm">// Bent normal contribution: how much of this slice's hemisphere is visible</span>
+        float NormalBias = <span class="fn">dot</span>(WorldNormal, float3(SliceDir, <span class="num">0</span>));
+        AO += <span class="fn">saturate</span>(<span class="num">1.0f</span> - <span class="fn">sin</span>(HorizonAngle)) * NormalBias;
+    }
+
+    <span class="kw">return</span> <span class="num">1.0f</span> - AO / float(NumDirections);  <span class="cm">// normalize to [0,1]</span>
+}</pre>
+
+  <p lang="en">
+    The GTAO result is temporally accumulated using a history buffer (same reprojection as SSR).
+    The accumulated AO is then <strong>composited</strong> with the scene: it multiplies the ambient/sky
+    light contribution, darkening corners and contact areas.
+  </p>
+  <p lang="zh">
+    GTAO 结果使用历史缓冲区在时域中累积（与 SSR 相同的重投影）。
+    累积的 AO 然后与场景<strong>合成</strong>：它乘以环境/天空光贡献，使角落和接触区域变暗。
+  </p>
+
+  <!-- s5 -->
+  <h2 id="s5"><span lang="en">Contact Shadows — Micro-Geometry Self-Shadowing</span><span lang="zh">接触阴影 — 微几何体自阴影</span></h2>
+  <p lang="en">
+    Standard shadow maps have a minimum resolution limit — they cannot represent the thin shadow cast
+    by a character's shoe touching the floor, or the shadow under a pebble. <span class="def">Contact shadows</span>
+    solve this by tracing a short ray in screen space <em>toward the light source</em> for each pixel.
+    If the ray intersects scene depth before reaching the light, the pixel is in contact shadow.
+  </p>
+  <p lang="zh">
+    标准阴影贴图有最小分辨率限制——它们无法表示角色鞋子接触地板投射的细薄阴影，
+    或小石子下的阴影。<span class="def">接触阴影</span>通过对每个像素在屏幕空间中
+    <em>朝向光源</em>追踪短光线来解决这个问题。
+    如果光线在到达光源之前与场景深度相交，则该像素在接触阴影中。
+  </p>
+  <pre><span class="cm">// ScreenSpaceShadows.cpp — per-light contact shadow ray</span>
+
+float <span class="fn">ComputeContactShadow</span>(
+    float2 PixelUV, float3 WorldPos,
+    float3 LightDir,              <span class="cm">// direction from pixel to light</span>
+    float ContactShadowLength)    <span class="cm">// max ray length (world units)</span>
+{
+    <span class="cm">// Project ray into screen space</span>
+    float3 RayEnd     = WorldPos + LightDir * ContactShadowLength;
+    float2 RayEndScreen = <span class="fn">WorldToScreenUV</span>(RayEnd);
+    float2 RayDirUV   = RayEndScreen - PixelUV;
+    float  RayLength  = <span class="fn">length</span>(RayDirUV);
+
+    <span class="kw">const int</span> NumSteps = <span class="num">8</span>;
+    float StepSize = <span class="num">1.0f</span> / float(NumSteps);
+
+    LOOP <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">1</span>; i &lt;= NumSteps; ++i)
+    {
+        float t = float(i) * StepSize;
+        float2 SampleUV = PixelUV + RayDirUV * t;
+        float3 SamplePos = <span class="fn">ReconstructWorldPos</span>(SampleUV);
+
+        <span class="cm">// Is this sample position behind the scene?</span>
+        <span class="kw">if</span> (SamplePos.z &lt; <span class="fn">WorldToLinearDepth</span>(SamplePos))
+        {
+            <span class="kw">return</span> <span class="num">0.0f</span>;  <span class="cm">// in shadow</span>
+        }
+    }
+    <span class="kw">return</span> <span class="num">1.0f</span>;  <span class="cm">// lit</span>
+}</pre>
+
+  <p lang="en">Contact shadows are enabled <strong>per-light</strong> (not globally). Each light with contact shadows enabled adds one screen-space ray pass per frame. They work best for small distances (0.1–0.5m). For larger distances, they exhibit the characteristic "stretching" artifact near screen edges.</p>
+  <p lang="zh">接触阴影<strong>逐灯光</strong>启用（而非全局）。每个启用接触阴影的灯光每帧添加一次屏幕空间光线通道。它们在短距离（0.1–0.5m）效果最好。对于较大距离，在屏幕边缘附近会出现特有的"拉伸"伪影。</p>
+
+  <!-- s6 -->
+  <h2 id="s6"><span lang="en">Screen Space Denoising</span><span lang="zh">屏幕空间降噪</span></h2>
+  <p lang="en">
+    Both SSR and SSAO are noisy at 1 sample/pixel. UE5 runs a <strong>spatiotemporal denoiser</strong>
+    (<code>ScreenSpaceDenoise.h/.cpp</code>) after each effect:
+  </p>
+  <p lang="zh">UE5 在每个效果后运行<strong>时空降噪器</strong>（<code>ScreenSpaceDenoise.h/.cpp</code>）：</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th><span lang="en">Stage</span><span lang="zh">阶段</span></th><th><span lang="en">Operation</span><span lang="zh">操作</span></th></tr></thead>
+    <tbody>
+      <tr><td><span lang="en">Temporal Reprojection</span><span lang="zh">时域重投影</span></td><td><span lang="en">Reproject previous frame's result using motion vectors. Accumulate with current frame (α = 0.1–0.2 per frame). Reject history on disocclusion (depth difference threshold).</span><span lang="zh">使用运动向量重投影上一帧结果。与当前帧累积（每帧 α = 0.1–0.2）。在遮挡消失时拒绝历史（深度差阈值）。</span></td></tr>
+      <tr><td><span lang="en">Spatial Filter</span><span lang="zh">空间滤波</span></td><td><span lang="en">5×5 bilateral Gaussian filter: preserves edges using normal + depth discontinuity detection.</span><span lang="zh">5×5 双边高斯滤波：使用法线 + 深度不连续性检测保留边缘。</span></td></tr>
+      <tr><td><span lang="en">Variance Clipping</span><span lang="zh">方差裁剪</span></td><td><span lang="en">Clip temporal accumulation to the current frame's neighborhood color/value range. Prevents ghosting on fast-moving objects.</span><span lang="zh">将时域累积裁剪到当前帧邻域颜色/值范围。防止快速移动物体上的重影。</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <!-- s7 -->
+  <h2 id="s7"><span lang="en">When to Use Screen Space vs Ray Tracing</span><span lang="zh">何时使用屏幕空间而非光线追踪</span></h2>
+  <div class="table-wrap"><table>
+    <thead><tr>
+      <th><span lang="en">Scenario</span><span lang="zh">场景</span></th>
+      <th><span lang="en">Best Option</span><span lang="zh">最佳选择</span></th>
+      <th><span lang="en">Why</span><span lang="zh">原因</span></th>
+    </tr></thead>
+    <tbody>
+      <tr><td><span lang="en">Reflections on rough surfaces (Rough &gt; 0.3)</span><span lang="zh">粗糙表面上的反射（粗糙度 &gt; 0.3）</span></td><td><span lang="en">Reflection Captures / Lumen</span><span lang="zh">反射捕获 / Lumen</span></td><td><span lang="en">SSR cone is too wide — noise cannot be denoised to stable result</span><span lang="zh">SSR 锥体太宽——噪声无法降噪为稳定结果</span></td></tr>
+      <tr><td><span lang="en">Mirror/near-mirror surfaces (Rough &lt; 0.1)</span><span lang="zh">镜面/近镜面表面（粗糙度 &lt; 0.1）</span></td><td><span lang="en">SSR (with Lumen fallback)</span><span lang="zh">SSR（带 Lumen 回退）</span></td><td><span lang="en">SSR is near-perfect for mirrors, very fast, Lumen for off-screen</span><span lang="zh">SSR 对镜面几乎完美，非常快，Lumen 处理屏幕外</span></td></tr>
+      <tr><td><span lang="en">AO for hero characters (close-up)</span><span lang="zh">英雄角色的 AO（特写）</span></td><td><span lang="en">SSAO + Capsule Shadows</span><span lang="zh">SSAO + 胶囊体阴影</span></td><td><span lang="en">SSAO catches detail. Capsule shadows handle large-scale self-AO.</span><span lang="zh">SSAO 捕获细节。胶囊体阴影处理大规模自 AO。</span></td></tr>
+      <tr><td><span lang="en">AO for outdoor/large scene</span><span lang="zh">室外/大场景的 AO</span></td><td><span lang="en">Lumen SSAO / DFAO</span><span lang="zh">Lumen SSAO / DFAO</span></td><td><span lang="en">SSAO radius is too small for building-scale. Use Distance Field AO instead.</span><span lang="zh">SSAO 半径对建筑尺度太小。改用距离场 AO。</span></td></tr>
+      <tr><td><span lang="en">Contact shadows for all lights</span><span lang="zh">所有灯光的接触阴影</span></td><td><span lang="en">Contact Shadows (per-light)</span><span lang="zh">接触阴影（逐灯光）</span></td><td><span lang="en">Cheapest way to get micro-contact shadows. Only enable on key lights.</span><span lang="zh">获得微接触阴影的最便宜方式。仅在关键灯光上启用。</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <!-- s8 -->
+  <h2 id="s8"><span lang="en">Performance Tuning</span><span lang="zh">性能调优</span></h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>CVar</th><th><span lang="en">Effect</span><span lang="zh">效果</span></th></tr></thead>
+    <tbody>
+      <tr><td>r.SSR.Quality</td><td><span lang="en">0=off, 1=low (no denoiser), 2=medium, 3=high, 4=very high. Default=3.</span><span lang="zh">0=关，1=低（无降噪），2=中，3=高，4=非常高。默认=3。</span></td></tr>
+      <tr><td>r.SSR.MaxRoughness</td><td><span lang="en">Max roughness for SSR (above this = no SSR). Default=0.6.</span><span lang="zh">SSR 最大粗糙度（超过此值 = 无 SSR）。默认=0.6。</span></td></tr>
+      <tr><td>r.SSR.HalfResScatter</td><td><span lang="en">1 = compute SSR at half resolution (faster, slightly less quality)</span><span lang="zh">1 = 以半分辨率计算 SSR（更快，质量稍低）</span></td></tr>
+      <tr><td>r.AmbientOcclusion.Method</td><td><span lang="en">0=SSAO, 1=GTAO (default), 2=DFAO. GTAO is best quality.</span><span lang="zh">0=SSAO，1=GTAO（默认），2=DFAO。GTAO 质量最好。</span></td></tr>
+      <tr><td>r.AmbientOcclusionSampleSetSizeScale</td><td><span lang="en">Scale AO sample count (0.5=half samples=2× faster, noisy)</span><span lang="zh">缩放 AO 样本数（0.5=一半样本=2× 更快，噪声更多）</span></td></tr>
+      <tr><td>r.ContactShadows</td><td><span lang="en">0 = disable all contact shadows globally</span><span lang="zh">0 = 全局禁用所有接触阴影</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <!-- s9 -->
+  <h2 id="s9"><span lang="en">Source Navigation</span><span lang="zh">源码导航</span></h2>
+  <ul class="file-list">
+    <li><span class="fp">ScreenSpaceRayTracing.h/.cpp</span><span class="fd"><span lang="en">SSR: Hi-Z traversal, hit detection, roughness fade, screen edge fade</span><span lang="zh">SSR：Hi-Z 遍历、命中检测、粗糙度衰退、屏幕边缘衰退</span></span></li>
+    <li><span class="fp">ScreenSpaceReflectionTiles.h/.cpp</span><span class="fd"><span lang="en">SSR tile classification: skip tiles with no reflective pixels</span><span lang="zh">SSR 瓦片分类：跳过没有反射像素的瓦片</span></span></li>
+    <li><span class="fp">ScreenSpaceDenoise.h/.cpp</span><span class="fd"><span lang="en">Spatiotemporal denoiser for SSR, SSAO, contact shadows</span><span lang="zh">SSR、SSAO、接触阴影的时空降噪器</span></span></li>
+    <li><span class="fp">CompositionLighting/PostProcessAmbientOcclusion.h/.cpp</span><span class="fd"><span lang="en">SSAO/GTAO: horizon-based AO computation and temporal accumulation</span><span lang="zh">SSAO/GTAO：基于水平线的 AO 计算和时域累积</span></span></li>
+    <li><span class="fp">Shadows/ScreenSpaceShadows.h/.cpp</span><span class="fd"><span lang="en">Contact shadows: per-light screen-space ray march</span><span lang="zh">接触阴影：逐灯光屏幕空间光线步进</span></span></li>
+    <li><span class="fp">HZB.h/.cpp</span><span class="fd"><span lang="en">Hi-Z buffer generation (max depth mip chain), occlusion queries</span><span lang="zh">Hi-Z 缓冲区生成（最大深度 Mip 链）、遮挡查询</span></span></li>
+  </ul>
+
+  <footer>Unreal Engine 5.6 &middot; Engine/Source/Runtime/Renderer/Private/<br>Source analysis &middot; For learning purposes</footer>
+
+  <div class="page-nav">
+    <a href="../06-post-processing/post-processing.html" class="prev"><span class="pn-label">&larr; Prev</span><span class="pn-title"><span lang="en">Post-Processing Pipeline</span><span lang="zh">后处理管线</span></span></a>
+    <a href="../04-material-shader/shading-models-reference.html" class="next"><span class="pn-label">Next &rarr;</span><span class="pn-title"><span lang="en">Shading Models Reference</span><span lang="zh">着色模型参考</span></span></a>
+  </div>
+</main>
+</div>
+<script>
+function toggleLang(){var h=document.documentElement;if(h.classList.contains('lang-zh')){h.classList.remove('lang-zh');h.lang='en';document.title='Screen Space Effects';localStorage.setItem('ue-doc-lang','en');}else{h.classList.add('lang-zh');h.lang='zh-CN';document.title='屏幕空间效果';localStorage.setItem('ue-doc-lang','zh');}}
+if(document.documentElement.classList.contains('lang-zh'))document.title='屏幕空间效果';
+</script>
+</body>
+</html>

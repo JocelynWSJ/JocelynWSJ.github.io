@@ -1,0 +1,724 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>USF / HLSL Guide — Writing Custom Shaders in UE5</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Gudea">
+  <script>(function(){if(localStorage.getItem('ue-doc-lang')==='zh'){document.documentElement.classList.add('lang-zh');document.documentElement.lang='zh-CN';}})();</script>
+  <style>
+    html:not(.lang-zh) [lang="zh"]{display:none;} html.lang-zh [lang="en"]{display:none;}
+    #lang-btn{position:fixed;top:16px;right:20px;z-index:999;background:#37425d;color:#fff;border:none;border-radius:4px;padding:5px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:Gudea,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.2);transition:background .15s;} #lang-btn:hover{background:#4a5a7a;}
+    *{box-sizing:border-box;margin:0;padding:0;} body{font-family:Gudea,sans-serif;font-size:16px;line-height:1.8;color:#111;background:#eee;}
+    #wrapper{max-width:1100px;margin:0 auto;display:flex;align-items:flex-start;padding:40px 24px;gap:36px;}
+    #sidebar{width:240px;flex-shrink:0;font-size:13px;}
+    #sidebar h2{font-size:12px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;border:none;padding:0;}
+    #sidebar > ol{list-style:none !important;padding:0;} #sidebar > ol > li{list-style:none !important;margin-bottom:5px;}
+    #sidebar > ol > li a{color:#555;text-decoration:none;display:block;padding:2px 0;transition:color .12s;} #sidebar > ol > li a:hover{color:#58A;} #sidebar > ol > li a::before{content:none;}
+    #content{flex:1;min-width:0;}
+    .page-header{margin-bottom:32px;padding-bottom:20px;border-bottom:1px solid #ddd;}
+    .page-header .crumb{font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
+    .page-header h1{font-size:1.8rem;font-weight:900;color:#303236;margin-bottom:8px;line-height:1.25;}
+    .page-header .subtitle{font-family:'Courier New',monospace;font-size:13px;color:#777;}
+    h2{color:#37425d;font-size:22px;margin:36px 0 10px;} h3{color:#633739;font-size:17px;margin:24px 0 8px;}
+    p{margin-bottom:14px;} a{color:#58A;text-decoration:none;} a:hover{text-decoration:underline;} strong{color:#222;}
+    .fun{font-family:'Courier New',monospace;color:#2a6496;} .def{color:green;font-weight:600;}
+    code{font-family:'Courier New',monospace;font-size:14px;background:#ddd;border-radius:3px;padding:1px 5px;}
+    pre{background:#282c34;color:#abb2bf;border-radius:5px;padding:16px 18px;overflow-x:auto;margin:14px 0 18px;font-family:'Courier New',monospace;font-size:13.5px;line-height:1.6;}
+    pre code{background:none;padding:0;color:inherit;} .kw{color:#c678dd;} .fn{color:#61afef;} .cm{color:#5c6370;font-style:italic;} .str{color:#98c379;} .num{color:#d19a66;} .type{color:#e5c07b;}
+    .note{display:block;margin:18px 0;padding:15px;background:#D8F5D8;color:#444;border-radius:5px;border:2px solid #AFDFAF;font-size:15px;line-height:1.7;}
+    .warning{display:block;margin:18px 0;padding:15px;background:#FFD2D2;color:#444;border-radius:5px;border:2px solid #E0B3B3;font-size:15px;line-height:1.7;}
+    ul,ol{padding-left:22px;margin-bottom:14px;} li{margin-bottom:5px;}
+    .table-wrap{overflow-x:auto;margin:14px 0;} table{border-collapse:collapse;font-size:14px;width:100%;}
+    th,td{padding:8px 12px;border-bottom:1px solid #aaa;text-align:left;} th{border-bottom:2px solid #888;font-weight:700;background:#ddd;} tr:nth-child(even) td{background:#e8e8e8;}
+    td:first-child{font-family:'Courier New',monospace;font-size:13px;color:#2a6496;white-space:nowrap;}
+    .step{display:inline-block;font-size:11px;font-weight:700;font-family:'Courier New',monospace;color:#fff;background:#37425d;padding:2px 7px;border-radius:3px;margin-right:8px;vertical-align:middle;}
+    .diagram{background:#fff;border:1px solid #ccc;border-radius:5px;padding:20px;margin:16px 0;font-family:'Courier New',monospace;font-size:13px;line-height:1.8;overflow-x:auto;white-space:pre;}
+    .file-list{list-style:none;padding:0;margin:12px 0;} .file-list li{padding:6px 0;border-bottom:1px solid #ccc;display:flex;align-items:baseline;gap:10px;font-size:14px;} .file-list li:last-child{border-bottom:none;} .file-list .fp{font-family:'Courier New',monospace;font-size:13px;color:#58A;min-width:300px;} .file-list .fd{color:#555;}
+    footer{margin-top:48px;padding-top:16px;border-top:1px solid #ccc;font-size:12px;color:#aaa;text-align:center;}
+    @media(max-width:800px){#wrapper{flex-direction:column;padding:20px 16px;}#sidebar{width:100%;position:static;max-height:none;margin-bottom:24px;}}
+    #series-nav{margin-bottom:24px;} #series-nav ol,#series-nav li{list-style:none;padding-left:0;}
+    .snav-label{font-size:11px;font-weight:800;color:#37425d;text-transform:uppercase;letter-spacing:.14em;display:block;margin-bottom:10px;padding-bottom:4px;border-bottom:2px solid #37425d;}
+    #series-nav > ol{list-style:none;padding:0;margin:0;} #series-nav ol{list-style:none;padding:0;margin:0;}
+    .snav-ch{margin-bottom:10px;}
+    .snav-ch > span{font-size:11px;font-weight:800;letter-spacing:.06em;color:#fff;background:#5a6a80;display:block;padding:3px 7px 3px 6px;border-radius:3px;margin-bottom:3px;text-transform:uppercase;}
+    .snav-ch > ol{padding-left:0;margin-top:0;}
+    .snav-item{margin-bottom:1px;}
+    .snav-item a{font-size:13.5px;color:#666;text-decoration:none;display:block;padding:3px 6px;border-left:3px solid transparent;border-radius:0 3px 3px 0;transition:color .12s,background .12s,border-color .12s;}
+    .snav-item a:hover{color:#37425d;background:#f0f2f5;border-left-color:#c0cad8;}
+    .snav-item.active a{color:#37425d;font-weight:700;background:#e8ecf4;border-left-color:#37425d;}
+    .page-nav{display:flex;justify-content:space-between;align-items:center;margin:36px 0 0;padding-top:16px;border-top:1px solid #ddd;font-size:14px;}
+    .page-nav a{color:#58A;text-decoration:none;display:flex;align-items:center;gap:6px;max-width:42%;}
+    .page-nav a:hover{text-decoration:underline;}
+    .page-nav .pn-label{font-size:11px;color:#aaa;text-transform:uppercase;display:block;}
+    .page-nav .pn-title{display:block;}
+    .page-nav .prev{text-align:left;} .page-nav .next{text-align:right;}
+  
+    .snav-children{display:block;list-style:none;padding:2px 0 4px 10px;margin:1px 0 0;border-left:2px solid #dde3ee;}
+    .snav-subitem{margin-bottom:1px;}
+    .snav-subitem a{font-size:12px;color:#888;text-decoration:none;display:block;padding:2px 4px 2px 8px;border-left:2px solid transparent;border-radius:0 3px 3px 0;transition:color .12s,background .12s,border-color .12s;}
+    .snav-subitem a:hover{color:#37425d;background:#f0f2f5;border-left-color:#c0cad8;}
+    .snav-subitem.active a{color:#37425d;font-weight:700;background:#e8ecf4;border-left-color:#37425d;}  </style>
+</head>
+<body>
+<button id="lang-btn" onclick="toggleLang()"><span lang="en">中文</span><span lang="zh">English</span></button>
+<div id="wrapper">
+<nav id="sidebar">
+  <div id="series-nav">
+    <span class="snav-label"><span lang="en">Series</span><span lang="zh">系列</span></span>
+    <ol>
+
+      <li class="snav-ch"><span lang="en">00 Overview</span><span lang="zh">00 概述</span>
+        <ol>
+          <li class="snav-item"><a href="../00-overview/introduction.html"><span lang="en">Introduction</span><span lang="zh">系列简介</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">01 Rendering Pipeline</span><span lang="zh">01 渲染管线</span>
+        <ol>
+          <li class="snav-item"><a href="../01-rendering-pipeline/deferred-shading.html"><span lang="en">Deferred Rendering</span><span lang="zh">延迟渲染</span></a></li>
+          <li class="snav-item"><a href="../01-rendering-pipeline/forward-shading.html"><span lang="en">Forward Rendering</span><span lang="zh">前向渲染</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">02 Engine Infrastructure</span><span lang="zh">02 引擎基础设施</span>
+        <ol>
+          <li class="snav-item"><a href="../02-engine-infrastructure/rdg-compiler.html"><span lang="en">RDG — Render Dependency Graph</span><span lang="zh">RDG 渲染依赖图</span></a></li>
+          <li class="snav-item"><a href="../02-engine-infrastructure/thread-concurrency.html"><span lang="en">Thread Concurrency</span><span lang="zh">线程并发</span></a></li>
+          <li class="snav-item"><a href="../02-engine-infrastructure/virtual-texture.html"><span lang="en">Virtual Texture Streaming</span><span lang="zh">虚拟纹理流送</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">03 Lighting &amp; Shadows</span><span lang="zh">03 光照与阴影</span>
+        <ol>
+          <li class="snav-item"><a href="../03-lighting-shadows/lighting-architecture.html"><span lang="en">Lighting Architecture</span><span lang="zh">光照架构</span></a></li>
+          <li class="snav-item"><a href="../03-lighting-shadows/virtual-shadow-maps.html"><span lang="en">Virtual Shadow Maps</span><span lang="zh">虚拟阴影贴图</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">04 Material &amp; Shader System</span><span lang="zh">04 材质与着色器系统</span>
+        <ol>
+          <li class="snav-item"><a href="../04-material-shader/material-translation.html"><span lang="en">Shader Compilation &amp; Architecture</span><span lang="zh">着色器编译与架构</span></a></li>
+          <li class="snav-item"><a href="../04-material-shader/shading-models-reference.html"><span lang="en">Shading Models Reference</span><span lang="zh">着色模型参考</span></a></li>
+          <li class="snav-item active"><a href="../04-material-shader/usf-hlsl-guide.html"><span lang="en">USF / HLSL Writing Guide</span><span lang="zh">USF / HLSL 编写指南</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">05 UE5 Core Technologies</span><span lang="zh">05 UE5 核心技术</span>
+        <ol>
+          <li class="snav-item"><a href="../05-ue5-core/nanite-rasterizer.html"><span lang="en">Nanite — Virtual Geometry</span><span lang="zh">Nanite 虚拟几何</span></a></li>
+          <li class="snav-item"><a href="../05-ue5-core/lumen-raytracing.html"><span lang="en">Lumen — Dynamic GI</span><span lang="zh">Lumen 动态全局光照</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">06 Post-Processing &amp; Effects</span><span lang="zh">06 后处理与屏幕效果</span>
+        <ol>
+          <li class="snav-item"><a href="../06-post-processing/post-processing.html"><span lang="en">Post-Processing Pipeline</span><span lang="zh">后处理管线</span></a></li>
+          <li class="snav-item"><a href="../06-post-processing/screen-space-effects.html"><span lang="en">Screen Space Effects</span><span lang="zh">屏幕空间效果</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">07 Specialized Rendering</span><span lang="zh">07 专项渲染</span>
+        <ol>
+          <li class="snav-item"><a href="../07-specialized-rendering/volumetric-atmosphere.html"><span lang="en">Volumetric Fog &amp; Atmosphere</span><span lang="zh">体积雾与大气</span></a></li>
+          <li class="snav-item"><a href="../07-specialized-rendering/water-rendering.html"><span lang="en">Water Rendering</span><span lang="zh">水体渲染</span></a></li>
+          <li class="snav-item"><a href="../07-specialized-rendering/hair-groom-rendering.html"><span lang="en">Hair &amp; Groom</span><span lang="zh">毛发渲染</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">08 Engine Customization</span><span lang="zh">08 引擎定制</span>
+        <ol>
+          <li class="snav-item"><a href="../08-engine-customization/custom-shading-model.html"><span lang="en">Custom Shading Model</span><span lang="zh">自定义着色模型</span></a></li>
+          <li class="snav-item"><a href="../08-engine-customization/niagara-gpu-compute.html"><span lang="en">Niagara GPU Compute</span><span lang="zh">Niagara GPU 计算</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">09 Performance &amp; Profiling</span><span lang="zh">09 性能与分析</span>
+        <ol>
+          <li class="snav-item"><a href="../09-profiling/hardware-profiling.html"><span lang="en">Hardware Profiling</span><span lang="zh">硬件性能分析</span></a></li>
+        </ol>
+      </li>
+
+    </ol>
+  </div>
+  <h2><span lang="en">Contents</span><span lang="zh">目录</span></h2>
+  <ol>
+    <li><a href="#s1"><span lang="en">USF vs HLSL</span><span lang="zh">USF 与 HLSL 的区别</span></a></li>
+    <li><a href="#s2"><span lang="en">File System &amp; Paths</span><span lang="zh">文件系统与路径</span></a></li>
+    <li><a href="#s3"><span lang="en">Key Include Files</span><span lang="zh">关键头文件</span></a></li>
+    <li><a href="#s4"><span lang="en">Shader Types</span><span lang="zh">Shader 类型</span></a></li>
+    <li><a href="#s5"><span lang="en">Declaring a Shader in C++</span><span lang="zh">在 C++ 中声明 Shader</span></a></li>
+    <li><a href="#s6"><span lang="en">Permutation Domains</span><span lang="zh">排列组合域</span></a></li>
+    <li><a href="#s7"><span lang="en">Full Compute Shader Example</span><span lang="zh">完整计算 Shader 示例</span></a></li>
+    <li><a href="#s8"><span lang="en">Full VS + PS Example</span><span lang="zh">完整 VS + PS 示例</span></a></li>
+    <li><a href="#s9"><span lang="en">Custom Material Expressions</span><span lang="zh">自定义材质表达式</span></a></li>
+    <li><a href="#s10"><span lang="en">Project / Plugin Setup</span><span lang="zh">项目 / 插件配置</span></a></li>
+    <li><a href="#s11"><span lang="en">Hot-Reload &amp; Debugging</span><span lang="zh">热重载与调试</span></a></li>
+    <li><a href="#s12"><span lang="en">Common USF Pitfalls</span><span lang="zh">常见 USF 坑点</span></a></li>
+    <li><a href="#s13"><span lang="en">Source Navigation</span><span lang="zh">源码导航</span></a></li>
+  </ol>
+</nav>
+
+<main id="content">
+  <div class="page-header">
+    <div class="crumb">Unreal Engine 5.6 &middot; Shader Architecture &middot; Part 03-E</div>
+    <h1><span lang="en">USF / HLSL Guide — Writing Custom Shaders in UE5</span><span lang="zh">USF / HLSL 编写指南 — 在 UE5 中编写自定义 Shader</span></h1>
+    <div class="subtitle">Engine/Shaders/Private/ &middot; Engine/Source/Runtime/Renderer/ &middot; YourProject/Shaders/</div>
+  </div>
+
+  <!-- s1 -->
+  <h2 id="s1"><span lang="en">USF vs HLSL — What's Different?</span><span lang="zh">USF 与 HLSL 的区别</span></h2>
+  <p lang="en">
+    <span class="def">.usf</span> (Unreal Shader Format) and <span class="def">.ush</span>
+    (Unreal Shader Header) files are <strong>HLSL extended with UE macros and virtual include paths</strong>.
+    At their core, they are standard HLSL — every HLSL intrinsic, type, and syntax works identically.
+    What UE adds on top:
+  </p>
+  <p lang="zh">
+    <span class="def">.usf</span>（Unreal Shader Format）和 <span class="def">.ush</span>
+    （Unreal Shader Header）文件是<strong>使用 UE 宏和虚拟包含路径扩展的 HLSL</strong>。
+    从本质上说，它们是标准 HLSL——每个 HLSL 内置函数、类型和语法工作方式完全相同。
+    UE 在此基础上增加：
+  </p>
+
+  <div class="table-wrap"><table>
+    <thead><tr><th><span lang="en">Feature</span><span lang="zh">功能</span></th><th><span lang="en">Description</span><span lang="zh">描述</span></th></tr></thead>
+    <tbody>
+      <tr><td><span lang="en">Virtual include paths</span><span lang="zh">虚拟包含路径</span></td><td><span lang="en"><code>#include "/Engine/Private/Common.ush"</code> — paths resolve through UE's virtual filesystem, not disk paths</span><span lang="zh"><code>#include "/Engine/Private/Common.ush"</code> — 路径通过 UE 虚拟文件系统解析，而非磁盘路径</span></td></tr>
+      <tr><td><span lang="en">Platform macros</span><span lang="zh">平台宏</span></td><td><span lang="en"><code>PLATFORM_PS5</code>, <code>PLATFORM_METAL</code>, <code>COMPILER_DXC</code> — injected by the shader compiler</span><span lang="zh">由 Shader 编译器注入</span></td></tr>
+      <tr><td><span lang="en">Feature level macros</span><span lang="zh">特性级别宏</span></td><td><span lang="en"><code>FEATURE_LEVEL_ES3_1</code>, <code>FEATURE_LEVEL_SM5</code>, <code>FEATURE_LEVEL_SM6</code></span><span lang="zh">用于按硬件能力条件编译</span></td></tr>
+      <tr><td><span lang="en">Permutation defines</span><span lang="zh">排列组合宏</span></td><td><span lang="en">C++ permutation dimensions become <code>#define MY_FLAG 0/1</code> — enables compile-time branching</span><span lang="zh">C++ 排列组合维度变为 <code>#define MY_FLAG 0/1</code>——启用编译期分支</span></td></tr>
+      <tr><td><span lang="en">UE utility functions</span><span lang="zh">UE 工具函数</span></td><td><span lang="en"><code>GetSceneTextureUV()</code>, <code>ReconstructWorldPosition()</code>, <code>Luminance()</code> etc.</span><span lang="zh">大量内置工具函数通过 include 引入</span></td></tr>
+      <tr><td><span lang="en">Multi-backend compilation</span><span lang="zh">多后端编译</span></td><td><span lang="en">Same .usf compiled to DXIL (DX12), SPIRV (Vulkan), Metal IR, PSSL (PS5) by respective compilers</span><span lang="zh">同一 .usf 被各自编译器编译为 DXIL、SPIRV、Metal IR、PSSL</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <!-- s2 -->
+  <h2 id="s2"><span lang="en">File System &amp; Include Paths</span><span lang="zh">文件系统与包含路径</span></h2>
+  <p lang="en">UE maps <strong>virtual paths</strong> to real directories on disk. You never use absolute paths in <code>#include</code> — always use the virtual form.</p>
+  <p lang="zh">UE 将<strong>虚拟路径</strong>映射到磁盘上的真实目录。在 <code>#include</code> 中从不使用绝对路径——始终使用虚拟形式。</p>
+
+  <div class="diagram">
+Virtual path → Real disk path mappings:
+
+  /Engine/Private/    →  Engine/Shaders/Private/       (engine internals)
+  /Engine/Public/     →  Engine/Shaders/Public/        (engine public API)
+  /Engine/Generated/  →  (generated at compile time)
+  /Project/           →  YourGame/Shaders/              (your project)
+  /Plugin/PluginName/ →  Plugins/PluginName/Shaders/   (plugin shaders)
+
+Rules:
+  - .ush files = header-only, included by other files (like .h in C++)
+  - .usf files = shader entry points (like .cpp in C++)
+  - Private/ files can be included by anyone (despite the name)
+  - You CANNOT include /Engine/Private/ from a plugin without
+    adding it as a dependency (ShaderCore module needed)</div>
+
+  <!-- s3 -->
+  <h2 id="s3"><span lang="en">Key Include Files — What's In Them</span><span lang="zh">关键头文件 — 内容说明</span></h2>
+  <p lang="en">Always start a new .usf with <code>#include "/Engine/Private/Common.ush"</code>. It transitively pulls in most things you need.</p>
+  <p lang="zh">新建 .usf 始终以 <code>#include "/Engine/Private/Common.ush"</code> 开头。它会传递性地引入大多数所需内容。</p>
+
+  <div class="table-wrap"><table>
+    <thead><tr><th><span lang="en">File</span><span lang="zh">文件</span></th><th><span lang="en">Key Definitions</span><span lang="zh">关键定义</span></th></tr></thead>
+    <tbody>
+      <tr><td>/Engine/Public/Platform.ush</td><td><span lang="en">Platform/compiler macros, HLSL version detection</span><span lang="zh">平台/编译器宏，HLSL 版本检测</span></td></tr>
+      <tr><td>/Engine/Private/Common.ush</td><td><span lang="en"><strong>Start here.</strong> Math utilities, <code>PI</code>, <code>saturate</code>, <code>lerp</code>, <code>rcp</code>, <code>pow2/4/5</code>, <code>BRANCH</code>, <code>UNROLL</code>, <code>LOOP</code></span><span lang="zh"><strong>从这里开始。</strong>数学工具函数、常量、控制流提示宏</span></td></tr>
+      <tr><td>/Engine/Private/DeferredShadingCommon.ush</td><td><span lang="en"><code>FGBufferData</code> struct, <code>GetGBufferData()</code>, <code>DecodeGBuffer()</code> — essential for deferred passes</span><span lang="zh">GBuffer 数据结构和解码函数——延迟通道必须</span></td></tr>
+      <tr><td>/Engine/Private/GBufferCommon.ush</td><td><span lang="en">GBuffer channel layout constants, encode/decode helpers</span><span lang="zh">GBuffer 通道布局常量，编码/解码辅助函数</span></td></tr>
+      <tr><td>/Engine/Private/ShadingModels.ush</td><td><span lang="en">All BRDF functions: <code>DefaultLitBxDF</code>, <code>HairBxDF</code>, etc.</span><span lang="zh">所有 BRDF 函数</span></td></tr>
+      <tr><td>/Engine/Private/SceneTexturesCommon.ush</td><td><span lang="en"><code>SceneDepthTexture</code>, <code>SceneColorTexture</code>, velocity, GBuffer SRVs</span><span lang="zh">场景深度/颜色/速度/GBuffer 纹理绑定</span></td></tr>
+      <tr><td>/Engine/Private/Random.ush</td><td><span lang="en">Hash functions: <code>RandFast()</code>, <code>Rand3DPCG16()</code>, blue noise</span><span lang="zh">哈希/随机函数</span></td></tr>
+      <tr><td>/Engine/Private/BRDF.ush</td><td><span lang="en">Low-level BRDF building blocks: <code>D_GGX</code>, <code>Vis_SmithJoint</code>, <code>F_Schlick</code></span><span lang="zh">底层 BRDF 构建块</span></td></tr>
+      <tr><td>/Engine/Private/ScreenPass.ush</td><td><span lang="en">Full-screen pass helpers: <code>FScreenTransform</code>, UV transforms for post-process</span><span lang="zh">全屏通道辅助函数，后处理 UV 变换</span></td></tr>
+      <tr><td>/Engine/Private/ComputeShaderUtils.ush</td><td><span lang="en">Compute group utilities, wave intrinsics wrappers</span><span lang="zh">计算组工具函数，Wave 内置函数封装</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <!-- s4 -->
+  <h2 id="s4"><span lang="en">Shader Types — Choosing the Right Base Class</span><span lang="zh">Shader 类型 — 选择正确的基类</span></h2>
+  <p lang="en">UE5 has a strict C++ class hierarchy for shaders. Choosing the wrong base class will either fail to compile or give you access to parameters you don't need (wasting memory).</p>
+  <p lang="zh">UE5 的 Shader 有严格的 C++ 类层次结构。选择错误的基类要么编译失败，要么给你访问不需要的参数（浪费内存）。</p>
+
+  <div class="table-wrap"><table>
+    <thead><tr>
+      <th><span lang="en">Base Class</span><span lang="zh">基类</span></th>
+      <th><span lang="en">Use When</span><span lang="zh">使用场景</span></th>
+      <th><span lang="en">Available Data</span><span lang="zh">可用数据</span></th>
+    </tr></thead>
+    <tbody>
+      <tr><td>FGlobalShader</td><td><span lang="en">Engine-wide effects: post-process, RDG compute, custom passes. No material, no mesh.</span><span lang="zh">引擎级效果：后处理、RDG 计算、自定义通道。无材质，无网格。</span></td><td><span lang="en">View UB, custom parameters only</span><span lang="zh">View UB、自定义参数</span></td></tr>
+      <tr><td>FMaterialShader</td><td><span lang="en">Shaders that need material parameters (BaseColor, Roughness etc.) but not mesh vertex data.</span><span lang="zh">需要材质参数但不需要网格顶点数据的 Shader。</span></td><td><span lang="en">+Material parameters, Material UB</span><span lang="zh">+材质参数、Material UB</span></td></tr>
+      <tr><td>FMeshMaterialShader</td><td><span lang="en">Vertex/Pixel shaders in the mesh drawing pipeline. Full access to vertex factory, material, and view.</span><span lang="zh">网格绘制管线中的 VS/PS。完整访问顶点工厂、材质和视图。</span></td><td><span lang="en">+Vertex factory, local-to-world matrix</span><span lang="zh">+顶点工厂、局部到世界矩阵</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="note">
+    <span lang="en"><strong>For most custom effects</strong>, you want <code>FGlobalShader</code>. It's the simplest — you supply all parameters yourself via <code>BEGIN_SHADER_PARAMETER_STRUCT</code>, and it integrates directly with RDG's <code>AddPass()</code>. Use <code>FMeshMaterialShader</code> only when you need to hook into the Mesh Drawing Pipeline (base pass, depth pass, shadow pass) and your shader needs material expression outputs.</span>
+    <span lang="zh"><strong>对于大多数自定义效果</strong>，使用 <code>FGlobalShader</code>。它最简单——你通过 <code>BEGIN_SHADER_PARAMETER_STRUCT</code> 自己提供所有参数，并直接与 RDG 的 <code>AddPass()</code> 集成。只有当需要挂入网格绘制管线（Base Pass、Depth Pass、Shadow Pass）且 Shader 需要材质表达式输出时，才使用 <code>FMeshMaterialShader</code>。</span>
+  </div>
+
+  <!-- s5 -->
+  <h2 id="s5"><span lang="en">Declaring a Shader in C++ — Complete Template</span><span lang="zh">在 C++ 中声明 Shader — 完整模板</span></h2>
+  <pre><span class="cm">// === MyEffect.h ===</span>
+<span class="kw">#pragma once</span>
+<span class="kw">#include</span> <span class="str">"GlobalShader.h"</span>
+<span class="kw">#include</span> <span class="str">"RenderGraphUtils.h"</span>
+<span class="kw">#include</span> <span class="str">"ShaderParameterUtils.h"</span>
+
+<span class="cm">// --- Compute shader ---</span>
+<span class="kw">class</span> <span class="type">FMyEffectCS</span> : <span class="kw">public</span> FGlobalShader
+{
+    DECLARE_GLOBAL_SHADER(FMyEffectCS);
+    SHADER_USE_PARAMETER_STRUCT(FMyEffectCS, FGlobalShader);
+
+    <span class="cm">// Parameter struct: RDG binds these automatically</span>
+    BEGIN_SHADER_PARAMETER_STRUCT(FParameters, )
+        SHADER_PARAMETER_RDG_TEXTURE(Texture2D, InputTexture)         <span class="cm">// SRV</span>
+        SHADER_PARAMETER_RDG_TEXTURE_UAV(RWTexture2D&lt;float4&gt;, Output) <span class="cm">// UAV</span>
+        SHADER_PARAMETER_SAMPLER(SamplerState, InputSampler)
+        SHADER_PARAMETER(FVector4f, Params)            <span class="cm">// simple scalar data</span>
+        SHADER_PARAMETER(FIntPoint, TextureSize)
+        SHADER_PARAMETER_STRUCT_REF(FViewUniformShaderParameters, View) <span class="cm">// camera</span>
+    END_SHADER_PARAMETER_STRUCT()
+
+    <span class="cm">// Only compile for SM5+ (skip mobile/ES31)</span>
+    <span class="kw">static bool</span> <span class="fn">ShouldCompilePermutation</span>(<span class="kw">const</span> FGlobalShaderPermutationParameters& P)
+    {
+        <span class="kw">return</span> <span class="fn">IsFeatureLevelSupported</span>(P.Platform, ERHIFeatureLevel::SM5);
+    }
+
+    <span class="cm">// Declare permutation if needed (see §6)</span>
+    <span class="kw">using</span> FPermutationDomain = TShaderPermutationDomain&lt;&gt;;
+};
+
+<span class="cm">// === MyEffect.cpp ===</span>
+<span class="cm">// Maps shader class → .usf file → entry point function → shader stage</span>
+IMPLEMENT_GLOBAL_SHADER(FMyEffectCS,
+    <span class="str">"/Project/Private/MyEffect.usf"</span>, <span class="cm">// virtual path</span>
+    <span class="str">"MainCS"</span>,                          <span class="cm">// HLSL entry function name</span>
+    SF_Compute);                       <span class="cm">// SF_Vertex / SF_Pixel / SF_Compute</span>
+
+IMPLEMENT_MODULE(FDefaultModuleImpl, MyModule);</pre>
+
+  <div class="note">
+    <span lang="en"><strong>Important:</strong> <code>SHADER_PARAMETER_STRUCT_REF(FViewUniformShaderParameters, View)</code> gives your shader all camera data (View matrices, screen size, near/far planes, etc.) for free. Always include it for world-space effects. Bind it in C++ with: <code>PassParams-&gt;View = View.ViewUniformBuffer;</code></span>
+    <span lang="zh"><strong>重要：</strong><code>SHADER_PARAMETER_STRUCT_REF(FViewUniformShaderParameters, View)</code> 免费提供所有相机数据（视图矩阵、屏幕尺寸、近/远裁剪面等）。始终为世界空间效果包含它。在 C++ 中绑定：<code>PassParams-&gt;View = View.ViewUniformBuffer;</code></span>
+  </div>
+
+  <!-- s6 -->
+  <h2 id="s6"><span lang="en">Permutation Domains — Compile-Time Shader Variants</span><span lang="zh">排列组合域 — 编译期 Shader 变体</span></h2>
+  <p lang="en">
+    A <span class="def">permutation domain</span> creates multiple compiled variants of a single .usf file.
+    Each combination of permutation values produces a separate shader binary. In the .usf, permutation
+    values are exposed as <code>#define</code>s. This is how UE avoids runtime branches for things like
+    "does this pass use MSAA?" or "is shadow enabled?".
+  </p>
+  <p lang="zh">
+    <span class="def">排列组合域</span>创建单个 .usf 文件的多个编译变体。
+    每种排列组合值的组合产生一个独立的 Shader 二进制文件。
+    在 .usf 中，排列组合值以 <code>#define</code> 形式暴露。
+    这就是 UE 如何为"此通道是否使用 MSAA？"或"是否启用阴影？"等情况避免运行时分支的方式。
+  </p>
+  <pre><span class="cm">// === Declaring permutation dimensions ===</span>
+
+<span class="cm">// Boolean permutation (generates 2 variants: USE_MSAA=0 and USE_MSAA=1)</span>
+<span class="kw">class</span> <span class="type">FUseMSAA</span> : <span class="kw">public</span> SHADER_PERMUTATION_BOOL(<span class="str">"USE_MSAA"</span>);
+
+<span class="cm">// Integer permutation (generates 4 variants: 0,1,2,3)</span>
+<span class="kw">class</span> <span class="type">FQualityLevel</span> : <span class="kw">public</span> SHADER_PERMUTATION_INT(<span class="str">"QUALITY_LEVEL"</span>, <span class="num">4</span>);
+
+<span class="cm">// Enum permutation (generates one variant per enum value)</span>
+SHADER_PERMUTATION_ENUM_CLASS(<span class="str">"BLEND_MODE"</span>, EMyBlendMode);
+
+<span class="cm">// Combine into a domain</span>
+<span class="kw">using</span> FPermutationDomain = TShaderPermutationDomain&lt;FUseMSAA, FQualityLevel&gt;;
+
+<span class="cm">// Filter out invalid combinations (e.g., QUALITY_LEVEL=3 only on SM6)</span>
+<span class="kw">static bool</span> <span class="fn">ShouldCompilePermutation</span>(...) {
+    FPermutationDomain Domain(Parameters.PermutationId);
+    <span class="kw">if</span> (Domain.<span class="fn">Get</span>&lt;FQualityLevel&gt;() == <span class="num">3</span> &amp;&amp;
+        !<span class="fn">IsFeatureLevelSupported</span>(Parameters.Platform, ERHIFeatureLevel::SM6))
+        <span class="kw">return false</span>;
+    <span class="kw">return true</span>;
+}
+
+<span class="cm">// === In C++ dispatch code ===</span>
+FPermutationDomain Domain;
+Domain.<span class="fn">Set</span>&lt;FUseMSAA&gt;(View.bMSAA);
+Domain.<span class="fn">Set</span>&lt;FQualityLevel&gt;(CVarQuality.<span class="fn">GetValueOnRenderThread</span>());
+TShaderMapRef&lt;FMyEffectCS&gt; Shader(GetGlobalShaderMap(FeatureLevel), Domain);
+
+<span class="cm">// === In .usf ===</span>
+<span class="cm">// #if USE_MSAA</span>
+<span class="cm">//   Texture2DMS&lt;float4&gt; InputMS;  // MSAA variant</span>
+<span class="cm">// #else</span>
+<span class="cm">//   Texture2D Input;               // regular variant</span>
+<span class="cm">// #endif</span></pre>
+
+  <div class="warning">
+    <span lang="en"><strong>Permutation explosion:</strong> 5 boolean permutations = 32 shader variants compiled. 5 integer permutations of 4 values = 4⁵ = 1024 variants. Use <code>ShouldCompilePermutation()</code> aggressively to filter impossible combinations. Each unfiltered permutation adds compile time and PSO cache size.</span>
+    <span lang="zh"><strong>排列组合爆炸：</strong>5 个布尔排列 = 编译 32 个 Shader 变体。5 个值为 4 的整数排列 = 4⁵ = 1024 个变体。积极使用 <code>ShouldCompilePermutation()</code> 过滤不可能的组合。每个未过滤的排列组合都会增加编译时间和 PSO 缓存大小。</span>
+  </div>
+
+  <!-- s7 -->
+  <h2 id="s7"><span lang="en">Full Compute Shader Example — Blur Effect</span><span lang="zh">完整计算 Shader 示例 — 模糊效果</span></h2>
+  <p lang="en">A complete, working example from C++ declaration to .usf implementation, integrated into the RDG pipeline.</p>
+  <p lang="zh">从 C++ 声明到 .usf 实现的完整可用示例，集成到 RDG 管线中。</p>
+
+  <h3><span lang="en">Step 1 — C++ Declaration (MyBlur.h/.cpp)</span><span lang="zh">步骤 1 — C++ 声明（MyBlur.h/.cpp）</span></h3>
+  <pre><span class="cm">// MyBlur.h</span>
+<span class="kw">class</span> <span class="type">FMyGaussianBlurCS</span> : <span class="kw">public</span> FGlobalShader
+{
+    DECLARE_GLOBAL_SHADER(FMyGaussianBlurCS);
+    SHADER_USE_PARAMETER_STRUCT(FMyGaussianBlurCS, FGlobalShader);
+
+    BEGIN_SHADER_PARAMETER_STRUCT(FParameters, )
+        SHADER_PARAMETER_RDG_TEXTURE(Texture2D, InputTexture)
+        SHADER_PARAMETER_SAMPLER(SamplerState, InputSampler)
+        SHADER_PARAMETER_RDG_TEXTURE_UAV(RWTexture2D&lt;float4&gt;, OutputTexture)
+        SHADER_PARAMETER(FVector2f, InvTextureSize)
+        SHADER_PARAMETER(FVector2f, BlurDirection)   <span class="cm">// (1,0) or (0,1)</span>
+        SHADER_PARAMETER(float, BlurRadius)
+    END_SHADER_PARAMETER_STRUCT()
+
+    <span class="kw">static bool</span> <span class="fn">ShouldCompilePermutation</span>(<span class="kw">const</span> FGlobalShaderPermutationParameters& P)
+    { <span class="kw">return</span> <span class="fn">IsFeatureLevelSupported</span>(P.Platform, ERHIFeatureLevel::SM5); }
+
+    <span class="kw">static void</span> <span class="fn">ModifyCompilationEnvironment</span>(
+        <span class="kw">const</span> FGlobalShaderPermutationParameters& P, FShaderCompilerEnvironment& Env)
+    {
+        FGlobalShader::<span class="fn">ModifyCompilationEnvironment</span>(P, Env);
+        Env.<span class="fn">SetDefine</span>(TEXT(<span class="str">"THREAD_GROUP_SIZE"</span>), <span class="num">8</span>);
+    }
+};
+IMPLEMENT_GLOBAL_SHADER(FMyGaussianBlurCS,
+    <span class="str">"/Project/Private/MyBlur.usf"</span>, <span class="str">"MainCS"</span>, SF_Compute);
+
+<span class="cm">// MyBlur.cpp — the dispatch function (called from a post-process or scene extension)</span>
+FRDGTextureRef <span class="fn">AddMyGaussianBlurPass</span>(
+    FRDGBuilder& GraphBuilder,
+    FRDGTextureRef InputTexture,
+    FIntPoint Resolution,
+    float BlurRadius)
+{
+    <span class="cm">// Create output texture</span>
+    FRDGTextureDesc OutDesc = InputTexture-&gt;Desc;
+    FRDGTextureRef OutputTexture = GraphBuilder.<span class="fn">CreateTexture</span>(OutDesc, TEXT(<span class="str">"BlurOutput"</span>));
+
+    TShaderMapRef&lt;FMyGaussianBlurCS&gt; Shader(<span class="fn">GetGlobalShaderMap</span>(GMaxRHIFeatureLevel));
+
+    <span class="kw">auto</span>* Params = GraphBuilder.<span class="fn">AllocParameters</span>&lt;FMyGaussianBlurCS::FParameters&gt;();
+    Params-&gt;InputTexture   = InputTexture;
+    Params-&gt;InputSampler   = TStaticSamplerState&lt;SF_Bilinear&gt;::<span class="fn">GetRHI</span>();
+    Params-&gt;OutputTexture  = GraphBuilder.<span class="fn">CreateUAV</span>(OutputTexture);
+    Params-&gt;InvTextureSize = FVector2f(<span class="num">1.0f</span>/Resolution.X, <span class="num">1.0f</span>/Resolution.Y);
+    Params-&gt;BlurDirection  = FVector2f(<span class="num">1.0f</span>, <span class="num">0.0f</span>); <span class="cm">// horizontal first</span>
+    Params-&gt;BlurRadius     = BlurRadius;
+
+    FIntVector GroupCount(
+        FMath::<span class="fn">DivideAndRoundUp</span>(Resolution.X, <span class="num">8</span>),
+        FMath::<span class="fn">DivideAndRoundUp</span>(Resolution.Y, <span class="num">8</span>), <span class="num">1</span>);
+
+    FComputeShaderUtils::<span class="fn">AddPass</span>(GraphBuilder,
+        RDG_EVENT_NAME(<span class="str">"MyGaussianBlur"</span>), Shader, Params, GroupCount);
+
+    <span class="kw">return</span> OutputTexture;
+}</pre>
+
+  <h3><span lang="en">Step 2 — .usf Shader (YourProject/Shaders/Private/MyBlur.usf)</span><span lang="zh">步骤 2 — .usf 着色器（YourProject/Shaders/Private/MyBlur.usf）</span></h3>
+  <pre><span class="cm">// MyBlur.usf</span>
+<span class="kw">#include</span> <span class="str">"/Engine/Private/Common.ush"</span>
+
+<span class="cm">// Bound by the parameter struct — names MUST match exactly</span>
+Texture2D InputTexture;
+SamplerState InputSampler;
+RWTexture2D&lt;float4&gt; OutputTexture;
+float2 InvTextureSize;
+float2 BlurDirection;
+float BlurRadius;
+
+<span class="cm">// THREAD_GROUP_SIZE injected by ModifyCompilationEnvironment</span>
+[numthreads(THREAD_GROUP_SIZE, THREAD_GROUP_SIZE, <span class="num">1</span>)]
+<span class="kw">void</span> <span class="fn">MainCS</span>(uint3 DispatchThreadId : SV_DispatchThreadID)
+{
+    uint2 Pixel = DispatchThreadId.xy;
+    float2 UV = (float2(Pixel) + <span class="num">0.5f</span>) * InvTextureSize;
+
+    <span class="cm">// Gaussian kernel (9 taps)</span>
+    <span class="kw">static const</span> float Weights[<span class="num">9</span>] = { <span class="num">0.05</span>, <span class="num">0.09</span>, <span class="num">0.12</span>, <span class="num">0.15</span>, <span class="num">0.18</span>,
+                                        <span class="num">0.15</span>, <span class="num">0.12</span>, <span class="num">0.09</span>, <span class="num">0.05</span> };
+    float4 Result = <span class="num">0</span>;
+    UNROLL <span class="cm">// tells the compiler to unroll this loop</span>
+    <span class="kw">for</span> (<span class="kw">int</span> i = -<span class="num">4</span>; i &lt;= <span class="num">4</span>; ++i)
+    {
+        float2 SampleUV = UV + BlurDirection * (float(i) * BlurRadius * InvTextureSize);
+        Result += InputTexture.<span class="fn">SampleLevel</span>(InputSampler, SampleUV, <span class="num">0</span>) * Weights[i + <span class="num">4</span>];
+    }
+
+    OutputTexture[Pixel] = Result;
+}</pre>
+
+  <!-- s8 -->
+  <h2 id="s8"><span lang="en">Full Vertex + Pixel Shader Example — Custom Mesh Pass</span><span lang="zh">完整顶点 + 像素 Shader 示例 — 自定义网格通道</span></h2>
+  <p lang="en">For a VS+PS pair that draws actual geometry (not full-screen), you typically use <code>FGlobalShader</code> with a simple vertex layout, or hook into the Mesh Drawing Pipeline with <code>FMeshMaterialShader</code>. Here is the simpler full-screen case using a screen-aligned triangle — the most common pattern for post-process effects:</p>
+  <p lang="zh">对于绘制实际几何体（而非全屏）的 VS+PS 对，通常使用带简单顶点布局的 <code>FGlobalShader</code>，或通过 <code>FMeshMaterialShader</code> 挂入网格绘制管线。以下是使用屏幕对齐三角形的更简单全屏情况——后处理效果最常见的模式：</p>
+  <pre><span class="cm">// Full-screen VS + PS pair (FGlobalShader, simplest approach)</span>
+
+<span class="cm">// C++ declaration</span>
+<span class="kw">class</span> <span class="type">FMyPostProcessVS</span> : <span class="kw">public</span> FGlobalShader {
+    DECLARE_GLOBAL_SHADER(FMyPostProcessVS);
+    SHADER_USE_PARAMETER_STRUCT(FMyPostProcessVS, FGlobalShader);
+    <span class="kw">using</span> FParameters = FEmptyShaderParameters; <span class="cm">// no vertex-side params needed</span>
+    <span class="kw">static bool</span> <span class="fn">ShouldCompilePermutation</span>(...) { <span class="kw">return true</span>; }
+};
+<span class="kw">class</span> <span class="type">FMyPostProcessPS</span> : <span class="kw">public</span> FGlobalShader {
+    DECLARE_GLOBAL_SHADER(FMyPostProcessPS);
+    SHADER_USE_PARAMETER_STRUCT(FMyPostProcessPS, FGlobalShader);
+    BEGIN_SHADER_PARAMETER_STRUCT(FParameters, )
+        SHADER_PARAMETER_RDG_TEXTURE(Texture2D, SceneColor)
+        SHADER_PARAMETER_SAMPLER(SamplerState, SceneColorSampler)
+        SHADER_PARAMETER(FVector4f, Tint)
+        RENDER_TARGET_BINDING_SLOTS()
+    END_SHADER_PARAMETER_STRUCT()
+    <span class="kw">static bool</span> <span class="fn">ShouldCompilePermutation</span>(...) { <span class="kw">return true</span>; }
+};
+IMPLEMENT_GLOBAL_SHADER(FMyPostProcessVS, <span class="str">"/Project/Private/MyPostProcess.usf"</span>, <span class="str">"MainVS"</span>, SF_Vertex);
+IMPLEMENT_GLOBAL_SHADER(FMyPostProcessPS, <span class="str">"/Project/Private/MyPostProcess.usf"</span>, <span class="str">"MainPS"</span>, SF_Pixel);
+
+<span class="cm">// C++ dispatch</span>
+<span class="kw">auto</span>* Params = GraphBuilder.<span class="fn">AllocParameters</span>&lt;FMyPostProcessPS::FParameters&gt;();
+Params-&gt;SceneColor       = SceneColorTexture;
+Params-&gt;SceneColorSampler= TStaticSamplerState&lt;&gt;::<span class="fn">GetRHI</span>();
+Params-&gt;Tint             = FVector4f(<span class="num">1</span>,<span class="num">0.8f</span>,<span class="num">0.6f</span>,<span class="num">1</span>);
+Params-&gt;RenderTargets[<span class="num">0</span>] = FRenderTargetBinding(OutputTexture, ERenderTargetLoadAction::ENoAction);
+
+GraphBuilder.<span class="fn">AddPass</span>(RDG_EVENT_NAME(<span class="str">"MyPostProcess"</span>), Params, ERDGPassFlags::Raster,
+    [Params](FRHICommandList& RHICmdList)
+    {
+        <span class="cm">// Use FScreenPassPipelineState for easy VS+PS setup</span>
+        TShaderMapRef&lt;FMyPostProcessVS&gt; VS(<span class="fn">GetGlobalShaderMap</span>(GMaxRHIFeatureLevel));
+        TShaderMapRef&lt;FMyPostProcessPS&gt; PS(<span class="fn">GetGlobalShaderMap</span>(GMaxRHIFeatureLevel));
+        <span class="fn">DrawScreenPass</span>(RHICmdList, VS, PS, *Params, Viewport);
+    });</pre>
+
+  <pre><span class="cm">// MyPostProcess.usf — the .usf file</span>
+<span class="kw">#include</span> <span class="str">"/Engine/Private/Common.ush"</span>
+<span class="kw">#include</span> <span class="str">"/Engine/Private/ScreenPass.ush"</span>
+
+Texture2D SceneColor;
+SamplerState SceneColorSampler;
+float4 Tint;
+
+<span class="cm">// Vertex shader: generates a full-screen triangle from 3 vertices (no VB needed)</span>
+<span class="kw">void</span> <span class="fn">MainVS</span>(
+    <span class="kw">in</span>  uint VertexId : SV_VertexID,
+    <span class="kw">out</span> float4 OutPosition : SV_POSITION,
+    <span class="kw">out</span> float2 OutUV : TEXCOORD0)
+{
+    <span class="cm">// Full-screen triangle trick: 3 vertices, no index buffer</span>
+    OutUV.x = (VertexId == <span class="num">2</span>) ? <span class="num">2.0f</span> : <span class="num">0.0f</span>;
+    OutUV.y = (VertexId == <span class="num">1</span>) ? <span class="num">2.0f</span> : <span class="num">0.0f</span>;
+    OutPosition = float4(OutUV * float2(<span class="num">2.0f</span>, -<span class="num">2.0f</span>) + float2(-<span class="num">1.0f</span>, <span class="num">1.0f</span>), <span class="num">0.0f</span>, <span class="num">1.0f</span>);
+}
+
+<span class="cm">// Pixel shader: sample + tint</span>
+float4 <span class="fn">MainPS</span>(float4 SVPosition : SV_POSITION, float2 UV : TEXCOORD0) : SV_Target0
+{
+    float4 Color = SceneColor.<span class="fn">Sample</span>(SceneColorSampler, UV);
+    <span class="kw">return</span> Color * Tint;
+}</pre>
+
+  <!-- s9 -->
+  <h2 id="s9"><span lang="en">Custom Material Expressions — HLSL in the Material Editor</span><span lang="zh">自定义材质表达式 — 材质编辑器中的 HLSL</span></h2>
+  <p lang="en">
+    The fastest way to add custom HLSL to a material without touching C++.
+    Use the <strong>Custom</strong> node in the Material Editor (right-click → Custom).
+    Each input pin becomes a function parameter; the code block is the function body.
+  </p>
+  <p lang="zh">
+    无需修改 C++ 向材质添加自定义 HLSL 的最快方法。
+    在材质编辑器中使用 <strong>Custom</strong> 节点（右键 → Custom）。
+    每个输入引脚成为函数参数；代码块是函数体。
+  </p>
+
+  <h3><span lang="en">Basic Custom Node Usage</span><span lang="zh">Custom 节点基本用法</span></h3>
+  <pre><span class="cm">// Custom node Code field — this becomes the function body</span>
+<span class="cm">// Inputs: "UV" (float2), "Roughness" (float)</span>
+<span class="cm">// Output Type: CMOT Float3 (set in node properties)</span>
+
+<span class="cm">// Simple example: procedural checkerboard</span>
+float2 Checker = floor(UV * float2(<span class="num">8</span>, <span class="num">8</span>));
+float IsWhite  = fmod(Checker.x + Checker.y, <span class="num">2.0f</span>);
+<span class="kw">return</span> float3(IsWhite, IsWhite, IsWhite) * Roughness;</pre>
+
+  <h3><span lang="en">Including Engine Headers in Custom Nodes</span><span lang="zh">在 Custom 节点中包含引擎头文件</span></h3>
+  <pre><span class="cm">// You can include engine ush files in Custom node code:</span>
+<span class="str">"#include \"/Engine/Private/Random.ush\""</span>
+<span class="cm">// (put the include as a string literal in the Code field — it will be prepended)</span>
+
+<span class="cm">// Actually: UE5 provides "Additional Includes" field in Custom node properties</span>
+<span class="cm">// Add: /Engine/Private/Random.ush</span>
+<span class="cm">// Then in code field, call engine functions directly:</span>
+float Hash = Rand3DPCG16(uint3(floor(WorldPos))).x / <span class="num">65535.0f</span>;
+<span class="kw">return</span> Hash;</pre>
+
+  <h3><span lang="en">Limitations of Custom Nodes</span><span lang="zh">Custom 节点的限制</span></h3>
+  <ul>
+    <li lang="en">Cannot write to UAVs (no RWTextures, no RW buffers) — read-only</li>
+    <li lang="zh">不能写入 UAV（没有 RWTexture，没有 RW 缓冲区）——只读</li>
+    <li lang="en">Cannot declare new textures — only use textures passed as inputs</li>
+    <li lang="zh">不能声明新纹理——只能使用作为输入传入的纹理</li>
+    <li lang="en">No control over the render pass or shader stage — always runs in the material's normal stage</li>
+    <li lang="zh">无法控制渲染通道或 Shader 阶段——始终在材质的正常阶段运行</li>
+    <li lang="en">Permutation-incompatible — the custom HLSL is compiled into every permutation of the material</li>
+    <li lang="zh">与排列组合不兼容——自定义 HLSL 被编译进材质的每个排列组合</li>
+    <li lang="en">For anything more complex, write a proper FGlobalShader + RDG pass</li>
+    <li lang="zh">对于更复杂的情况，编写适当的 FGlobalShader + RDG 通道</li>
+  </ul>
+
+  <!-- s10 -->
+  <h2 id="s10"><span lang="en">Project / Plugin Shader Directory Setup</span><span lang="zh">项目 / 插件 Shader 目录配置</span></h2>
+  <p lang="en">Before your .usf files can be found by UE, you must register the virtual path mapping.</p>
+  <p lang="zh">在 UE 找到你的 .usf 文件之前，必须注册虚拟路径映射。</p>
+
+  <h3><span lang="en">Method 1: Module StartupModule() (Recommended)</span><span lang="zh">方法 1：Module StartupModule()（推荐）</span></h3>
+  <pre><span class="cm">// MyModule.cpp</span>
+<span class="kw">void</span> FMyModule::<span class="fn">StartupModule</span>()
+{
+    <span class="cm">// Map the virtual path /Project/  →  YourGame/Shaders/</span>
+    FString ShaderDir = FPaths::<span class="fn">Combine</span>(
+        FPaths::<span class="fn">ProjectDir</span>(), TEXT(<span class="str">"Shaders"</span>));
+    <span class="fn">AddShaderSourceDirectoryMapping</span>(TEXT(<span class="str">"/Project"</span>), ShaderDir);
+
+    <span class="cm">// For a plugin instead:</span>
+    <span class="cm">// FString PluginDir = IPluginManager::Get().FindPlugin("MyPlugin")->GetBaseDir();</span>
+    <span class="cm">// AddShaderSourceDirectoryMapping(TEXT("/Plugin/MyPlugin"),</span>
+    <span class="cm">//     FPaths::Combine(PluginDir, TEXT("Shaders")));</span>
+}</pre>
+
+  <h3><span lang="en">Method 2: .uplugin / .uproject (Declarative)</span><span lang="zh">方法 2：.uplugin / .uproject（声明式）</span></h3>
+  <pre><span class="cm">// YourPlugin.uplugin — add shader directory declaration</span>
+{
+  <span class="str">"FileVersion"</span>: <span class="num">3</span>,
+  <span class="str">"Modules"</span>: [{ <span class="str">"Name"</span>: <span class="str">"MyPlugin"</span>, <span class="str">"Type"</span>: <span class="str">"Runtime"</span> }],
+  <span class="str">"ShaderSourceDirectories"</span>: [
+    { <span class="str">"VirtualRoot"</span>: <span class="str">"/Plugin/MyPlugin"</span>, <span class="str">"LocalPath"</span>: <span class="str">"Shaders"</span> }
+  ]
+}</pre>
+
+  <h3><span lang="en">Recommended Folder Structure</span><span lang="zh">推荐目录结构</span></h3>
+  <div class="diagram">
+YourGame/
+  Shaders/
+    Private/           ← your implementation .usf files
+      MyBlur.usf
+      MyPostProcess.usf
+      MyEffect.usf
+    Public/            ← headers that other projects/plugins can include
+      MySharedTypes.ush
+
+Then in .usf files:
+  #include "/Project/Private/MyBlur.usf"   ← your own files
+  #include "/Engine/Private/Common.ush"    ← engine files</div>
+
+  <!-- s11 -->
+  <h2 id="s11"><span lang="en">Hot-Reload &amp; Debugging</span><span lang="zh">热重载与调试</span></h2>
+  <h3><span lang="en">Shader Development Mode</span><span lang="zh">Shader 开发模式</span></h3>
+  <pre><span class="cm">-- In Engine.ini or DefaultEngine.ini --</span>
+[DevOptions.Shaders]
+bAllowUniqueShaderJobId=True    <span class="cm">; required for shader development</span>
+
+<span class="cm">-- Console commands (in-editor or in-game) --</span>
+r.ShaderDevelopmentMode=1        <span class="cm">; enable hot-reload on .usf file save</span>
+RecompileShaders all             <span class="cm">; recompile all shaders</span>
+RecompileShaders /Project/Private/MyBlur.usf   <span class="cm">; recompile one file</span>
+RecompileShaders changed         <span class="cm">; recompile only modified files</span>
+
+r.Shaders.Optimize=0             <span class="cm">; disable optimization (for debugger)</span>
+r.Shaders.KeepDebugInfo=1        <span class="cm">; keep HLSL source in binary (for RenderDoc/PIX)</span>
+r.Shaders.Symbols=1              <span class="cm">; write .pdb shader symbols to disk</span>
+
+<span class="cm">-- View compiled HLSL source (useful for material debug) --</span>
+r.DumpShaderDebugInfo=1          <span class="cm">; writes HLSL source for every compiled shader</span>
+r.DumpShaderDebugShortNames=1    <span class="cm">; shorter filenames</span>
+<span class="cm">-- Output location: Saved/ShaderDebugInfo/ --</span></pre>
+
+  <h3><span lang="en">Debugging with RenderDoc / PIX</span><span lang="zh">使用 RenderDoc / PIX 调试</span></h3>
+  <ol>
+    <li lang="en">Set <code>r.Shaders.Optimize=0</code> and <code>r.Shaders.KeepDebugInfo=1</code> <strong>before</strong> the shader is compiled (in .ini or before startup)</li>
+    <li lang="zh">在 Shader 编译<strong>之前</strong>设置 <code>r.Shaders.Optimize=0</code> 和 <code>r.Shaders.KeepDebugInfo=1</code>（在 .ini 中或启动前）</li>
+    <li lang="en">Capture a frame in RenderDoc. Find your RDG event name (e.g., "MyGaussianBlur") in the event list.</li>
+    <li lang="zh">在 RenderDoc 中捕获一帧。在事件列表中找到你的 RDG 事件名称（例如 "MyGaussianBlur"）。</li>
+    <li lang="en">In RenderDoc: Pipeline State → Compute Shader → "Edit" → opens HLSL source with live edit</li>
+    <li lang="zh">在 RenderDoc 中：Pipeline State → Compute Shader → "Edit" → 打开带实时编辑的 HLSL 源码</li>
+    <li lang="en">Use <code>Mesh Viewer → Source</code> to see the input geometry for a draw call</li>
+    <li lang="zh">使用 <code>Mesh Viewer → Source</code> 查看绘制调用的输入几何体</li>
+  </ol>
+
+  <h3><span lang="en">Shader Printf Debugging (SHADER_PRINT)</span><span lang="zh">Shader Printf 调试（SHADER_PRINT）</span></h3>
+  <pre><span class="cm">// In your .usf file — print from GPU to console (UE 5.1+)</span>
+<span class="kw">#include</span> <span class="str">"/Engine/Private/ShaderPrint.ush"</span>
+
+[numthreads(<span class="num">8</span>,<span class="num">8</span>,<span class="num">1</span>)]
+<span class="kw">void</span> <span class="fn">MainCS</span>(uint3 DispatchThreadId : SV_DispatchThreadID)
+{
+    <span class="kw">if</span> (all(DispatchThreadId.xy == uint2(<span class="num">0</span>,<span class="num">0</span>)))  <span class="cm">// print once</span>
+    {
+        FShaderPrintContext Ctx = <span class="fn">InitShaderPrintContext</span>(<span class="kw">true</span>, float2(<span class="num">0.1</span>,<span class="num">0.5</span>));
+        <span class="fn">Print</span>(Ctx, TEXT(<span class="str">"MyValue="</span>));
+        <span class="fn">Print</span>(Ctx, MyValue);  <span class="cm">// works for float, int, float2/3/4</span>
+        <span class="fn">Newline</span>(Ctx);
+    }
+}
+
+<span class="cm">// Enable from console: r.ShaderPrint=1</span></pre>
+
+  <!-- s12 -->
+  <h2 id="s12"><span lang="en">Common USF Pitfalls</span><span lang="zh">常见 USF 坑点</span></h2>
+
+  <div class="warning">
+    <span lang="en"><strong>Name mismatch crash:</strong> The C++ parameter struct member name and the HLSL variable name MUST be identical (case-sensitive). If your struct has <code>SHADER_PARAMETER(float, BlurRadius)</code>, the HLSL must declare <code>float BlurRadius;</code>. A name mismatch causes a silent bind failure — the GPU reads garbage.</span>
+    <span lang="zh"><strong>名称不匹配崩溃：</strong>C++ 参数结构体成员名和 HLSL 变量名必须完全相同（区分大小写）。如果结构体有 <code>SHADER_PARAMETER(float, BlurRadius)</code>，HLSL 必须声明 <code>float BlurRadius;</code>。名称不匹配会导致静默绑定失败——GPU 读取垃圾数据。</span>
+  </div>
+
+  <div class="table-wrap"><table>
+    <thead><tr><th><span lang="en">Pitfall</span><span lang="zh">坑点</span></th><th><span lang="en">Solution</span><span lang="zh">解决方法</span></th></tr></thead>
+    <tbody>
+      <tr><td><span lang="en">Shader not found (ensure failure)</span><span lang="zh">Shader 找不到（ensure 失败）</span></td><td><span lang="en">Check: virtual path registered? File exists at that path? IMPLEMENT_GLOBAL_SHADER called in a .cpp linked by the module?</span><span lang="zh">检查：虚拟路径已注册？文件在该路径存在？IMPLEMENT_GLOBAL_SHADER 在模块链接的 .cpp 中调用？</span></td></tr>
+      <tr><td><span lang="en">float3 vs float4 mismatch</span><span lang="zh">float3 与 float4 不匹配</span></td><td><span lang="en">C++ <code>FVector3f</code> → HLSL <code>float3</code>, C++ <code>FVector4f</code> → HLSL <code>float4</code>. Always match exactly.</span><span lang="zh">C++ <code>FVector3f</code> → HLSL <code>float3</code>，C++ <code>FVector4f</code> → HLSL <code>float4</code>。始终精确匹配。</span></td></tr>
+      <tr><td><span lang="en">Texture reads wrong data</span><span lang="zh">纹理读取错误数据</span></td><td><span lang="en">RDG textures: use <code>SHADER_PARAMETER_RDG_TEXTURE</code> (not plain SHADER_PARAMETER_TEXTURE) for RDG-managed resources.</span><span lang="zh">RDG 纹理：对 RDG 管理的资源使用 <code>SHADER_PARAMETER_RDG_TEXTURE</code>（而非普通 SHADER_PARAMETER_TEXTURE）。</span></td></tr>
+      <tr><td><span lang="en">Compile error "not found in scope"</span><span lang="zh">编译错误"未在作用域中找到"</span></td><td><span lang="en">Missing include. Add <code>#include "/Engine/Private/Common.ush"</code> at top.</span><span lang="zh">缺少 include。在顶部添加 <code>#include "/Engine/Private/Common.ush"</code>。</span></td></tr>
+      <tr><td><span lang="en">Permutation count explodes build time</span><span lang="zh">排列组合数量爆炸增加构建时间</span></td><td><span lang="en">Filter with <code>ShouldCompilePermutation()</code>. Use <code>r.ShaderDevelopmentMode=1</code> to only compile the current permutation.</span><span lang="zh">用 <code>ShouldCompilePermutation()</code> 过滤。使用 <code>r.ShaderDevelopmentMode=1</code> 只编译当前排列组合。</span></td></tr>
+      <tr><td><span lang="en">Changes not picked up after save</span><span lang="zh">保存后更改未生效</span></td><td><span lang="en">Must have <code>r.ShaderDevelopmentMode=1</code>. Then run <code>RecompileShaders changed</code> in console.</span><span lang="zh">必须设置 <code>r.ShaderDevelopmentMode=1</code>。然后在控制台运行 <code>RecompileShaders changed</code>。</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <!-- s13 -->
+  <h2 id="s13"><span lang="en">Source Navigation</span><span lang="zh">源码导航</span></h2>
+  <ul class="file-list">
+    <li><span class="fp">/Engine/Shaders/Private/Common.ush</span><span class="fd"><span lang="en">Start every .usf here. Math, BRANCH/UNROLL macros, platform abstractions.</span><span lang="zh">每个 .usf 的起点。数学函数、控制流宏、平台抽象。</span></span></li>
+    <li><span class="fp">/Engine/Shaders/Private/BRDF.ush</span><span class="fd"><span lang="en"><code>D_GGX</code>, <code>Vis_SmithJointApprox</code>, <code>F_Schlick</code>, <code>Diffuse_Lambert</code></span><span lang="zh">底层 BRDF 函数实现</span></span></li>
+    <li><span class="fp">/Engine/Shaders/Private/DeferredShadingCommon.ush</span><span class="fd"><span lang="en"><code>FGBufferData</code>, <code>GetGBufferData()</code> — GBuffer read helpers</span><span lang="zh">GBuffer 读取辅助函数</span></span></li>
+    <li><span class="fp">/Engine/Shaders/Private/Random.ush</span><span class="fd"><span lang="en">Hashing: <code>Rand3DPCG16</code>, <code>RandFast</code>, blue noise LUT</span><span lang="zh">哈希/随机函数，蓝噪声 LUT</span></span></li>
+    <li><span class="fp">/Engine/Shaders/Private/ScreenPass.ush</span><span class="fd"><span lang="en">Post-process UV transforms, <code>FScreenTransform</code></span><span lang="zh">后处理 UV 变换</span></span></li>
+    <li><span class="fp">/Engine/Shaders/Private/ShaderPrint.ush</span><span class="fd"><span lang="en">GPU printf: <code>Print()</code>, <code>PrintNewline()</code> — enable with r.ShaderPrint=1</span><span lang="zh">GPU printf：<code>Print()</code>、<code>PrintNewline()</code>——用 r.ShaderPrint=1 启用</span></span></li>
+    <li><span class="fp">Runtime/RenderCore/Public/GlobalShader.h</span><span class="fd"><span lang="en"><code>FGlobalShader</code> base class, <code>DECLARE_GLOBAL_SHADER</code>, <code>IMPLEMENT_GLOBAL_SHADER</code></span><span lang="zh">全局 Shader 基类和注册宏</span></span></li>
+    <li><span class="fp">Runtime/RenderCore/Public/ShaderParameterMacros.h</span><span class="fd"><span lang="en">All <code>SHADER_PARAMETER_*</code> macros — parameter struct binding system</span><span lang="zh">所有 <code>SHADER_PARAMETER_*</code> 宏——参数结构体绑定系统</span></span></li>
+    <li><span class="fp">Runtime/RenderCore/Public/ShaderPermutation.h</span><span class="fd"><span lang="en"><code>SHADER_PERMUTATION_BOOL</code>, <code>SHADER_PERMUTATION_INT</code>, <code>TShaderPermutationDomain</code></span><span lang="zh">排列组合域系统</span></span></li>
+    <li><span class="fp">Runtime/RenderCore/Public/RenderGraphUtils.h</span><span class="fd"><span lang="en"><code>FComputeShaderUtils::AddPass()</code>, <code>AddFullscreenPass()</code>, <code>AddCopyTexturePass()</code></span><span lang="zh">RDG 集成工具函数</span></span></li>
+  </ul>
+
+  <footer>Unreal Engine 5.6 &middot; Engine/Shaders/Private/ &middot; Engine/Source/Runtime/RenderCore/Public/<br>Source analysis &middot; For learning purposes</footer>
+
+  <div class="page-nav">
+    <a href="../04-material-shader/shading-models-reference.html" class="prev"><span class="pn-label">&larr; Prev</span><span class="pn-title"><span lang="en">Shading Models Reference</span><span lang="zh">着色模型参考</span></span></a>
+    <a href="../07-specialized-rendering/water-rendering.html" class="next"><span class="pn-label">Next &rarr;</span><span class="pn-title"><span lang="en">Water Rendering</span><span lang="zh">水体渲染</span></span></a>
+  </div>
+</main>
+</div>
+<script>
+function toggleLang(){var h=document.documentElement;if(h.classList.contains('lang-zh')){h.classList.remove('lang-zh');h.lang='en';document.title='USF / HLSL Guide';localStorage.setItem('ue-doc-lang','en');}else{h.classList.add('lang-zh');h.lang='zh-CN';document.title='USF / HLSL 编写指南';localStorage.setItem('ue-doc-lang','zh');}}
+if(document.documentElement.classList.contains('lang-zh'))document.title='USF / HLSL 编写指南';
+</script>
+</body>
+</html>

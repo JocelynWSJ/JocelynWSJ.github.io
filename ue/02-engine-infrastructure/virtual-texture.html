@@ -1,0 +1,614 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Virtual Texture System — Streaming, Feedback &amp; RVT</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Gudea">
+  <script>(function(){if(localStorage.getItem('ue-doc-lang')==='zh'){document.documentElement.classList.add('lang-zh');document.documentElement.lang='zh-CN';}})();</script>
+  <style>
+    html:not(.lang-zh) [lang="zh"]{display:none;} html.lang-zh [lang="en"]{display:none;}
+    #lang-btn{position:fixed;top:16px;right:20px;z-index:999;background:#37425d;color:#fff;border:none;border-radius:4px;padding:5px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:Gudea,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.2);transition:background .15s;} #lang-btn:hover{background:#4a5a7a;}
+    *{box-sizing:border-box;margin:0;padding:0;} body{font-family:Gudea,sans-serif;font-size:16px;line-height:1.8;color:#111;background:#eee;}
+    #wrapper{max-width:1100px;margin:0 auto;display:flex;align-items:flex-start;padding:40px 24px;gap:36px;}
+    #sidebar{width:240px;flex-shrink:0;font-size:13px;}
+    #sidebar h2{font-size:12px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;border:none;padding:0;}
+    #sidebar > ol{list-style:none !important;padding:0;} #sidebar > ol > li{list-style:none !important;margin-bottom:5px;}
+    #sidebar > ol > li a{color:#555;text-decoration:none;display:block;padding:2px 0;transition:color .12s;} #sidebar > ol > li a:hover{color:#58A;} #sidebar > ol > li a::before{content:none;}
+    #content{flex:1;min-width:0;}
+    .page-header{margin-bottom:32px;padding-bottom:20px;border-bottom:1px solid #ddd;}
+    .page-header .crumb{font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
+    .page-header h1{font-size:1.8rem;font-weight:900;color:#303236;margin-bottom:8px;line-height:1.25;}
+    .page-header .subtitle{font-family:'Courier New',monospace;font-size:13px;color:#777;}
+    h2{color:#37425d;font-size:22px;margin:36px 0 10px;} h3{color:#633739;font-size:17px;margin:24px 0 8px;}
+    p{margin-bottom:14px;} a{color:#58A;text-decoration:none;} a:hover{text-decoration:underline;} strong{color:#222;}
+    .fun{font-family:'Courier New',monospace;color:#2a6496;} .def{color:green;font-weight:600;}
+    code{font-family:'Courier New',monospace;font-size:14px;background:#ddd;border-radius:3px;padding:1px 5px;}
+    pre{background:#282c34;color:#abb2bf;border-radius:5px;padding:16px 18px;overflow-x:auto;margin:14px 0 18px;font-family:'Courier New',monospace;font-size:13.5px;line-height:1.6;}
+    pre code{background:none;padding:0;color:inherit;} .kw{color:#c678dd;} .fn{color:#61afef;} .cm{color:#5c6370;font-style:italic;} .str{color:#98c379;} .num{color:#d19a66;} .type{color:#e5c07b;}
+    .note{display:block;margin:18px 0;padding:15px;background:#D8F5D8;color:#444;border-radius:5px;border:2px solid #AFDFAF;font-size:15px;line-height:1.7;}
+    .warning{display:block;margin:18px 0;padding:15px;background:#FFD2D2;color:#444;border-radius:5px;border:2px solid #E0B3B3;font-size:15px;line-height:1.7;}
+    ul,ol{padding-left:22px;margin-bottom:14px;} li{margin-bottom:5px;}
+    .table-wrap{overflow-x:auto;margin:14px 0;} table{border-collapse:collapse;font-size:14px;width:100%;}
+    th,td{padding:8px 12px;border-bottom:1px solid #aaa;text-align:left;} th{border-bottom:2px solid #888;font-weight:700;background:#ddd;} tr:nth-child(even) td{background:#e8e8e8;}
+    td:first-child{font-family:'Courier New',monospace;font-size:13px;color:#2a6496;white-space:nowrap;}
+    .diagram{background:#fff;border:1px solid #ccc;border-radius:5px;padding:20px;margin:16px 0;font-family:'Courier New',monospace;font-size:13px;line-height:1.8;overflow-x:auto;white-space:pre;}
+    .file-list{list-style:none;padding:0;margin:12px 0;} .file-list li{padding:6px 0;border-bottom:1px solid #ccc;display:flex;align-items:baseline;gap:10px;font-size:14px;} .file-list li:last-child{border-bottom:none;} .file-list .fp{font-family:'Courier New',monospace;font-size:13px;color:#58A;min-width:300px;} .file-list .fd{color:#555;}
+    footer{margin-top:48px;padding-top:16px;border-top:1px solid #ccc;font-size:12px;color:#aaa;text-align:center;}
+    @media(max-width:800px){#wrapper{flex-direction:column;padding:20px 16px;}#sidebar{width:100%;position:static;max-height:none;margin-bottom:24px;}}
+    #series-nav{margin-bottom:24px;padding-bottom:0;}
+    #series-nav ol,#series-nav li{list-style:none;padding-left:0;}
+    .snav-label{font-size:11px;font-weight:800;color:#37425d;text-transform:uppercase;letter-spacing:.14em;display:block;margin-bottom:10px;padding-bottom:4px;border-bottom:2px solid #37425d;}
+    #series-nav > ol{list-style:none;padding:0;margin:0;} #series-nav ol{list-style:none;padding:0;margin:0;}
+    .snav-ch{margin-bottom:10px;}
+    .snav-ch > span{font-size:11px;font-weight:800;letter-spacing:.06em;color:#fff;background:#5a6a80;display:block;padding:3px 7px 3px 6px;border-radius:3px;margin-bottom:3px;text-transform:uppercase;}
+    .snav-ch > ol{padding-left:0;margin-top:0;}
+    .snav-item{margin-bottom:1px;}
+    .snav-item a{font-size:13.5px;color:#666;text-decoration:none;display:block;padding:3px 6px;border-left:3px solid transparent;border-radius:0 3px 3px 0;transition:color .12s,background .12s,border-color .12s;}
+    .snav-item a:hover{color:#37425d;background:#f0f2f5;border-left-color:#c0cad8;}
+    .snav-item.active a{color:#37425d;font-weight:700;background:#e8ecf4;border-left-color:#37425d;}
+    .page-nav{display:flex;justify-content:space-between;align-items:center;margin:36px 0 0;padding-top:16px;border-top:1px solid #ddd;font-size:14px;}
+    .page-nav a{color:#58A;text-decoration:none;display:flex;align-items:center;gap:6px;max-width:42%;}
+    .page-nav a:hover{text-decoration:underline;}
+    .page-nav .pn-label{font-size:11px;color:#aaa;text-transform:uppercase;display:block;}
+    .page-nav .pn-title{display:block;}
+    .page-nav .prev{text-align:left;} .page-nav .next{text-align:right;}
+  
+    .snav-children{display:block;list-style:none;padding:2px 0 4px 10px;margin:1px 0 0;border-left:2px solid #dde3ee;}
+    .snav-subitem{margin-bottom:1px;}
+    .snav-subitem a{font-size:12px;color:#888;text-decoration:none;display:block;padding:2px 4px 2px 8px;border-left:2px solid transparent;border-radius:0 3px 3px 0;transition:color .12s,background .12s,border-color .12s;}
+    .snav-subitem a:hover{color:#37425d;background:#f0f2f5;border-left-color:#c0cad8;}
+    .snav-subitem.active a{color:#37425d;font-weight:700;background:#e8ecf4;border-left-color:#37425d;}  </style>
+</head>
+<body>
+<button id="lang-btn" onclick="toggleLang()"><span lang="en">中文</span><span lang="zh">English</span></button>
+<div id="wrapper">
+<nav id="sidebar">
+  <div id="series-nav">
+    <span class="snav-label"><span lang="en">Series</span><span lang="zh">系列</span></span>
+    <ol>
+
+      <li class="snav-ch"><span lang="en">00 Overview</span><span lang="zh">00 概述</span>
+        <ol>
+          <li class="snav-item"><a href="../00-overview/introduction.html"><span lang="en">Introduction</span><span lang="zh">系列简介</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">01 Rendering Pipeline</span><span lang="zh">01 渲染管线</span>
+        <ol>
+          <li class="snav-item"><a href="../01-rendering-pipeline/deferred-shading.html"><span lang="en">Deferred Rendering</span><span lang="zh">延迟渲染</span></a></li>
+          <li class="snav-item"><a href="../01-rendering-pipeline/forward-shading.html"><span lang="en">Forward Rendering</span><span lang="zh">前向渲染</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">02 Engine Infrastructure</span><span lang="zh">02 引擎基础设施</span>
+        <ol>
+          <li class="snav-item"><a href="../02-engine-infrastructure/rdg-compiler.html"><span lang="en">RDG — Render Dependency Graph</span><span lang="zh">RDG 渲染依赖图</span></a></li>
+          <li class="snav-item"><a href="../02-engine-infrastructure/thread-concurrency.html"><span lang="en">Thread Concurrency</span><span lang="zh">线程并发</span></a></li>
+          <li class="snav-item active"><a href="../02-engine-infrastructure/virtual-texture.html"><span lang="en">Virtual Texture Streaming</span><span lang="zh">虚拟纹理流送</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">03 Lighting &amp; Shadows</span><span lang="zh">03 光照与阴影</span>
+        <ol>
+          <li class="snav-item"><a href="../03-lighting-shadows/lighting-architecture.html"><span lang="en">Lighting Architecture</span><span lang="zh">光照架构</span></a></li>
+          <li class="snav-item"><a href="../03-lighting-shadows/virtual-shadow-maps.html"><span lang="en">Virtual Shadow Maps</span><span lang="zh">虚拟阴影贴图</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">04 Material &amp; Shader System</span><span lang="zh">04 材质与着色器系统</span>
+        <ol>
+          <li class="snav-item"><a href="../04-material-shader/material-translation.html"><span lang="en">Shader Compilation &amp; Architecture</span><span lang="zh">着色器编译与架构</span></a></li>
+          <li class="snav-item"><a href="../04-material-shader/shading-models-reference.html"><span lang="en">Shading Models Reference</span><span lang="zh">着色模型参考</span></a></li>
+          <li class="snav-item"><a href="../04-material-shader/usf-hlsl-guide.html"><span lang="en">USF / HLSL Writing Guide</span><span lang="zh">USF / HLSL 编写指南</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">05 UE5 Core Technologies</span><span lang="zh">05 UE5 核心技术</span>
+        <ol>
+          <li class="snav-item"><a href="../05-ue5-core/nanite-rasterizer.html"><span lang="en">Nanite — Virtual Geometry</span><span lang="zh">Nanite 虚拟几何</span></a></li>
+          <li class="snav-item"><a href="../05-ue5-core/lumen-raytracing.html"><span lang="en">Lumen — Dynamic GI</span><span lang="zh">Lumen 动态全局光照</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">06 Post-Processing &amp; Effects</span><span lang="zh">06 后处理与屏幕效果</span>
+        <ol>
+          <li class="snav-item"><a href="../06-post-processing/post-processing.html"><span lang="en">Post-Processing Pipeline</span><span lang="zh">后处理管线</span></a></li>
+          <li class="snav-item"><a href="../06-post-processing/screen-space-effects.html"><span lang="en">Screen Space Effects</span><span lang="zh">屏幕空间效果</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">07 Specialized Rendering</span><span lang="zh">07 专项渲染</span>
+        <ol>
+          <li class="snav-item"><a href="../07-specialized-rendering/volumetric-atmosphere.html"><span lang="en">Volumetric Fog &amp; Atmosphere</span><span lang="zh">体积雾与大气</span></a></li>
+          <li class="snav-item"><a href="../07-specialized-rendering/water-rendering.html"><span lang="en">Water Rendering</span><span lang="zh">水体渲染</span></a></li>
+          <li class="snav-item"><a href="../07-specialized-rendering/hair-groom-rendering.html"><span lang="en">Hair &amp; Groom</span><span lang="zh">毛发渲染</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">08 Engine Customization</span><span lang="zh">08 引擎定制</span>
+        <ol>
+          <li class="snav-item"><a href="../08-engine-customization/custom-shading-model.html"><span lang="en">Custom Shading Model</span><span lang="zh">自定义着色模型</span></a></li>
+          <li class="snav-item"><a href="../08-engine-customization/niagara-gpu-compute.html"><span lang="en">Niagara GPU Compute</span><span lang="zh">Niagara GPU 计算</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">09 Performance &amp; Profiling</span><span lang="zh">09 性能与分析</span>
+        <ol>
+          <li class="snav-item"><a href="../09-profiling/hardware-profiling.html"><span lang="en">Hardware Profiling</span><span lang="zh">硬件性能分析</span></a></li>
+        </ol>
+      </li>
+
+    </ol>
+  </div>
+  <h2><span lang="en">Contents</span><span lang="zh">目录</span></h2>
+  <ol>
+    <li><a href="#s1"><span lang="en">Why Virtual Texturing?</span><span lang="zh">为什么需要虚拟纹理？</span></a></li>
+    <li><a href="#s2"><span lang="en">Page Table Architecture</span><span lang="zh">页表架构</span></a></li>
+    <li><a href="#s3"><span lang="en">Physical Page Pool</span><span lang="zh">物理页池</span></a></li>
+    <li><a href="#s4"><span lang="en">GPU Feedback Buffer</span><span lang="zh">GPU 反馈缓冲区</span></a></li>
+    <li><a href="#s5"><span lang="en">Streaming Pipeline</span><span lang="zh">流式传输管线</span></a></li>
+    <li><a href="#s6"><span lang="en">Shader Integration</span><span lang="zh">Shader 集成</span></a></li>
+    <li><a href="#s7"><span lang="en">Runtime Virtual Texture</span><span lang="zh">运行时虚拟纹理</span></a></li>
+    <li><a href="#s8"><span lang="en">Adaptive Virtual Texture</span><span lang="zh">自适应虚拟纹理</span></a></li>
+    <li><a href="#s9"><span lang="en">Usage &amp; Setup Guide</span><span lang="zh">使用与配置指南</span></a></li>
+    <li><a href="#s10"><span lang="en">Performance Tuning</span><span lang="zh">性能调优</span></a></li>
+    <li><a href="#s11"><span lang="en">Source Navigation</span><span lang="zh">源码导航</span></a></li>
+  </ol>
+</nav>
+
+<main id="content">
+  <div class="page-header">
+    <div class="crumb">Unreal Engine 5.6 &middot; Infrastructure &amp; Graph &middot; Part 02-C</div>
+    <h1><span lang="en">Virtual Texture System — Streaming, Feedback &amp; RVT</span><span lang="zh">虚拟纹理系统 — 流式传输、反馈与 RVT</span></h1>
+    <div class="subtitle">Renderer/Private/VT/VirtualTextureSystem.cpp &middot; VirtualTextureSpace.cpp &middot; VirtualTextureFeedback.cpp</div>
+  </div>
+
+  <!-- s1 -->
+  <h2 id="s1"><span lang="en">Why Virtual Texturing?</span><span lang="zh">为什么需要虚拟纹理？</span></h2>
+  <p lang="en">
+    Modern open-world games use terrain and environmental textures at resolutions that far exceed GPU VRAM.
+    A fully detailed 8km&times;8km landscape might require a 64K&times;64K texture — roughly 16 GB at 4 bytes/texel.
+    <span class="def">Virtual Texturing (VT)</span> solves this with the same insight as OS virtual memory:
+    you only ever load and keep in VRAM the <em>pages</em> (tiles) that are actually visible on screen right now,
+    streaming others in and out on demand.
+  </p>
+  <p lang="zh">
+    现代开放世界游戏使用的地形和环境纹理分辨率远远超过 GPU VRAM 的容量。
+    一个完全精细的 8km×8km 地形可能需要 64K×64K 的纹理——以 4 字节/纹素计算约 16 GB。
+    <span class="def">虚拟纹理（VT）</span>用与操作系统虚拟内存相同的思路解决这个问题：
+    你只需在 VRAM 中加载并保留当前屏幕上实际<em>可见</em>的页面（瓦片），
+    其他页面按需流入和流出。
+  </p>
+
+  <div class="note">
+    <span lang="en"><strong>Analogy:</strong> Just as a CPU maps virtual addresses to physical RAM pages, Virtual Texturing maps virtual texel coordinates to physical tiles in a fixed-size GPU memory pool. Pages not in use are evicted; frequently-accessed pages are kept hot.</span>
+    <span lang="zh"><strong>类比：</strong>就像 CPU 将虚拟地址映射到物理 RAM 页面一样，虚拟纹理将虚拟纹素坐标映射到固定大小 GPU 内存池中的物理瓦片。不用的页面被驱逐；频繁访问的页面保持热状态。</span>
+  </div>
+
+  <div class="diagram">
+Virtual Texture System — Full Pipeline (per frame):
+
+  ┌─────────────────────────────────────────────────────┐
+  │  1. GPU RENDER                                       │
+  │     Shaders sample VT → write (vt_space_id, page_id)│
+  │     into the Feedback Buffer (1/16 resolution)       │
+  └───────────────────┬─────────────────────────────────┘
+                      │ GPU→CPU readback (async, 2 frames latency)
+  ┌───────────────────▼─────────────────────────────────┐
+  │  2. CPU ANALYSIS (FVirtualTextureSystem::Update)     │
+  │     Parse feedback → determine needed pages          │
+  │     → request streaming from FVirtualTextureProducer │
+  └───────────────────┬─────────────────────────────────┘
+                      │ async I/O + decompression
+  ┌───────────────────▼─────────────────────────────────┐
+  │  3. CPU UPLOAD                                       │
+  │     Allocate page in Physical Pool                   │
+  │     Upload tile data via staging buffer → GPU        │
+  └───────────────────┬─────────────────────────────────┘
+                      │ GPU update
+  ┌───────────────────▼─────────────────────────────────┐
+  │  4. PAGE TABLE UPDATE                                │
+  │     Write new virtual→physical mapping into          │
+  │     the Page Table texture (indirection texture)     │
+  └─────────────────────────────────────────────────────┘</div>
+
+  <!-- s2 -->
+  <h2 id="s2"><span lang="en">Page Table Architecture — The Indirection Texture</span><span lang="zh">页表架构 — 间接纹理</span></h2>
+  <p lang="en">
+    The <span class="def">page table</span> is the GPU-side indirection structure. It's implemented as a texture
+    where each texel stores the location of a physical page in the pool. When a shader samples a virtual texture,
+    it first reads the page table to find out <em>where</em> the data actually lives in physical memory.
+  </p>
+  <p lang="zh">
+    <span class="def">页表</span>是 GPU 端的间接结构。它被实现为一个纹理，
+    每个纹素存储物理池中一个物理页面的位置。当 Shader 采样虚拟纹理时，
+    它首先读取页表以找出数据实际存放在物理内存的<em>哪个位置</em>。
+  </p>
+  <p lang="en">
+    In UE5, a <code>FVirtualTextureSpace</code> owns the page table. Each virtual texture gets
+    assigned a region of the space. The page table itself is a small texture (e.g., 256&times;256 for a 128K virtual texture
+    with 512-texel pages), where each RGBA8 texel encodes:
+  </p>
+  <p lang="zh">
+    在 UE5 中，<code>FVirtualTextureSpace</code> 拥有页表。每个虚拟纹理被分配到空间的某个区域。
+    页表本身是一个小纹理（例如，对于 128K 虚拟纹理配合 512 纹素页面，页表为 256×256），
+    每个 RGBA8 纹素编码：
+  </p>
+  <ul>
+    <li lang="en"><strong>R, G:</strong> X and Y page coordinates in the physical page pool atlas</li>
+    <li lang="zh"><strong>R, G：</strong>物理页池图集中的 X 和 Y 页坐标</li>
+    <li lang="en"><strong>B:</strong> The mip bias — which mip level of the physical page is stored here</li>
+    <li lang="zh"><strong>B：</strong>Mip 偏移——物理页中存储的是哪个 Mip 级别</li>
+    <li lang="en"><strong>A:</strong> Flags (loaded / fallback mip)</li>
+    <li lang="zh"><strong>A：</strong>标志位（已加载 / 回退 Mip）</li>
+  </ul>
+
+  <p lang="en">
+    UE5 maintains <strong>multiple mip levels in the page table</strong>. When a page is not yet loaded,
+    the shader falls back to a coarser mip level that <em>is</em> resident. This means you always see
+    some texture data, never a black hole — just potentially lower resolution. This graceful degradation
+    is one of VT's key advantages over a naive streaming approach.
+  </p>
+  <p lang="zh">
+    UE5 在页表中维护<strong>多个 Mip 级别</strong>。当某页尚未加载时，
+    Shader 回退到<em>已驻留</em>的更粗糙 Mip 级别。这意味着你总能看到纹理数据，
+    不会出现黑洞——只是可能分辨率较低。这种优雅降级是 VT 相对于朴素流式方案的关键优势之一。
+  </p>
+
+  <pre><span class="cm">// FVirtualTextureSpace — owns the page table and virtual address space</span>
+<span class="cm">// Engine/Source/Runtime/Renderer/Private/VT/VirtualTextureSpace.h</span>
+
+<span class="kw">class</span> <span class="type">FVirtualTextureSpace</span>
+{
+<span class="kw">public</span>:
+    <span class="cm">// The page table texture (indirection texture on GPU)</span>
+    FTextureRHIRef PageTableTexture;
+
+    <span class="cm">// Size of the virtual address space (in pages)</span>
+    <span class="cm">// e.g., 4096x4096 pages × 128-texel page = 512K virtual texture</span>
+    uint32 Dimensions;          <span class="cm">// Width/height in pages</span>
+    uint32 NumPageTableLayers;  <span class="cm">// One layer per mip level</span>
+
+    <span class="cm">// Allocate a virtual region for a new texture</span>
+    FVirtualTextureProducerHandle <span class="fn">RegisterProducer</span>(...);
+
+    <span class="cm">// Called each frame to flush page table updates to GPU</span>
+    <span class="kw">void</span> <span class="fn">UpdatePageTable</span>(FRDGBuilder& GraphBuilder, ...);
+};</pre>
+
+  <!-- s3 -->
+  <h2 id="s3"><span lang="en">Physical Page Pool — Fixed GPU Memory Budget</span><span lang="zh">物理页池 — 固定 GPU 内存预算</span></h2>
+  <p lang="en">
+    The <span class="def">physical page pool</span> is the actual GPU texture atlas that stores loaded pages.
+    It's a large 2D texture divided into a grid of <strong>page tiles</strong> (e.g., 128-texel or 256-texel squares).
+    Every loaded virtual texture page lives somewhere in this atlas. The pool size is fixed, bounding VRAM usage.
+  </p>
+  <p lang="zh">
+    <span class="def">物理页池</span>是存储已加载页面的实际 GPU 纹理图集。
+    它是一个被划分为<strong>页面瓦片</strong>网格的大型 2D 纹理（例如 128 或 256 纹素的正方形）。
+    每个已加载的虚拟纹理页面都存储在这个图集的某个位置。池大小是固定的，限制了 VRAM 使用量。
+  </p>
+
+  <div class="table-wrap"><table>
+    <thead><tr>
+      <th><span lang="en">Property</span><span lang="zh">属性</span></th>
+      <th><span lang="en">Typical Value</span><span lang="zh">典型值</span></th>
+      <th><span lang="en">Description</span><span lang="zh">描述</span></th>
+    </tr></thead>
+    <tbody>
+      <tr><td>Page size</td><td>128 or 256 texels</td><td><span lang="en">Square tile size, including a 4-texel border for bilinear filtering seams</span><span lang="zh">正方形瓦片大小，含 4 纹素边框用于双线性过滤接缝</span></td></tr>
+      <tr><td>Pool dimensions</td><td>2048×2048 ~ 4096×4096</td><td><span lang="en">Atlas texture resolution — configurable via r.VT.PoolSizeScale</span><span lang="zh">图集纹理分辨率——通过 r.VT.PoolSizeScale 配置</span></td></tr>
+      <tr><td>Layers</td><td>1 per format</td><td><span lang="en">Separate pools for BC1, BC3, BC7, etc. — different compression formats</span><span lang="zh">每种格式单独的池——BC1、BC3、BC7 等不同压缩格式</span></td></tr>
+      <tr><td>Eviction policy</td><td>LRU</td><td><span lang="en">Least-recently-used pages are evicted when the pool is full</span><span lang="zh">池满时驱逐最近最少使用的页面</span></td></tr>
+      <tr><td>Border texels</td><td>4 texels</td><td><span lang="en">Duplicate border prevents bilinear filter from sampling adjacent pages</span><span lang="zh">重复边框防止双线性过滤采样到相邻页面</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <pre><span class="cm">// FVirtualTexturePhysicalSpace — manages the physical page pool atlas</span>
+<span class="cm">// Engine/Source/Runtime/Renderer/Private/VT/VirtualTexturePhysicalSpace.h</span>
+
+<span class="kw">class</span> <span class="type">FVirtualTexturePhysicalSpace</span>
+{
+<span class="kw">public</span>:
+    <span class="cm">// The actual GPU atlas texture</span>
+    FTextureRHIRef PooledRenderTarget;
+
+    <span class="cm">// Number of pages that fit in the pool</span>
+    uint32 NumTiles;
+
+    <span class="cm">// Allocate/free individual pages</span>
+    uint16 <span class="fn">AcquirePage</span>(uint32 vAddress);
+    <span class="kw">void</span>   <span class="fn">ReleasePage</span>(uint16 pAddress);
+
+    <span class="cm">// Get UV coordinates within the atlas for a given page</span>
+    FVector4f <span class="fn">GetPageUVTransform</span>(uint16 pAddress) <span class="kw">const</span>;
+};</pre>
+
+  <!-- s4 -->
+  <h2 id="s4"><span lang="en">GPU Feedback Buffer — "Which Pages Do I Need?"</span><span lang="zh">GPU 反馈缓冲区 — "我需要哪些页面？"</span></h2>
+  <p lang="en">
+    The feedback buffer is the core mechanism that allows the GPU to <em>tell the CPU</em> which virtual
+    texture pages are needed this frame. Without it, the CPU would have no way to know which parts of a
+    64K texture are actually on screen.
+  </p>
+  <p lang="zh">
+    反馈缓冲区是允许 GPU <em>告知 CPU</em> 本帧需要哪些虚拟纹理页面的核心机制。
+    没有它，CPU 就没有办法知道 64K 纹理的哪些部分实际上在屏幕上。
+  </p>
+  <p lang="en">
+    The feedback buffer is rendered at <strong>1/16th resolution</strong> (e.g., 120&times;67 for 1920&times;1080).
+    During the base pass, each pixel writes its required virtual texture page ID into this buffer.
+    The page ID encodes: VT space index, mip level, page X, and page Y — packed into 32 bits.
+  </p>
+  <p lang="zh">
+    反馈缓冲区以<strong>1/16 分辨率</strong>渲染（例如 1920×1080 时为 120×67）。
+    在 Base Pass 期间，每个像素将其所需的虚拟纹理页面 ID 写入此缓冲区。
+    页面 ID 编码：VT 空间索引、Mip 级别、页面 X 和页面 Y——打包为 32 位。
+  </p>
+
+  <pre><span class="cm">// VirtualTextureFeedback.usf — shader side</span>
+<span class="cm">// Called inside the base pass material shader when sampling a VT:</span>
+
+uint <span class="fn">PackFeedback</span>(uint SpaceIndex, uint MipLevel, uint2 PageAddress)
+{
+    <span class="cm">// Pack: [4 bits mip][8 bits space][10 bits pageX][10 bits pageY]</span>
+    <span class="kw">return</span> (MipLevel &lt;&lt; <span class="num">28</span>) | (SpaceIndex &lt;&lt; <span class="num">20</span>) | (PageAddress.x &lt;&lt; <span class="num">10</span>) | PageAddress.y;
+}
+
+<span class="cm">// The feedback buffer is an R32_UINT UAV</span>
+<span class="cm">// Shader writes: FeedbackBuffer[pixel / 4] = PackFeedback(...);</span>
+<span class="cm">// Only one write per 4x4 pixel block (stochastic sampling)</span></pre>
+
+  <p lang="en">
+    After rendering, UE5 reads the feedback buffer back to the CPU asynchronously (with 2 frames of latency
+    to avoid GPU stalls). The CPU then parses all the page IDs to build a set of required pages. Pages that
+    are required but not in the pool are queued for streaming.
+  </p>
+  <p lang="zh">
+    渲染后，UE5 异步将反馈缓冲区读回 CPU（有 2 帧延迟以避免 GPU 停顿）。
+    CPU 然后解析所有页面 ID 以建立所需页面集合。所需但不在池中的页面被排队等待流式传输。
+  </p>
+
+  <!-- s5 -->
+  <h2 id="s5"><span lang="en">Streaming Pipeline — Async I/O to GPU Upload</span><span lang="zh">流式传输管线 — 异步 I/O 到 GPU 上传</span></h2>
+  <p lang="en">
+    When the CPU determines a page is needed, the <code>FVirtualTextureProducer</code> is responsible for
+    supplying the data. Producers are abstract: they might read from disk, decompress from a format like
+    BC1/BC7, or even render the data on the GPU (for Runtime VT). The pipeline is:
+  </p>
+  <p lang="zh">
+    当 CPU 确定某页面被需要时，<code>FVirtualTextureProducer</code> 负责提供数据。
+    Producer 是抽象的：它们可能从磁盘读取、从 BC1/BC7 等格式解压，
+    甚至在 GPU 上渲染数据（用于 Runtime VT）。管线为：
+  </p>
+
+  <div class="diagram">
+Producer streaming pipeline:
+
+  [CPU] FVirtualTextureSystem::Update()
+    → Analyze feedback, determine missing pages
+    → FVirtualTextureProducer::RequestPageData(page_id)
+       ├── TextureProducer: async disk I/O → decompress BC tiles
+       ├── RuntimeVT: schedule GPU render to staging buffer
+       └── AdaptiveVT: generate procedurally
+
+  [CPU] Upload thread:
+    → Allocate physical page in pool (FVirtualTexturePhysicalSpace::AcquirePage)
+    → Copy decompressed data to RHI staging buffer
+    → UploadToTexture() → GPU pool atlas (async)
+
+  [GPU] Page table update pass:
+    → Write new (virtual → physical) mapping into page table texture
+    → Next frame: shaders can now sample the newly loaded page</div>
+
+  <p lang="en">
+    UE5 limits how many new pages can be uploaded per frame (<code>r.VT.MaxUploadPerFrame</code>, default 8)
+    to bound the bandwidth spike. Pages that are frequently needed but not yet loaded will show a lower-resolution
+    mip fallback until the full page arrives.
+  </p>
+  <p lang="zh">
+    UE5 限制每帧可以上传的新页面数量（<code>r.VT.MaxUploadPerFrame</code>，默认 8）以限制带宽峰值。
+    经常需要但尚未加载的页面将显示低分辨率 Mip 回退，直到完整页面到达。
+  </p>
+
+  <!-- s6 -->
+  <h2 id="s6"><span lang="en">Shader Integration — Sampling a Virtual Texture</span><span lang="zh">Shader 集成 — 采样虚拟纹理</span></h2>
+  <p lang="en">
+    Sampling a virtual texture in HLSL is different from a regular texture2D sample. It requires an extra
+    indirection through the page table. UE5 wraps this in the <code>TextureVirtualSample</code> HLSL function
+    (defined in <code>VirtualTextureCommon.ush</code>), so Material Editor and HLSL both use the same path.
+  </p>
+  <p lang="zh">
+    在 HLSL 中采样虚拟纹理与常规 Texture2D 采样不同。它需要通过页表进行额外的间接访问。
+    UE5 将这个过程封装在 <code>TextureVirtualSample</code> HLSL 函数中（定义于 <code>VirtualTextureCommon.ush</code>），
+    因此 Material Editor 和 HLSL 都使用相同的路径。
+  </p>
+
+  <pre><span class="cm">// VirtualTextureCommon.ush — simplified conceptual version</span>
+
+float4 <span class="fn">VirtualTextureSample</span>(
+    Texture2D PageTable,     <span class="cm">// The indirection texture</span>
+    Texture2D PhysicalPool,  <span class="cm">// The physical page atlas</span>
+    SamplerState Sampler,
+    float2 UV,               <span class="cm">// Virtual UV [0,1]</span>
+    float4 VTPackedPageTableUniform)
+{
+    <span class="cm">// Step 1: calculate which mip level we need</span>
+    float MipLevel = <span class="fn">CalcMipLevel</span>(UV, VirtualResolution);
+
+    <span class="cm">// Step 2: calculate the page address (which tile contains this UV?)</span>
+    float2 PageUV = UV * VirtualPageCount;  <span class="cm">// in page-space</span>
+    float2 PageCoord = <span class="fn">floor</span>(PageUV);
+
+    <span class="cm">// Step 3: look up the page table (indirection)</span>
+    <span class="cm">// Result: tells us WHERE in the physical atlas this page lives</span>
+    float4 PageTableEntry = PageTable.<span class="fn">SampleLevel</span>(Sampler, PageCoord / PageTableSize, MipLevel);
+    float2 PhysicalPageOffset = <span class="fn">DecodePageTableEntry</span>(PageTableEntry);
+
+    <span class="cm">// Step 4: compute physical UV within the pool atlas</span>
+    float2 IntraPageUV = <span class="fn">frac</span>(PageUV);  <span class="cm">// position within the page</span>
+    float2 PhysicalUV  = (PhysicalPageOffset + IntraPageUV * PageSizeTexels) / PoolAtlasSize;
+
+    <span class="cm">// Step 5: sample the actual data from the physical pool</span>
+    <span class="kw">return</span> PhysicalPool.<span class="fn">Sample</span>(Sampler, PhysicalUV);
+}
+
+<span class="cm">// Also: while sampling, write feedback</span>
+<span class="cm">// FeedbackBuffer[pixel/4] = PackFeedback(SpaceID, MipLevel, PageCoord);</span></pre>
+
+  <!-- s7 -->
+  <h2 id="s7"><span lang="en">Runtime Virtual Texture (RVT) — Render to VT</span><span lang="zh">运行时虚拟纹理（RVT）— 渲染至 VT</span></h2>
+  <p lang="en">
+    <span class="def">Runtime Virtual Texture</span> is a VT variant where pages are not loaded from disk
+    but rendered on demand by the GPU. This is used primarily for <strong>landscape blending</strong>:
+    the landscape material can be very complex (blending 8+ layers), but the result is baked into VT pages
+    that terrain meshes can sample cheaply as a single texture lookup.
+  </p>
+  <p lang="zh">
+    <span class="def">运行时虚拟纹理（RVT）</span>是一种 VT 变体，页面不从磁盘加载，
+    而是由 GPU 按需渲染。这主要用于<strong>地形混合</strong>：
+    地形材质可以非常复杂（混合 8+ 个层级），但结果被烘焙到 VT 页面中，
+    地形网格可以作为单次纹理查找廉价采样。
+  </p>
+
+  <div class="note">
+    <span lang="en"><strong>RVT use case example:</strong> Landscape with 8 layers (rock, grass, mud, snow...) blended by weight maps. Without RVT: the full blending shader runs for every pixel of the landscape every frame. With RVT: blending happens only when a new page is needed (or on update). Subsequent frames read a pre-blended page — roughly 8× fewer texture samples in the shading pass.</span>
+    <span lang="zh"><strong>RVT 用例示例：</strong>包含 8 个图层（岩石、草地、泥土、雪...）按权重图混合的地形。没有 RVT：完整混合 Shader 每帧对地形每个像素运行。有 RVT：混合仅在需要新页面时发生（或按需更新）。后续帧读取预混合页面——着色通道中纹理采样减少约 8 倍。</span>
+  </div>
+
+  <p lang="en">
+    RVT pages are rendered by <code>FRuntimeVirtualTextureRender</code>. When a page is needed, a
+    scene capture renders the landscape/terrain into a staging render target at the appropriate resolution,
+    then uploads the result into the physical pool. Pages can be marked as static (never re-render)
+    or dynamic (re-render when the scene changes).
+  </p>
+  <p lang="zh">
+    RVT 页面由 <code>FRuntimeVirtualTextureRender</code> 渲染。需要页面时，
+    场景捕获以适当分辨率将地形渲染到暂存渲染目标，然后将结果上传到物理池。
+    页面可以标记为静态（从不重新渲染）或动态（场景变化时重新渲染）。
+  </p>
+
+  <pre><span class="cm">// Setting up RVT in a Landscape in Blueprints / C++:</span>
+
+<span class="cm">// 1. Place a RuntimeVirtualTextureVolume actor in the level</span>
+<span class="cm">// 2. Create a VirtualTexture asset (content browser) with type "Runtime"</span>
+<span class="cm">// 3. Assign the VT asset to the Landscape's RuntimeVirtualTextures array</span>
+<span class="cm">// 4. In the Landscape material: use "Runtime Virtual Texture Sample" node</span>
+<span class="cm">//    to read from the VT instead of sampling all layers directly</span>
+
+<span class="cm">// C++ setup:</span>
+URuntimeVirtualTexture* RVT = <span class="fn">NewObject</span>&lt;URuntimeVirtualTexture&gt;();
+RVT-&gt;SetSize(ETextureSize::TS_4096);       <span class="cm">// 4096×4096 virtual resolution</span>
+RVT-&gt;SetTileSize(ETileSize::TS_128);       <span class="cm">// 128-texel physical pages</span>
+RVT-&gt;SetTileBorderSize(<span class="num">4</span>);               <span class="cm">// 4-texel border</span>
+RVT-&gt;SetMipLevels(<span class="num">9</span>);                    <span class="cm">// log2(4096/128) + 1</span>
+
+<span class="cm">// Console: stat VirtualTextureMemory — shows pool usage</span></pre>
+
+  <!-- s8 -->
+  <h2 id="s8"><span lang="en">Adaptive Virtual Texture — Per-Object VT</span><span lang="zh">自适应虚拟纹理 — 逐对象 VT</span></h2>
+  <p lang="en">
+    <span class="def">Adaptive Virtual Texture (AVT)</span> extends VT to work on individual static mesh objects,
+    not just landscapes. Each object can have its own VT space, and the page size adapts based on the object's
+    on-screen pixel density. This is useful for hero assets that need more texture detail than standard streaming
+    can provide without consuming disproportionate VRAM.
+  </p>
+  <p lang="zh">
+    <span class="def">自适应虚拟纹理（AVT）</span>将 VT 扩展到单个静态网格对象，而不仅仅是地形。
+    每个对象可以有自己的 VT 空间，页面大小根据对象的屏幕像素密度自适应。
+    这对于需要比标准流式传输能提供更多纹理细节的英雄资产非常有用，同时不消耗不成比例的 VRAM。
+  </p>
+
+  <!-- s9 -->
+  <h2 id="s9"><span lang="en">Usage &amp; Setup Guide</span><span lang="zh">使用与配置指南</span></h2>
+
+  <h3><span lang="en">Enabling VT for a Texture</span><span lang="zh">为纹理启用 VT</span></h3>
+  <p lang="en">In the Texture Editor (or bulk-edit): check <strong>"Virtual Texture Streaming"</strong> in the Texture Compression settings. This makes the texture stream via VT. Then enable <code>r.VirtualTextures=1</code> (project-wide via Project Settings → Rendering → Virtual Textures).</p>
+  <p lang="zh">在纹理编辑器（或批量编辑）中：在纹理压缩设置中勾选<strong>"Virtual Texture Streaming"</strong>。这使纹理通过 VT 流式传输。然后启用 <code>r.VirtualTextures=1</code>（通过"项目设置 → 渲染 → 虚拟纹理"在项目范围内设置）。</p>
+
+  <h3><span lang="en">Setting Up RVT for Landscape</span><span lang="zh">为地形设置 RVT</span></h3>
+  <ol>
+    <li lang="en">In Project Settings → Rendering, enable <strong>Virtual Texture Support</strong> and <strong>Enable virtual texture support in materials</strong>.</li>
+    <li lang="zh">在"项目设置 → 渲染"中，启用<strong>"虚拟纹理支持"</strong>和<strong>"在材质中启用虚拟纹理支持"</strong>。</li>
+    <li lang="en">Place a <strong>RuntimeVirtualTextureVolume</strong> actor in your level. Set its bounds to cover the landscape.</li>
+    <li lang="zh">在关卡中放置 <strong>RuntimeVirtualTextureVolume</strong> Actor，设置其边界以覆盖地形。</li>
+    <li lang="en">Create a <strong>VirtualTexture</strong> asset in Content Browser. Configure: type = Color+Normal, page size = 128–256, mip levels = auto.</li>
+    <li lang="zh">在内容浏览器中创建 <strong>VirtualTexture</strong> 资产。配置：类型 = 颜色+法线，页面大小 = 128–256，Mip 级别 = 自动。</li>
+    <li lang="en">In the Landscape actor, under Virtual Textures, add the VT asset. Enable <strong>Draw in Virtual Textures</strong>.</li>
+    <li lang="zh">在地形 Actor 的虚拟纹理下，添加 VT 资产。启用<strong>"在虚拟纹理中绘制"</strong>。</li>
+    <li lang="en">In the Landscape Material: add a <strong>Runtime Virtual Texture Sample</strong> node. Set it to read BaseColor, Normal, Roughness from the RVT.</li>
+    <li lang="zh">在地形材质中：添加 <strong>Runtime Virtual Texture Sample</strong> 节点。设置为从 RVT 读取 BaseColor、Normal、Roughness。</li>
+    <li lang="en">Create a second material (the "write" material) with <strong>Runtime Virtual Texture Output</strong> node — this renders into the VT pages.</li>
+    <li lang="zh">创建第二个材质（"写入"材质），包含 <strong>Runtime Virtual Texture Output</strong> 节点——它渲染到 VT 页面中。</li>
+  </ol>
+
+  <h3><span lang="en">Debugging Virtual Textures</span><span lang="zh">调试虚拟纹理</span></h3>
+  <pre><span class="cm">-- Console commands for VT debugging --</span>
+
+r.VT.Flush             <span class="cm">-- Evict all VT pages (forces re-stream)</span>
+r.VT.Borders=1         <span class="cm">-- Visualize page borders in the viewport</span>
+r.VT.Verbose=1         <span class="cm">-- Log detailed page streaming events</span>
+stat VirtualTextureMemory   <span class="cm">-- Pool memory usage statistics</span>
+stat VirtualTexturePerf     <span class="cm">-- Streaming performance counters</span>
+
+<span class="cm">-- Viewport Show menu → Virtual Texture → Feedback shows feedback buffer</span>
+<span class="cm">-- Viewport Show menu → Virtual Texture → Page Table shows page occupancy</span>
+
+r.VT.PoolSizeScale=1.0      <span class="cm">-- Scale physical pool size (0.5 = half, saves VRAM)</span>
+r.VT.MaxUploadPerFrame=8    <span class="cm">-- Max pages uploaded per frame</span>
+r.VT.NumFeedbackSamples=4   <span class="cm">-- Feedback buffer density (higher = more responsive)</span></pre>
+
+  <!-- s10 -->
+  <h2 id="s10"><span lang="en">Performance Tuning</span><span lang="zh">性能调优</span></h2>
+  <div class="table-wrap"><table>
+    <thead><tr>
+      <th>CVar</th>
+      <th><span lang="en">Default</span><span lang="zh">默认</span></th>
+      <th><span lang="en">Effect</span><span lang="zh">效果</span></th>
+    </tr></thead>
+    <tbody>
+      <tr><td>r.VirtualTextures</td><td>0</td><td><span lang="en">Master enable (must enable in Project Settings UI)</span><span lang="zh">主开关（须在项目设置 UI 中启用）</span></td></tr>
+      <tr><td>r.VT.PoolSizeScale</td><td>1.0</td><td><span lang="en">Physical pool size multiplier. Reduce to 0.5 on low-VRAM devices.</span><span lang="zh">物理池大小乘数。在低显存设备上减到 0.5。</span></td></tr>
+      <tr><td>r.VT.MaxUploadPerFrame</td><td>8</td><td><span lang="en">Limits bandwidth spike from page uploads. Increase for faster streaming.</span><span lang="zh">限制页面上传的带宽峰值。增大可加快流式传输速度。</span></td></tr>
+      <tr><td>r.VT.FeedbackFactor</td><td>16</td><td><span lang="en">Feedback resolution divisor (16 = 1/16 screen res). Lower = more accurate, more overhead.</span><span lang="zh">反馈分辨率除数（16 = 1/16 屏幕分辨率）。越小越精确，开销越大。</span></td></tr>
+      <tr><td>r.VT.PageTableExtraLODBias</td><td>0</td><td><span lang="en">Extra mip bias for page table lookups. Positive values use coarser (cheaper) mips.</span><span lang="zh">页表查找的额外 Mip 偏差。正值使用更粗糙（更便宜）的 Mip。</span></td></tr>
+      <tr><td>r.RVT.TileCountBias</td><td>0</td><td><span lang="en">Increase RVT tile count for more detail on high-end hardware.</span><span lang="zh">为高端硬件增加 RVT 瓦片数以获取更多细节。</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="warning">
+    <span lang="en"><strong>Common pitfall — VT Flickering:</strong> If you see textures popping or flickering, the physical pool is likely full and pages are being evicted too aggressively. Increase <code>r.VT.PoolSizeScale</code> or reduce the number of unique VT textures in view. Check <code>stat VirtualTextureMemory</code> for pool occupancy.</span>
+    <span lang="zh"><strong>常见问题 — VT 闪烁：</strong>如果看到纹理弹出或闪烁，物理池可能已满且页面被过于积极地驱逐。增大 <code>r.VT.PoolSizeScale</code> 或减少视野中唯一 VT 纹理的数量。通过 <code>stat VirtualTextureMemory</code> 检查池占用情况。</span>
+  </div>
+
+  <!-- s11 -->
+  <h2 id="s11"><span lang="en">Source Navigation</span><span lang="zh">源码导航</span></h2>
+  <p lang="en">All paths relative to <code>Engine/Source/Runtime/Renderer/Private/VT/</code></p>
+  <p lang="zh">所有路径相对于 <code>Engine/Source/Runtime/Renderer/Private/VT/</code></p>
+  <ul class="file-list">
+    <li><span class="fp">VirtualTextureSystem.h/.cpp</span><span class="fd"><span lang="en">Master manager: <span class="fun">Update()</span>, feedback analysis, page request dispatch</span><span lang="zh">主管理器：<span class="fun">Update()</span>、反馈分析、页面请求分发</span></span></li>
+    <li><span class="fp">VirtualTextureSpace.h/.cpp</span><span class="fd"><span lang="en">Virtual address space, page table texture management</span><span lang="zh">虚拟地址空间、页表纹理管理</span></span></li>
+    <li><span class="fp">VirtualTexturePhysicalSpace.h/.cpp</span><span class="fd"><span lang="en">Physical page pool atlas, LRU eviction, page allocation</span><span lang="zh">物理页池图集、LRU 驱逐、页面分配</span></span></li>
+    <li><span class="fp">VirtualTextureProducer.h/.cpp</span><span class="fd"><span lang="en">Abstract producer interface — disk, RVT, procedural</span><span lang="zh">抽象 Producer 接口——磁盘、RVT、程序化</span></span></li>
+    <li><span class="fp">VirtualTextureFeedback.h/.cpp</span><span class="fd"><span lang="en">Feedback buffer setup, GPU→CPU readback, page set analysis</span><span lang="zh">反馈缓冲区设置、GPU→CPU 回读、页面集分析</span></span></li>
+    <li><span class="fp">RuntimeVirtualTextureRender.cpp</span><span class="fd"><span lang="en">RVT page rendering: scene capture, GPU-rendered pages</span><span lang="zh">RVT 页面渲染：场景捕获、GPU 渲染页面</span></span></li>
+    <li><span class="fp">AdaptiveVirtualTexture.h/.cpp</span><span class="fd"><span lang="en">Per-object VT support, density-adaptive page size</span><span lang="zh">逐对象 VT 支持，密度自适应页面大小</span></span></li>
+    <li><span class="fp">AllocatedVirtualTexture.h/.cpp</span><span class="fd"><span lang="en">Tracks an allocated region within a VT space</span><span lang="zh">追踪 VT 空间内的已分配区域</span></span></li>
+    <li><span class="fp">../MaterialCache/MaterialCacheVirtualTexture.cpp</span><span class="fd"><span lang="en">Material cache integration with VT system</span><span lang="zh">材质缓存与 VT 系统的集成</span></span></li>
+  </ul>
+
+  <footer>Unreal Engine 5.6 &middot; Engine/Source/Runtime/Renderer/Private/VT/<br>Source analysis &middot; For learning purposes</footer>
+
+  <div class="page-nav">
+    <a href="../02-engine-infrastructure/thread-concurrency.html" class="prev"><span class="pn-label">&larr; Prev</span><span class="pn-title"><span lang="en">Thread Concurrency</span><span lang="zh">线程并发</span></span></a>
+    <a href="../04-material-shader/material-translation.html" class="next"><span class="pn-label">Next &rarr;</span><span class="pn-title"><span lang="en">Shader Architecture</span><span lang="zh">Shader 架构</span></span></a>
+  </div>
+</main>
+</div>
+
+<script>
+function toggleLang(){var h=document.documentElement;if(h.classList.contains('lang-zh')){h.classList.remove('lang-zh');h.lang='en';document.title='Virtual Texture System';localStorage.setItem('ue-doc-lang','en');}else{h.classList.add('lang-zh');h.lang='zh-CN';document.title='虚拟纹理系统';localStorage.setItem('ue-doc-lang','zh');}}
+if(document.documentElement.classList.contains('lang-zh'))document.title='虚拟纹理系统';
+</script>
+</body>
+</html>

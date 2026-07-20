@@ -1,0 +1,452 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Water Rendering — Single Layer Water Shading &amp; Pipeline</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Gudea">
+  <script>(function(){if(localStorage.getItem('ue-doc-lang')==='zh'){document.documentElement.classList.add('lang-zh');document.documentElement.lang='zh-CN';}})();</script>
+  <style>
+    html:not(.lang-zh) [lang="zh"]{display:none;} html.lang-zh [lang="en"]{display:none;}
+    #lang-btn{position:fixed;top:16px;right:20px;z-index:999;background:#37425d;color:#fff;border:none;border-radius:4px;padding:5px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:Gudea,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.2);transition:background .15s;} #lang-btn:hover{background:#4a5a7a;}
+    *{box-sizing:border-box;margin:0;padding:0;} body{font-family:Gudea,sans-serif;font-size:16px;line-height:1.8;color:#111;background:#eee;}
+    #wrapper{max-width:1100px;margin:0 auto;display:flex;align-items:flex-start;padding:40px 24px;gap:36px;}
+    #sidebar{width:240px;flex-shrink:0;font-size:13px;}
+    #sidebar h2{font-size:12px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;border:none;padding:0;}
+    #sidebar > ol{list-style:none !important;padding:0;} #sidebar > ol > li{list-style:none !important;margin-bottom:5px;}
+    #sidebar > ol > li a{color:#555;text-decoration:none;display:block;padding:2px 0;transition:color .12s;} #sidebar > ol > li a:hover{color:#58A;} #sidebar > ol > li a::before{content:none;}
+    #content{flex:1;min-width:0;}
+    .page-header{margin-bottom:32px;padding-bottom:20px;border-bottom:1px solid #ddd;}
+    .page-header .crumb{font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
+    .page-header h1{font-size:1.8rem;font-weight:900;color:#303236;margin-bottom:8px;line-height:1.25;}
+    .page-header .subtitle{font-family:'Courier New',monospace;font-size:13px;color:#777;}
+    h2{color:#37425d;font-size:22px;margin:36px 0 10px;} h3{color:#633739;font-size:17px;margin:24px 0 8px;}
+    p{margin-bottom:14px;} a{color:#58A;text-decoration:none;} a:hover{text-decoration:underline;} strong{color:#222;}
+    .fun{font-family:'Courier New',monospace;color:#2a6496;} .def{color:green;font-weight:600;}
+    code{font-family:'Courier New',monospace;font-size:14px;background:#ddd;border-radius:3px;padding:1px 5px;}
+    pre{background:#282c34;color:#abb2bf;border-radius:5px;padding:16px 18px;overflow-x:auto;margin:14px 0 18px;font-family:'Courier New',monospace;font-size:13.5px;line-height:1.6;}
+    pre code{background:none;padding:0;color:inherit;} .kw{color:#c678dd;} .fn{color:#61afef;} .cm{color:#5c6370;font-style:italic;} .str{color:#98c379;} .num{color:#d19a66;} .type{color:#e5c07b;}
+    .note{display:block;margin:18px 0;padding:15px;background:#D8F5D8;color:#444;border-radius:5px;border:2px solid #AFDFAF;font-size:15px;line-height:1.7;}
+    .warning{display:block;margin:18px 0;padding:15px;background:#FFD2D2;color:#444;border-radius:5px;border:2px solid #E0B3B3;font-size:15px;line-height:1.7;}
+    ul,ol{padding-left:22px;margin-bottom:14px;} li{margin-bottom:5px;}
+    .table-wrap{overflow-x:auto;margin:14px 0;} table{border-collapse:collapse;font-size:14px;width:100%;}
+    th,td{padding:8px 12px;border-bottom:1px solid #aaa;text-align:left;} th{border-bottom:2px solid #888;font-weight:700;background:#ddd;} tr:nth-child(even) td{background:#e8e8e8;}
+    td:first-child{font-family:'Courier New',monospace;font-size:13px;color:#2a6496;white-space:nowrap;}
+    .diagram{background:#fff;border:1px solid #ccc;border-radius:5px;padding:20px;margin:16px 0;font-family:'Courier New',monospace;font-size:13px;line-height:1.8;overflow-x:auto;white-space:pre;}
+    .file-list{list-style:none;padding:0;margin:12px 0;} .file-list li{padding:6px 0;border-bottom:1px solid #ccc;display:flex;align-items:baseline;gap:10px;font-size:14px;} .file-list li:last-child{border-bottom:none;} .file-list .fp{font-family:'Courier New',monospace;font-size:13px;color:#58A;min-width:300px;} .file-list .fd{color:#555;}
+    footer{margin-top:48px;padding-top:16px;border-top:1px solid #ccc;font-size:12px;color:#aaa;text-align:center;}
+    @media(max-width:800px){#wrapper{flex-direction:column;padding:20px 16px;}#sidebar{width:100%;position:static;max-height:none;margin-bottom:24px;}}
+    #series-nav{margin-bottom:24px;} #series-nav ol,#series-nav li{list-style:none;padding-left:0;}
+    .snav-label{font-size:11px;font-weight:800;color:#37425d;text-transform:uppercase;letter-spacing:.14em;display:block;margin-bottom:10px;padding-bottom:4px;border-bottom:2px solid #37425d;}
+    #series-nav > ol{list-style:none;padding:0;margin:0;} #series-nav ol{list-style:none;padding:0;margin:0;}
+    .snav-ch{margin-bottom:10px;}
+    .snav-ch > span{font-size:11px;font-weight:800;letter-spacing:.06em;color:#fff;background:#5a6a80;display:block;padding:3px 7px 3px 6px;border-radius:3px;margin-bottom:3px;text-transform:uppercase;}
+    .snav-ch > ol{padding-left:0;margin-top:0;}
+    .snav-item{margin-bottom:1px;}
+    .snav-item a{font-size:13.5px;color:#666;text-decoration:none;display:block;padding:3px 6px;border-left:3px solid transparent;border-radius:0 3px 3px 0;transition:color .12s,background .12s,border-color .12s;}
+    .snav-item a:hover{color:#37425d;background:#f0f2f5;border-left-color:#c0cad8;}
+    .snav-item.active a{color:#37425d;font-weight:700;background:#e8ecf4;border-left-color:#37425d;}
+    .page-nav{display:flex;justify-content:space-between;align-items:center;margin:36px 0 0;padding-top:16px;border-top:1px solid #ddd;font-size:14px;}
+    .page-nav a{color:#58A;text-decoration:none;display:flex;align-items:center;gap:6px;max-width:42%;}
+    .page-nav a:hover{text-decoration:underline;}
+    .page-nav .pn-label{font-size:11px;color:#aaa;text-transform:uppercase;display:block;}
+    .page-nav .pn-title{display:block;} .page-nav .prev{text-align:left;} .page-nav .next{text-align:right;}
+  
+    .snav-children{display:block;list-style:none;padding:2px 0 4px 10px;margin:1px 0 0;border-left:2px solid #dde3ee;}
+    .snav-subitem{margin-bottom:1px;}
+    .snav-subitem a{font-size:12px;color:#888;text-decoration:none;display:block;padding:2px 4px 2px 8px;border-left:2px solid transparent;border-radius:0 3px 3px 0;transition:color .12s,background .12s,border-color .12s;}
+    .snav-subitem a:hover{color:#37425d;background:#f0f2f5;border-left-color:#c0cad8;}
+    .snav-subitem.active a{color:#37425d;font-weight:700;background:#e8ecf4;border-left-color:#37425d;}  </style>
+</head>
+<body>
+<button id="lang-btn" onclick="toggleLang()"><span lang="en">中文</span><span lang="zh">English</span></button>
+<div id="wrapper">
+<nav id="sidebar">
+  <div id="series-nav">
+    <span class="snav-label"><span lang="en">Series</span><span lang="zh">系列</span></span>
+    <ol>
+
+      <li class="snav-ch"><span lang="en">00 Overview</span><span lang="zh">00 概述</span>
+        <ol>
+          <li class="snav-item"><a href="../00-overview/introduction.html"><span lang="en">Introduction</span><span lang="zh">系列简介</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">01 Rendering Pipeline</span><span lang="zh">01 渲染管线</span>
+        <ol>
+          <li class="snav-item"><a href="../01-rendering-pipeline/deferred-shading.html"><span lang="en">Deferred Rendering</span><span lang="zh">延迟渲染</span></a></li>
+          <li class="snav-item"><a href="../01-rendering-pipeline/forward-shading.html"><span lang="en">Forward Rendering</span><span lang="zh">前向渲染</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">02 Engine Infrastructure</span><span lang="zh">02 引擎基础设施</span>
+        <ol>
+          <li class="snav-item"><a href="../02-engine-infrastructure/rdg-compiler.html"><span lang="en">RDG — Render Dependency Graph</span><span lang="zh">RDG 渲染依赖图</span></a></li>
+          <li class="snav-item"><a href="../02-engine-infrastructure/thread-concurrency.html"><span lang="en">Thread Concurrency</span><span lang="zh">线程并发</span></a></li>
+          <li class="snav-item"><a href="../02-engine-infrastructure/virtual-texture.html"><span lang="en">Virtual Texture Streaming</span><span lang="zh">虚拟纹理流送</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">03 Lighting &amp; Shadows</span><span lang="zh">03 光照与阴影</span>
+        <ol>
+          <li class="snav-item"><a href="../03-lighting-shadows/lighting-architecture.html"><span lang="en">Lighting Architecture</span><span lang="zh">光照架构</span></a></li>
+          <li class="snav-item"><a href="../03-lighting-shadows/virtual-shadow-maps.html"><span lang="en">Virtual Shadow Maps</span><span lang="zh">虚拟阴影贴图</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">04 Material &amp; Shader System</span><span lang="zh">04 材质与着色器系统</span>
+        <ol>
+          <li class="snav-item"><a href="../04-material-shader/material-translation.html"><span lang="en">Shader Compilation &amp; Architecture</span><span lang="zh">着色器编译与架构</span></a></li>
+          <li class="snav-item"><a href="../04-material-shader/shading-models-reference.html"><span lang="en">Shading Models Reference</span><span lang="zh">着色模型参考</span></a></li>
+          <li class="snav-item"><a href="../04-material-shader/usf-hlsl-guide.html"><span lang="en">USF / HLSL Writing Guide</span><span lang="zh">USF / HLSL 编写指南</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">05 UE5 Core Technologies</span><span lang="zh">05 UE5 核心技术</span>
+        <ol>
+          <li class="snav-item"><a href="../05-ue5-core/nanite-rasterizer.html"><span lang="en">Nanite — Virtual Geometry</span><span lang="zh">Nanite 虚拟几何</span></a></li>
+          <li class="snav-item"><a href="../05-ue5-core/lumen-raytracing.html"><span lang="en">Lumen — Dynamic GI</span><span lang="zh">Lumen 动态全局光照</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">06 Post-Processing &amp; Effects</span><span lang="zh">06 后处理与屏幕效果</span>
+        <ol>
+          <li class="snav-item"><a href="../06-post-processing/post-processing.html"><span lang="en">Post-Processing Pipeline</span><span lang="zh">后处理管线</span></a></li>
+          <li class="snav-item"><a href="../06-post-processing/screen-space-effects.html"><span lang="en">Screen Space Effects</span><span lang="zh">屏幕空间效果</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">07 Specialized Rendering</span><span lang="zh">07 专项渲染</span>
+        <ol>
+          <li class="snav-item"><a href="../07-specialized-rendering/volumetric-atmosphere.html"><span lang="en">Volumetric Fog &amp; Atmosphere</span><span lang="zh">体积雾与大气</span></a></li>
+          <li class="snav-item active"><a href="../07-specialized-rendering/water-rendering.html"><span lang="en">Water Rendering</span><span lang="zh">水体渲染</span></a></li>
+          <li class="snav-item"><a href="../07-specialized-rendering/hair-groom-rendering.html"><span lang="en">Hair &amp; Groom</span><span lang="zh">毛发渲染</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">08 Engine Customization</span><span lang="zh">08 引擎定制</span>
+        <ol>
+          <li class="snav-item"><a href="../08-engine-customization/custom-shading-model.html"><span lang="en">Custom Shading Model</span><span lang="zh">自定义着色模型</span></a></li>
+          <li class="snav-item"><a href="../08-engine-customization/niagara-gpu-compute.html"><span lang="en">Niagara GPU Compute</span><span lang="zh">Niagara GPU 计算</span></a></li>
+        </ol>
+      </li>
+
+      <li class="snav-ch"><span lang="en">09 Performance &amp; Profiling</span><span lang="zh">09 性能与分析</span>
+        <ol>
+          <li class="snav-item"><a href="../09-profiling/hardware-profiling.html"><span lang="en">Hardware Profiling</span><span lang="zh">硬件性能分析</span></a></li>
+        </ol>
+      </li>
+
+    </ol>
+  </div>
+  <h2><span lang="en">Contents</span><span lang="zh">目录</span></h2>
+  <ol>
+    <li><a href="#s1"><span lang="en">Why a Dedicated Water Model?</span><span lang="zh">为何需要专用水体模型？</span></a></li>
+    <li><a href="#s2"><span lang="en">Single Layer Water BRDF</span><span lang="zh">单层水体 BRDF</span></a></li>
+    <li><a href="#s3"><span lang="en">Water Rendering Pipeline</span><span lang="zh">水体渲染管线</span></a></li>
+    <li><a href="#s4"><span lang="en">Refraction &amp; Underwater</span><span lang="zh">折射与水下</span></a></li>
+    <li><a href="#s5"><span lang="en">Water Info Texture</span><span lang="zh">水体信息纹理</span></a></li>
+    <li><a href="#s6"><span lang="en">Reflections &amp; SSR</span><span lang="zh">反射与 SSR</span></a></li>
+    <li><a href="#s7"><span lang="en">Material Setup Guide</span><span lang="zh">材质配置指南</span></a></li>
+    <li><a href="#s8"><span lang="en">Performance Tuning</span><span lang="zh">性能调优</span></a></li>
+    <li><a href="#s9"><span lang="en">Source Navigation</span><span lang="zh">源码导航</span></a></li>
+  </ol>
+</nav>
+
+<main id="content">
+  <div class="page-header">
+    <div class="crumb">Unreal Engine 5.6 &middot; Shader Architecture &middot; Part 03-F</div>
+    <h1><span lang="en">Water Rendering — Single Layer Water Shading &amp; Pipeline</span><span lang="zh">水体渲染 — 单层水体着色与管线</span></h1>
+    <div class="subtitle">Renderer/Private/SingleLayerWaterRendering.cpp &middot; Engine/Shaders/Private/SingleLayerWaterShading.ush</div>
+  </div>
+
+  <!-- s1 -->
+  <h2 id="s1"><span lang="en">Why a Dedicated Water Model?</span><span lang="zh">为何需要专用水体模型？</span></h2>
+  <p lang="en">
+    Water is optically unique: it simultaneously <strong>reflects</strong> (air–water interface with Fresnel),
+    <strong>refracts</strong> (objects underwater are displaced by IOR ≈ 1.33), and <strong>absorbs</strong>
+    (exponential extinction per wavelength — red dies fastest, blue persists longest). None of the standard
+    shading models handle all three together. The <span class="def">Single Layer Water</span> shading model
+    was purpose-built to solve this, treating the water surface as a thin interface between air and a
+    participating medium.
+  </p>
+  <p lang="zh">
+    水在光学上是独特的：它同时<strong>反射</strong>（具有 Fresnel 的空气–水界面）、
+    <strong>折射</strong>（水下物体因 IOR ≈ 1.33 而发生位移），以及<strong>吸收</strong>
+    （每个波长的指数衰减——红色最先消失，蓝色持续最久）。
+    没有任何标准着色模型能同时处理这三者。
+    <span class="def">单层水体</span>着色模型专为解决此问题而构建，
+    将水面视为空气与参与介质之间的薄界面。
+  </p>
+
+  <div class="diagram">
+Water = 3 phenomena at the surface + 1 beneath:
+
+  ┌──── AIR ────────────────────────────────────────────────┐
+  │  Reflected ray:   Fresnel(IOR=1.33) × sky/reflection    │
+  │  Refracted ray:   bent by IOR, enters water volume       │
+  ├──── WATER SURFACE ──────────────────────────────────────┤
+  │  Scatter color:   Mie/Rayleigh — the "teal/blue" of water│
+  │  Absorption:      exp(-extinction × depth) per R,G,B     │
+  │                   → deep water kills red first           │
+  ├──── WATER BED / OBJECTS ────────────────────────────────┤
+  │  Scene depth buffer used to determine water depth        │
+  │  Depth = WaterSurface.z - SceneDepth.z                   │
+  └─────────────────────────────────────────────────────────┘</div>
+
+  <!-- s2 -->
+  <h2 id="s2"><span lang="en">Single Layer Water BRDF — The Math</span><span lang="zh">单层水体 BRDF — 数学原理</span></h2>
+  <p lang="en">
+    The water shading model evaluates four components and combines them into the final pixel color:
+  </p>
+  <p lang="zh">水体着色模型计算四个分量并将它们合并为最终像素颜色：</p>
+
+  <pre><span class="cm">// SingleLayerWaterShading.ush — conceptual structure</span>
+float4 <span class="fn">EvaluateSingleLayerWater</span>(FSingleLayerWaterData W, FGBufferData G, ...)
+{
+    <span class="cm">// 1. SURFACE SPECULAR — GGX reflection, same as Default Lit</span>
+    float3 SurfaceSpecular = <span class="fn">SpecularGGX</span>(G.Roughness, <span class="num">0.02</span> <span class="cm">/*F0 for water*/</span>, Context);
+
+    <span class="cm">// 2. FRESNEL REFLECTANCE — how much light reflects vs refracts</span>
+    <span class="cm">// Schlick approximation with IOR=1.33</span>
+    float F0_water = ((<span class="num">1.33f</span> - <span class="num">1.0f</span>) / (<span class="num">1.33f</span> + <span class="num">1.0f</span>));
+    F0_water *= F0_water; <span class="cm">// ≈ 0.02</span>
+    float FresnelR = F0_water + (<span class="num">1</span> - F0_water) * <span class="fn">pow5</span>(<span class="num">1</span> - <span class="fn">saturate</span>(dot(N, V)));
+    float Transmission = <span class="num">1.0f</span> - FresnelR;   <span class="cm">// complement: refracted fraction</span>
+
+    <span class="cm">// 3. WATER ABSORPTION — Beer-Lambert law per channel</span>
+    <span class="cm">// WaterDepth = distance from surface to bed (in cm)</span>
+    float WaterDepth = <span class="fn">max</span>(<span class="num">0</span>, W.SurfaceWorldZ - SceneBedWorldZ);
+    float3 Transmittance = <span class="fn">exp</span>(-W.AbsorptionCoeff * WaterDepth / <span class="num">100.0f</span>);
+
+    <span class="cm">// 4. SCATTER COLOR — in-water scattering (Mie: forward scatter, blue-ish)</span>
+    <span class="cm">// Henyey-Greenstein phase function for directional scatter</span>
+    float ScatterPhase = <span class="fn">HenyeyGreenstein</span>(W.PhaseG, <span class="fn">dot</span>(L, V));
+    float3 ScatterColor = W.ScatterColor * ScatterPhase * WaterDepth;
+
+    <span class="cm">// 5. UNDERWATER COLOR — what's below, attenuated by absorption</span>
+    float3 RefractedUV  = <span class="fn">ComputeRefractedUV</span>(PixelPos, G.Normal, IOR);
+    float3 Underwater   = <span class="fn">SampleSceneColor</span>(RefractedUV) * Transmittance;
+
+    <span class="cm">// 6. FINAL COMPOSITE</span>
+    <span class="kw">return</span> FresnelR * (SurfaceSpecular + ReflectionColor) +   <span class="cm">// reflected</span>
+           Transmission * (Underwater + ScatterColor);          <span class="cm">// refracted</span>
+}</pre>
+
+  <h3><span lang="en">Key Physical Parameters Explained</span><span lang="zh">关键物理参数说明</span></h3>
+  <div class="table-wrap"><table>
+    <thead><tr>
+      <th><span lang="en">Parameter</span><span lang="zh">参数</span></th>
+      <th><span lang="en">Physical Meaning</span><span lang="zh">物理含义</span></th>
+      <th><span lang="en">Typical Values</span><span lang="zh">典型值</span></th>
+    </tr></thead>
+    <tbody>
+      <tr><td>WaterScatterColor</td><td><span lang="en">The color of light scattered within the water body — gives tropical water its teal/cyan, or murky water its greenish-brown tint</span><span lang="zh">水体内散射光的颜色——使热带水呈现蓝绿/青色，或浑浊水呈现绿棕色</span></td><td><span lang="en">Tropical: (0.1, 0.6, 0.6)<br>Ocean: (0.05, 0.3, 0.5)</span><span lang="zh">热带：(0.1, 0.6, 0.6)</span></td></tr>
+      <tr><td>WaterAbsorptionColor</td><td><span lang="en">Per-channel extinction coefficient (cm⁻¹). Higher = faster absorption. Red absorbs first in real water.</span><span lang="zh">逐通道消光系数（cm⁻¹）。越高吸收越快。真实水中红色最先被吸收。</span></td><td><span lang="en">Clear: (0.3, 0.05, 0.01)<br>Murky: (0.7, 0.4, 0.2)</span><span lang="zh">清澈：(0.3, 0.05, 0.01)</span></td></tr>
+      <tr><td>ColorAbsorptionDepth</td><td><span lang="en">Reference depth (cm) for absorption curve normalization</span><span lang="zh">吸收曲线归一化的参考深度（cm）</span></td><td>200–500</td></tr>
+      <tr><td>WaterPhaseG</td><td><span lang="en">Henyey-Greenstein phase anisotropy: 0=isotropic, +1=full forward scatter, -1=full back scatter</span><span lang="zh">Henyey-Greenstein 相位各向异性：0=各向同性，+1=完全前向散射，-1=完全后向散射</span></td><td>0.1–0.5</td></tr>
+    </tbody>
+  </table></div>
+
+  <!-- s3 -->
+  <h2 id="s3"><span lang="en">Water Rendering Pipeline — Per-Frame Passes</span><span lang="zh">水体渲染管线 — 逐帧通道</span></h2>
+  <div class="diagram">
+Per-frame water rendering (SingleLayerWaterRendering.cpp):
+
+  1. Depth Pre-Pass (normal):
+     → Water mesh writes to depth buffer normally
+     → Allows correct depth-based occlusion
+
+  2. Scene Opaque Rendering:
+     → All opaque objects rendered to GBuffer + SceneColor
+
+  3. SingleLayerWater Pass  ← THE KEY PASS
+     → Water surface rendered with SingleLayerWater material
+     → At this point: SceneColor has the underwater scene
+     → Shader reads SceneColor (with refraction offset)
+     → Applies absorption: attenuate by exp(-absorption * depth)
+     → Adds scatter color
+     → Adds Fresnel reflection (from Reflection Capture / SSR / Lumen)
+     → Writes final composited color to SceneColor
+
+  4. Translucency Pass (after water):
+     → Foam, splashes, particles drawn on top</div>
+
+  <p lang="en">
+    The critical insight is that water renders <em>after</em> all opaque geometry. At render time, the
+    <code>SceneColor</code> texture already contains the correctly-lit underwater floor. The water shader
+    simply reads it (with a refraction offset for distortion), applies the absorption/scatter math,
+    and adds the surface reflection — all in a single pass. No separate "underwater render" is needed.
+  </p>
+  <p lang="zh">
+    关键洞察是水体在所有不透明几何体<em>之后</em>渲染。在渲染时，
+    <code>SceneColor</code> 纹理已经包含正确光照的水下地面。
+    水体 Shader 只需读取它（使用折射偏移进行扭曲），应用吸收/散射数学，
+    然后添加水面反射——全在单一通道中完成。不需要单独的"水下渲染"。
+  </p>
+
+  <!-- s4 -->
+  <h2 id="s4"><span lang="en">Refraction &amp; Underwater Distortion</span><span lang="zh">折射与水下扭曲</span></h2>
+  <p lang="en">
+    Refraction in UE5 water works by <strong>offsetting the screen-space UV</strong> when sampling the
+    underwater scene color. The offset direction and magnitude is derived from the surface normal:
+    a flat calm water surface has zero offset (you see straight down); a normal-mapped choppy surface
+    distorts the underwater view.
+  </p>
+  <p lang="zh">
+    UE5 水体中的折射通过在采样水下场景颜色时<strong>偏移屏幕空间 UV</strong> 来实现。
+    偏移方向和大小从表面法线推导：
+    平静的水面偏移为零（你直视水下）；法线映射的波涛汹涌的水面扭曲水下视图。
+  </p>
+  <pre><span class="cm">// Refraction UV offset (SingleLayerWaterShading.ush concept)</span>
+float2 <span class="fn">ComputeRefractionUVOffset</span>(float3 WorldNormal, float3 V, float RefractStrength)
+{
+    <span class="cm">// Project normal deviation onto screen plane</span>
+    float2 NormalXY = WorldNormal.xy;
+
+    <span class="cm">// Scale by depth (closer to camera = larger apparent distortion)</span>
+    float DepthScale = <span class="num">1.0f</span> / <span class="fn">max</span>(<span class="num">0.01f</span>, SceneDepth);
+    <span class="kw">return</span> NormalXY * RefractStrength * DepthScale;
+}
+
+<span class="cm">// Sample underwater with refraction:</span>
+float2 RefractUV = PixelUV + <span class="fn">ComputeRefractionUVOffset</span>(N, V, RefractStrength);
+
+<span class="cm">// Clamp to avoid sampling outside the screen</span>
+RefractUV = <span class="fn">clamp</span>(RefractUV, float2(<span class="num">0.001f</span>), float2(<span class="num">0.999f</span>));
+
+<span class="cm">// Depth test: if refracted UV hits geometry above water, fall back to no-refract</span>
+<span class="kw">float</span> RefractedDepth = SceneDepthTexture.<span class="fn">SampleLevel</span>(PointSampler, RefractUV, <span class="num">0</span>).r;
+<span class="kw">if</span> (RefractedDepth &lt; SurfaceDepth)
+    RefractUV = PixelUV;  <span class="cm">// fallback: no distortion for above-water pixels</span>
+
+float3 UnderwaterColor = SceneColorTexture.<span class="fn">SampleLevel</span>(BilinearSampler, RefractUV, <span class="num">0</span>).rgb;</pre>
+
+  <!-- s5 -->
+  <h2 id="s5"><span lang="en">Water Info Texture — Per-Pixel Water Properties</span><span lang="zh">水体信息纹理 — 逐像素水体属性</span></h2>
+  <p lang="en">
+    The <span class="def">Water Info Texture</span> (<code>WaterInfoTextureRendering.cpp</code>) is a
+    screen-space render target that stores per-pixel water properties: surface height, normal, and flow
+    velocity. It's generated before the main water pass by rendering the water surface to a dedicated
+    2D texture. Downstream effects (foam, depth fade, caustics) sample this texture to know whether
+    a given screen pixel is underwater and at what depth.
+  </p>
+  <p lang="zh">
+    <span class="def">水体信息纹理</span>（<code>WaterInfoTextureRendering.cpp</code>）是一个
+    存储逐像素水体属性的屏幕空间渲染目标：水面高度、法线和流速。
+    它在主水体通道之前通过将水面渲染到专用 2D 纹理来生成。
+    下游效果（泡沫、深度消退、焦散）采样此纹理以了解给定屏幕像素是否在水下以及深度如何。
+  </p>
+
+  <!-- s6 -->
+  <h2 id="s6"><span lang="en">Reflections — SSR, Lumen &amp; Planar</span><span lang="zh">反射 — SSR、Lumen 与平面反射</span></h2>
+  <p lang="en">Water integrates with all three reflection systems in UE5:</p>
+  <p lang="zh">水体与 UE5 中的所有三种反射系统集成：</p>
+  <ul>
+    <li lang="en"><strong>Screen Space Reflections (SSR):</strong> Works well for calm, nearly-flat water. Fast, but only sees what's on screen. Enabled by default. Set <code>r.SSR.Quality=4</code> for higher quality on water.</li>
+    <li lang="zh"><strong>屏幕空间反射（SSR）：</strong>适用于平静、几乎平坦的水体。快速，但只能看到屏幕上的内容。默认启用。在水体上设置 <code>r.SSR.Quality=4</code> 以获得更高质量。</li>
+    <li lang="en"><strong>Lumen Reflections:</strong> Full scene reflections including off-screen objects. Best quality for rough/choppy water (needs cone-traced reflections). Enable in Post Process Volume: Lumen → Reflections → Allow Lumen Reflections.</li>
+    <li lang="zh"><strong>Lumen 反射：</strong>完整场景反射，包括屏幕外物体。最适合粗糙/波涛汹涌的水体（需要锥形追踪反射）。在后处理体积中启用：Lumen → Reflections → Allow Lumen Reflections。</li>
+    <li lang="en"><strong>Planar Reflections:</strong> Renders the scene from a reflected camera. Perfect mirror-quality but 2× rendering cost. Best for very still, highly reflective water (ponds, pools).</li>
+    <li lang="zh"><strong>平面反射：</strong>从反射相机渲染场景。完美镜面质量但渲染成本翻倍。最适合非常平静、高度反射的水体（池塘、泳池）。</li>
+  </ul>
+
+  <!-- s7 -->
+  <h2 id="s7"><span lang="en">Material Setup Guide — Creating a Water Material</span><span lang="zh">材质配置指南 — 创建水体材质</span></h2>
+
+  <h3><span lang="en">Step 1: Material Settings</span><span lang="zh">步骤 1：材质设置</span></h3>
+  <ul>
+    <li lang="en">Material Domain: <strong>Surface</strong></li>
+    <li lang="zh">材质域：<strong>Surface</strong></li>
+    <li lang="en">Blend Mode: <strong>Opaque</strong> (yes, opaque — the transparency is handled inside the SingleLayerWater shader)</li>
+    <li lang="zh">混合模式：<strong>Opaque</strong>（是的，不透明——透明度在 SingleLayerWater Shader 内部处理）</li>
+    <li lang="en">Shading Model: <strong>Single Layer Water</strong></li>
+    <li lang="zh">着色模型：<strong>Single Layer Water</strong></li>
+    <li lang="en">Two Sided: <strong>Off</strong> (usually — water is one-sided from above)</li>
+    <li lang="zh">双面：<strong>关</strong>（通常——水体从上方是单面的）</li>
+  </ul>
+
+  <h3><span lang="en">Step 2: Required Material Inputs</span><span lang="zh">步骤 2：必要材质输入</span></h3>
+  <pre><span class="cm">// After selecting SingleLayerWater shading model, these special pins appear:</span>
+
+Normal:
+  → Use two Panner nodes on a Normal Map texture (different speed/scale)
+  → Cross-fade between two tiling scales for convincing motion
+  → Adjust amplitude with HeightLerp or Lerp(Flat, Normal, WaveHeight)
+
+Water Scatter Color:  float3
+  → The "in-water" color. Tropical: (0.05, 0.5, 0.5). Deep ocean: (0.01, 0.2, 0.4)
+
+Water Absorption Color:  float3
+  → How fast each RGB channel dies with depth
+  → For realistic ocean: (0.3, 0.06, 0.01) — red dies fastest
+  → Connected to: Multiply(BaseColor, AbsorptionDepthMask)
+
+Water Phase G:  scalar [−1, 1]
+  → 0 = isotropic scatter, 0.3 = forward bias (sunlit underwater glow)
+
+Specular:  scalar [0, 1]
+  → Leave at 0.5 (maps to F0=0.04 for water)
+
+Roughness:  scalar
+  → 0 = dead calm (mirror), 0.05–0.2 = ocean chop, 0.5+ = storm
+
+Refraction (implicit):  controlled by Normal map strength
+  → Stronger normals = more underwater distortion</pre>
+
+  <h3><span lang="en">Step 3: Foam &amp; Shoreline</span><span lang="zh">步骤 3：泡沫与海岸线</span></h3>
+  <pre><span class="cm">// Shore fade using Water Body depth:</span>
+
+<span class="cm">// In the material, use the built-in WaterBodyDepth output</span>
+<span class="cm">// (available on Water Body component, or via WaterInfoTexture)</span>
+
+float ShoreFade = saturate(WaterBodyDepth / ShoreTransitionDist);
+float3 FoamMask = 1 - ShoreFade;  <span class="cm">// white at shore, zero in deep</span>
+
+<span class="cm">// Blend foam texture using FoamMask</span>
+float3 FoamColor = FoamTexture.Sample(Sampler, UV * 8) * FoamMask;
+
+<span class="cm">// Add foam to Emissive or blend into BaseColor</span>
+<span class="cm">// Note: foam uses Emissive not BaseColor to avoid shadowing</span>
+Emissive = FoamColor * SunLightColor;</pre>
+
+  <!-- s8 -->
+  <h2 id="s8"><span lang="en">Performance Tuning</span><span lang="zh">性能调优</span></h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>CVar</th><th><span lang="en">Effect</span><span lang="zh">效果</span></th></tr></thead>
+    <tbody>
+      <tr><td>r.Water.SingleLayer.Refraction</td><td><span lang="en">Enable/disable screen-space refraction (0 = no underwater distortion, saves ~0.5ms)</span><span lang="zh">启用/禁用屏幕空间折射（0 = 无水下扭曲，节省约 0.5ms）</span></td></tr>
+      <tr><td>r.Water.SingleLayer.Reflection</td><td><span lang="en">Enable/disable surface reflections (0 = no reflections, significant savings)</span><span lang="zh">启用/禁用水面反射（0 = 无反射，显著节省）</span></td></tr>
+      <tr><td>r.Water.SingleLayer.ShadowReceiving</td><td><span lang="en">Enable/disable shadow receiving on water (0 = no shadows cast on water)</span><span lang="zh">启用/禁用水体接收阴影（0 = 水体上无阴影）</span></td></tr>
+      <tr><td>r.SSR.Quality</td><td><span lang="en">SSR quality on water (0=off, 1–4, 4=best). Reduce to 2 on mobile.</span><span lang="zh">水体上的 SSR 质量（0=关，1–4，4=最佳）。移动端减为 2。</span></td></tr>
+      <tr><td>r.Water.VisualizeWaterInfo</td><td><span lang="en">1 = show the WaterInfo texture (depth + normal + velocity) for debugging</span><span lang="zh">1 = 显示 WaterInfo 纹理（深度 + 法线 + 速度）用于调试</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="warning">
+    <span lang="en"><strong>Water + Translucency sorting:</strong> Objects that overlap with the water surface (boats, buoys, shore foam) must be carefully ordered. Objects <em>inside</em> the water should use the default opaque pipeline so they appear in the underwater scene color. Objects <em>on</em> the water (foam, splashes) should be translucent. Misclassifying these causes objects to ignore the underwater absorption or appear doubled.</span>
+    <span lang="zh"><strong>水体 + 半透明排序：</strong>与水面重叠的物体（船只、浮标、海岸泡沫）必须仔细排序。水<em>内</em>的物体应使用默认不透明管线，以便出现在水下场景颜色中。水<em>上</em>的物体（泡沫、水花）应该是半透明的。对这些物体的错误分类会导致物体忽略水下吸收或出现重影。</span>
+  </div>
+
+  <!-- s9 -->
+  <h2 id="s9"><span lang="en">Source Navigation</span><span lang="zh">源码导航</span></h2>
+  <ul class="file-list">
+    <li><span class="fp">Renderer/Private/SingleLayerWaterRendering.h/.cpp</span><span class="fd"><span lang="en">Main water pass orchestrator: schedule, depth composite, reflection integration</span><span lang="zh">主水体通道协调器：调度、深度合成、反射集成</span></span></li>
+    <li><span class="fp">Shaders/Private/SingleLayerWaterShading.ush</span><span class="fd"><span lang="en">Water BRDF: absorption, Fresnel, scatter, refraction UV computation</span><span lang="zh">水体 BRDF：吸收、Fresnel、散射、折射 UV 计算</span></span></li>
+    <li><span class="fp">Renderer/Private/WaterInfoTextureRendering.h/.cpp</span><span class="fd"><span lang="en">Water info texture generation (depth, normal, flow velocity)</span><span lang="zh">水体信息纹理生成（深度、法线、流速）</span></span></li>
+    <li><span class="fp">Shaders/Private/WaterInfoMerge.usf</span><span class="fd"><span lang="en">Merge multiple water body layers into the info texture</span><span lang="zh">将多个水体层合并到信息纹理中</span></span></li>
+  </ul>
+
+  <footer>Unreal Engine 5.6 &middot; Engine/Source/Runtime/Renderer/Private/ &middot; Engine/Shaders/Private/<br>Source analysis &middot; For learning purposes</footer>
+
+  <div class="page-nav">
+    <a href="../04-material-shader/usf-hlsl-guide.html" class="prev"><span class="pn-label">&larr; Prev</span><span class="pn-title"><span lang="en">USF / HLSL Guide</span><span lang="zh">USF / HLSL 编写指南</span></span></a>
+    <a href="../07-specialized-rendering/hair-groom-rendering.html" class="next"><span class="pn-label">Next &rarr;</span><span class="pn-title"><span lang="en">Hair &amp; Groom</span><span lang="zh">毛发渲染</span></span></a>
+  </div>
+</main>
+</div>
+<script>
+function toggleLang(){var h=document.documentElement;if(h.classList.contains('lang-zh')){h.classList.remove('lang-zh');h.lang='en';document.title='Water Rendering';localStorage.setItem('ue-doc-lang','en');}else{h.classList.add('lang-zh');h.lang='zh-CN';document.title='水体渲染';localStorage.setItem('ue-doc-lang','zh');}}
+if(document.documentElement.classList.contains('lang-zh'))document.title='水体渲染';
+</script>
+</body>
+</html>

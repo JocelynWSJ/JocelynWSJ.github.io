@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PBR Material System — NeoX Engine</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Gudea">
+  <script>(function(){if(localStorage.getItem('neox-doc-lang')==='zh'){document.documentElement.classList.add('lang-zh');document.documentElement.lang='zh-CN';}})();</script>
+  <style>
+    html:not(.lang-zh) [lang="zh"]{display:none;} html.lang-zh [lang="en"]{display:none;}
+    #lang-btn{position:fixed;top:16px;right:20px;z-index:999;background:#37425d;color:#fff;border:none;border-radius:4px;padding:5px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:Gudea,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.2);transition:background .15s;} #lang-btn:hover{background:#4a5a7a;}
+    *{box-sizing:border-box;margin:0;padding:0;} body{font-family:Gudea,sans-serif;font-size:16px;line-height:1.8;color:#111;background:#eee;}
+    #wrapper{max-width:1100px;margin:0 auto;display:flex;align-items:flex-start;padding:40px 24px;gap:36px;}
+    #sidebar{width:240px;flex-shrink:0;font-size:13px;} #content{flex:1;min-width:0;}
+    #series-nav{margin-bottom:24px;} #series-nav ol,#series-nav li{list-style:none;padding-left:0;}
+    .snav-label{font-size:11px;font-weight:800;color:#2d6a5a;text-transform:uppercase;letter-spacing:.14em;display:block;margin-bottom:10px;padding-bottom:4px;border-bottom:2px solid #2d6a5a;}
+    #series-nav > ol{list-style:none;padding:0;margin:0;} .snav-ch{margin-bottom:10px;}
+    .snav-ch > span{font-size:11px;font-weight:800;letter-spacing:.06em;color:#fff;background:#3d8070;display:block;padding:3px 7px 3px 6px;border-radius:3px;margin-bottom:3px;text-transform:uppercase;}
+    .snav-ch > ol{padding-left:0;margin-top:0;} .snav-item{margin-bottom:1px;}
+    .snav-item a{font-size:13.5px;color:#666;text-decoration:none;display:block;padding:3px 6px;border-left:3px solid transparent;border-radius:0 3px 3px 0;transition:color .12s,background .12s,border-color .12s;}
+    .snav-item a:hover{color:#2d6a5a;background:#edf5f3;border-left-color:#a8d4c8;}
+    .snav-item.active a{color:#2d6a5a;font-weight:700;background:#e2f0ec;border-left-color:#2d6a5a;}
+    #sidebar > h2{font-size:10.5px;font-style:italic;font-weight:400;color:#b0b0b0;margin-bottom:8px;border:none;padding:0;margin-top:20px;padding-top:16px;border-top:1px dashed #ddd;}
+    #sidebar > ol{list-style:none !important;padding:0;margin:0;} #sidebar > ol > li{list-style:none !important;margin-bottom:5px;}
+    #sidebar > ol > li a{color:#666;text-decoration:none;display:block;padding:1px 0;font-size:12px;transition:color .12s;} #sidebar > ol > li a:hover{color:#58A;}
+    .page-header{margin-bottom:32px;padding-bottom:20px;border-bottom:1px solid #ddd;}
+    .page-header .crumb{font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
+    .page-header h1{font-size:1.8rem;font-weight:900;color:#303236;margin-bottom:8px;line-height:1.25;}
+    .page-header .subtitle{font-family:'Courier New',monospace;font-size:13px;color:#777;}
+    h2{color:#37425d;font-size:22px;margin:36px 0 10px;} h3{color:#633739;font-size:17px;margin:24px 0 8px;}
+    p{margin-bottom:14px;} a{color:#58A;text-decoration:none;} a:hover{text-decoration:underline;} strong{color:#222;}
+    .fun{font-family:'Courier New',monospace;color:#2a6496;} .def{color:green;font-weight:600;}
+    code{font-family:'Courier New',monospace;font-size:14px;background:#ddd;border-radius:3px;padding:1px 5px;}
+    pre{background:#282c34;color:#abb2bf;border-radius:5px;padding:16px 18px;overflow-x:auto;margin:14px 0 18px;font-family:'Courier New',monospace;font-size:14px;line-height:1.6;}
+    pre code{background:none;padding:0;color:inherit;}
+    .kw{color:#c678dd;} .fn{color:#61afef;} .cm{color:#5c6370;font-style:italic;} .str{color:#98c379;} .num{color:#d19a66;} .type{color:#e5c07b;}
+    .note{display:block;margin:18px 0;padding:15px;background:#D8F5D8;color:#444;border-radius:5px;border:2px solid #AFDFAF;font-size:15px;line-height:1.7;}
+    .warning{display:block;margin:18px 0;padding:15px;background:#FFD2D2;color:#444;border-radius:5px;border:2px solid #E0B3B3;font-size:15px;line-height:1.7;}
+    .legacy{display:block;margin:18px 0;padding:15px;background:#FFF3CD;color:#444;border-radius:5px;border:2px solid #FFCC5C;font-size:15px;line-height:1.7;}
+    ul,ol{padding-left:22px;margin-bottom:14px;} li{margin-bottom:5px;}
+    .table-wrap{overflow-x:auto;margin:14px 0;} table{border-collapse:collapse;font-size:14px;width:100%;}
+    th,td{padding:8px 12px;border-bottom:1px solid #aaa;text-align:left;} th{border-bottom:2px solid #888;font-weight:700;background:#ddd;} tr:nth-child(even) td{background:#e8e8e8;}
+    td:first-child{font-family:'Courier New',monospace;font-size:13px;color:#2a6496;white-space:nowrap;}
+    .arch-diagram{background:#fff;border:1px solid #ccc;border-radius:5px;padding:22px;margin:16px 0;font-family:'Courier New',monospace;font-size:13px;line-height:1.9;overflow-x:auto;white-space:pre;}
+    .file-list{list-style:none;padding:0;margin:12px 0;} .file-list li{padding:6px 0;border-bottom:1px solid #e0dcdd;display:flex;align-items:baseline;gap:10px;font-size:14px;} .file-list li:last-child{border-bottom:none;}
+    .file-list .fp{font-family:'Courier New',monospace;font-size:13px;color:#58A;min-width:220px;} .file-list .fd{color:#555;}
+    .page-nav{display:flex;justify-content:space-between;margin:36px 0 0;padding-top:16px;border-top:1px solid #ddd;font-size:14px;}
+    .page-nav a{color:#58A;text-decoration:none;display:flex;align-items:center;gap:6px;} .page-nav a:hover{text-decoration:underline;}
+    .page-nav .pn-label{font-size:11px;color:#aaa;text-transform:uppercase;display:block;} .page-nav .pn-title{display:block;} .page-nav .prev{text-align:left;} .page-nav .next{text-align:right;}
+    footer{margin-top:48px;padding-top:16px;border-top:1px solid #ccc;font-size:12px;color:#aaa;text-align:center;}
+    @media(max-width:800px){#wrapper{flex-direction:column;padding:20px 16px;}#sidebar{width:100%;}}
+  </style>
+</head>
+<body>
+<button id="lang-btn" onclick="toggleLang()"><span lang="en">中文</span><span lang="zh">English</span></button>
+<div id="wrapper">
+<nav id="sidebar">
+  <div id="series-nav">
+    <span class="snav-label"><span lang="en">Series</span><span lang="zh">系列</span></span>
+    <ol>
+      <li class="snav-ch"><span lang="en">00 Introduction</span><span lang="zh">00 简介</span><ol><li class="snav-item"><a href="../00-introduction/introduction.html"><span lang="en">Introduction</span><span lang="zh">简介</span></a></li></ol></li>
+      <li class="snav-ch"><span lang="en">01 Shader System</span><span lang="zh">01 Shader 系统</span><ol><li class="snav-item"><a href="../01-shader-system/nfx-surf.html"><span lang="en">NFX & SURF Format</span><span lang="zh">NFX & SURF 格式</span></a></li><li class="snav-item"><a href="../01-shader-system/hlsl-dialect.html"><span lang="en">NeoX HLSL Dialect</span><span lang="zh">NeoX HLSL 方言</span></a></li></ol></li>
+      <li class="snav-ch"><span lang="en">02 Rendering Pipeline</span><span lang="zh">02 渲染管线</span><ol><li class="snav-item"><a href="../02-rendering-pipeline/forward-shading.html"><span lang="en">Forward Shading</span><span lang="zh">前向渲染</span></a></li><li class="snav-item"><a href="../02-rendering-pipeline/deferred-shading.html"><span lang="en">Deferred Shading</span><span lang="zh">延迟渲染</span></a></li></ol></li>
+      <li class="snav-ch"><span lang="en">03 Material System</span><span lang="zh">03 材质系统</span><ol><li class="snav-item active"><a href="../03-material-system/pbr-material.html"><span lang="en">PBR Material</span><span lang="zh">PBR 材质</span></a></li><li class="snav-item"><a href="../03-material-system/multi-layered-pbr.html"><span lang="en">Multi-Layered PBR</span><span lang="zh">多层 PBR</span></a></li></ol></li>
+      <li class="snav-ch"><span lang="en">04 Lighting Models</span><span lang="zh">04 光照模型</span><ol><li class="snav-item"><a href="../04-lighting-models/ggx-brdf.html"><span lang="en">GGX BRDF</span><span lang="zh">GGX BRDF</span></a></li><li class="snav-item"><a href="../04-lighting-models/shading-models.html"><span lang="en">16 Shading Models</span><span lang="zh">16 种光照模型</span></a></li></ol></li>
+      <li class="snav-ch"><span lang="en">05 Post Processing</span><span lang="zh">05 后处理</span><ol><li class="snav-item"><a href="../05-post-processing/post-effects.html"><span lang="en">Post Effects Overview</span><span lang="zh">后处理全景</span></a></li></ol></li>
+    </ol>
+  </div>
+  <h2><span lang="en">Contents</span><span lang="zh">目录</span></h2>
+  <ol>
+    <li><a href="#s1"><span lang="en">Material Architecture</span><span lang="zh">材质架构</span></a></li>
+    <li><a href="#s2"><span lang="en">Texture Slot Convention</span><span lang="zh">纹理槽位约定</span></a></li>
+    <li><a href="#s3"><span lang="en">Material Interface Functions</span><span lang="zh">材质接口函数</span></a></li>
+    <li><a href="#s4"><span lang="en">default.hlsl — Material Graph</span><span lang="zh">default.hlsl — 材质图</span></a></li>
+    <li><a href="#s5"><span lang="en">Specialized Materials</span><span lang="zh">专用材质</span></a></li>
+    <li><a href="#s6"><span lang="en">Material File Map</span><span lang="zh">材质文件地图</span></a></li>
+  </ol>
+</nav>
+
+<main id="content">
+  <div class="page-header">
+    <div class="crumb">NeoX Engine &middot; Material System &middot; PBR Material</div>
+    <h1><span lang="en">PBR Material System</span><span lang="zh">PBR 材质系统</span></h1>
+    <div class="subtitle">res_upgrade/shader/built_in/materials/ &middot; 24 files (New Engine)</div>
+  </div>
+
+  <!-- s1 -->
+  <h2 id="s1"><span lang="en">Material Architecture — Two Authoring Paths</span><span lang="zh">材质架构 — 两种创作路径</span></h2>
+
+  <p lang="en">NeoX materials exist in two forms. The <span class="def">handwritten path</span> uses a clean set of <code>Get*()</code> interface functions in <code>material.hlsl</code>. The <span class="def">material-graph path</span> produces a compiled <code>default.hlsl</code> where all parameters are resolved in one monolithic <code>CalcMaterialParam()</code> call. Both paths feed the same downstream pipeline.</p>
+  <p lang="zh">NeoX 材质有两种形式。<span class="def">手写路径</span>在 <code>material.hlsl</code> 中使用一组整洁的 <code>Get*()</code> 接口函数。<span class="def">材质图路径</span>产生编译后的 <code>default.hlsl</code>，所有参数在单个 <code>CalcMaterialParam()</code> 调用中解析。两种路径都向同一下游管线输出。</p>
+
+  <div class="arch-diagram">
++===========================================================+
+|                  NeoX Material Pipeline                    |
++===========================================================+
+|                                                           |
+|  Artist-facing path                                       |
+|  +-----------------+        +------------------+          |
+|  |  .surf (XML)    |        |   Material Graph  |         |
+|  |  LightingModel  |        |   (editor nodes)  |         |
+|  |  Macro switches |        +--------+----------+         |
+|  |  Texture slots  |                 | compile             |
+|  +-------+---------+                 v                    |
+|          |                   default.hlsl                  |
+|          |                  (CalcMaterialParam)            |
+|          v                          |                     |
+|    material.hlsl            (or)    |                     |
+|    GetAlbedo()              material_skin.hlsl             |
+|    GetNormal()              material_hair.hlsl             |
+|    GetRoughness()           material_toon.hlsl             |
+|    GetMetalness()           material_ssss.hlsl             |
+|    GetEmissive()            material_terrain.hlsl          |
+|    GetOcclusion()           ...                            |
+|    GetSSSCurvature()                |                     |
+|          |                          |                     |
+|          +------------+-------------+                     |
+|                       v                                   |
+|             SetupMaterial(frag, raw, mtl)                  |
+|             Material struct filled                         |
+|                       v                                   |
+|             Lighting() --- shading_models/isotropy.hlsl   |
+|                            shading_models/skin.hlsl       |
+|                            shading_models/hair.hlsl  ...  |
++===========================================================+</div>
+
+  <!-- s2 -->
+  <h2 id="s2"><span lang="en">Texture Slot Convention — The MRO Pack</span><span lang="zh">纹理槽位约定 — MRO 打包</span></h2>
+
+  <p lang="en">All standard PBR materials follow a fixed <span class="def">4-texture, 3-slot encoding</span>. The third texture packs three physically-based parameters into RGB channels — called <strong>MRO</strong> (Metalness, Roughness, Occlusion):</p>
+  <p lang="zh">所有标准 PBR 材质遵循固定的 <span class="def">4 纹理、3 槽位编码</span>。第三张纹理将三个基于物理的参数打包到 RGB 通道中——称为 <strong>MRO</strong>（金属度、粗糙度、遮蔽）：</p>
+
+  <div class="table-wrap"><table>
+    <thead><tr><th><span lang="en">Slot</span><span lang="zh">槽位</span></th><th><span lang="en">Register</span><span lang="zh">寄存器</span></th><th>R</th><th>G</th><th>B</th><th>A</th></tr></thead>
+    <tbody>
+      <tr><td>Tex0</td><td>t0</td><td colspan="3"><span lang="en">Albedo (sRGB → linear)</span><span lang="zh">反照率（sRGB→线性）</span></td><td><span lang="en">Opacity</span><span lang="zh">不透明度</span></td></tr>
+      <tr><td>Tex1</td><td>t1</td><td colspan="3"><span lang="en">Normal map (tangent space)</span><span lang="zh">法线贴图（切线空间）</span></td><td><span lang="en">—</span></td></tr>
+      <tr><td>Tex2</td><td>t2</td><td><span lang="en">AO / Occlusion</span><span lang="zh">AO 遮蔽</span></td><td><span lang="en">Roughness</span><span lang="zh">粗糙度</span></td><td><span lang="en">Metalness</span><span lang="zh">金属度</span></td><td><span lang="en">varies*</span><span lang="zh">视材质*</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <p lang="en">* The Alpha channel of Tex2 has material-specific meaning: for skin it carries SSS curvature; for the 4S SSSS material it carries SSS blur intensity; for terrain it may carry blend weights.</p>
+  <p lang="zh">* Tex2 的 Alpha 通道有材质特定含义：皮肤材质存储 SSS 曲率；4S SSSS 材质存储 SSS 模糊强度；地形材质可能存储混合权重。</p>
+
+  <div class="note">
+    <span lang="en"><strong>Uniform modulation:</strong> The <code>Intensity</code> float4 uniform modulates Tex2 channels: <code>Intensity.x</code> = normal intensity, <code>Intensity.y</code> = roughness scale, <code>Intensity.z</code> = metalness scale, <code>Intensity.w</code> = emissive scale. Final roughness = <code>MakeMaterialRoughness(tex2.g * Intensity.y)</code> = <code>saturate(tex2.g * Intensity.y)</code>.</span>
+    <span lang="zh"><strong>Uniform 调制：</strong><code>Intensity</code> float4 uniform 调制 Tex2 通道：<code>Intensity.x</code>=法线强度，<code>Intensity.y</code>=粗糙度缩放，<code>Intensity.z</code>=金属度缩放，<code>Intensity.w</code>=自发光缩放。最终粗糙度 = <code>MakeMaterialRoughness(tex2.g * Intensity.y)</code> = <code>saturate(tex2.g * Intensity.y)</code>。</span>
+  </div>
+
+  <!-- s3 -->
+  <h2 id="s3"><span lang="en">Material Interface Functions</span><span lang="zh">材质接口函数</span></h2>
+
+  <p lang="en">Every material file implements the same set of interface functions. The engine's <code>SetupMaterial()</code> calls them in order to fill the <code>Material</code> struct:</p>
+  <p lang="zh">每个材质文件实现同一套接口函数。引擎的 <code>SetupMaterial()</code> 按顺序调用它们以填充 <code>Material</code> 结构体：</p>
+
+  <div class="table-wrap"><table>
+    <thead><tr><th><span lang="en">Function</span><span lang="zh">函数</span></th><th><span lang="en">Output field</span><span lang="zh">输出字段</span></th><th><span lang="en">Default behavior (material.hlsl)</span><span lang="zh">默认行为（material.hlsl）</span></th></tr></thead>
+    <tbody>
+      <tr><td>GetAlbedo()</td><td>mtl.albedo</td><td><code>ToLinear(tex0.rgb) * BaseColor.rgb</code></td></tr>
+      <tr><td>GetOpacity()</td><td>mtl.opacity</td><td><code>tex0.a * BaseColor.a</code></td></tr>
+      <tr><td>GetNormal()</td><td>mtl.normal</td><td><span lang="en">TBN decode, xy scaled by Intensity.x</span><span lang="zh">TBN 解码，xy 按 Intensity.x 缩放</span></td></tr>
+      <tr><td>GetRoughness()</td><td>mtl.roughness</td><td><code>saturate(tex2.g * Intensity.y)</code></td></tr>
+      <tr><td>GetMetalness()</td><td>mtl.metalness</td><td><code>saturate(tex2.b * Intensity.z)</code></td></tr>
+      <tr><td>GetSpecular()</td><td>mtl.specular</td><td><code>0.5</code> (hardcoded)</td></tr>
+      <tr><td>GetEmissive()</td><td>mtl.emissive</td><td><code>EmissiveColor.rgb * Intensity.w</code></td></tr>
+      <tr><td>GetOcclusion()</td><td>mtl.occlusion</td><td><code>tex2.r</code></td></tr>
+      <tr><td>GetSSSCurvature()</td><td>mtl.sss_curvature</td><td><span lang="en">empty stub (0)</span><span lang="zh">空桩（0）</span></td></tr>
+      <tr><td>GetSSSColor()</td><td>mtl.sss_color</td><td><span lang="en">empty stub (float3 0)</span><span lang="zh">空桩（float3 0）</span></td></tr>
+      <tr><td>GetRawPreintergratedSkin()</td><td><span lang="en">LUT sample</span><span lang="zh">LUT 采样</span></td><td><span lang="en">empty stub — overridden in material_skin.hlsl</span><span lang="zh">空桩——在 material_skin.hlsl 中覆盖</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <pre><span class="cm">// material.hlsl — Normal decoding (standard TBN path)</span>
+<span class="kw">void</span> <span class="fn">GetNormal</span>(<span class="type">Fragment</span> frag, <span class="type">RawData</span> raw, <span class="kw">inout</span> <span class="type">Material</span> mtl) {
+<span class="cm">#if LIGHT_ENABLE && NORMAL_MAP_ENABLE</span>
+  <span class="kw">float3</span> n = raw.tex1.xyz * <span class="num">2.0</span> - <span class="num">1.0</span>;
+  n.xy *= Intensity.x;          <span class="cm">// normal intensity</span>
+  <span class="kw">float3x3</span> TBN = <span class="fn">float3x3</span>(frag.tangent_world,
+                             frag.binormal_world,
+                             frag.normal_world);
+  mtl.normal = <span class="fn">normalize</span>(<span class="fn">mul</span>(n, TBN));
+<span class="cm">#else</span>
+  mtl.normal = frag.normal_world;
+<span class="cm">#endif</span>
+}
+
+<span class="cm">// material_ssss.hlsl — UE4 normal path (z reconstruction)</span>
+<span class="kw">void</span> <span class="fn">GetNormal</span>(...) {
+<span class="cm">#if IMPORT_FROM_UE4</span>
+  n.z = <span class="fn">sqrt</span>(<span class="fn">max</span>(<span class="num">1.0</span> - <span class="fn">dot</span>(n.xy, n.xy), <span class="num">0</span>));  <span class="cm">// reconstruct Z</span>
+<span class="cm">#endif</span>
+  <span class="cm">// ... rest of TBN decode</span>
+}</pre>
+
+  <!-- s4 -->
+  <h2 id="s4"><span lang="en">default.hlsl — Material Graph Compiled Shader</span><span lang="zh">default.hlsl — 材质图编译着色器</span></h2>
+
+  <p lang="en">The new engine's <code>default.hlsl</code> is the output of the material graph editor — rather than separate <code>Get*()</code> functions, all parameter logic is centralized in a single <span class="fun">CalcMaterialParam()</span> function. This enables features impossible in the handwritten path:</p>
+  <p lang="zh">新引擎的 <code>default.hlsl</code> 是材质图编辑器的输出——所有参数逻辑集中在单个 <span class="fun">CalcMaterialParam()</span> 函数中，而非独立的 <code>Get*()</code> 函数。这使得手写路径无法实现的功能成为可能：</p>
+
+  <div class="table-wrap"><table>
+    <thead><tr>
+      <th><span lang="en">Macro</span><span lang="zh">宏</span></th>
+      <th><span lang="en">Feature</span><span lang="zh">功能</span></th>
+    </tr></thead>
+    <tbody>
+      <tr><td>IMPORT_FROM_UE4</td><td><span lang="en">Use UE4-style normal map (Z reconstructed from XY; swizzled G channel)</span><span lang="zh">使用 UE4 风格法线贴图（Z 从 XY 重建；G 通道翻转）</span></td></tr>
+      <tr><td>EMISSIVE_TEXTURE</td><td><span lang="en">Sample Tex3 as dedicated emissive map; multiply by EmissiveColor * Intensity.w</span><span lang="zh">采样 Tex3 作为专用自发光贴图；乘以 EmissiveColor * Intensity.w</span></td></tr>
+      <tr><td>SHADER_CUSTOMIZED_UV0..3</td><td><span lang="en">Per-UV transform hooks — allows each texture to use independently transformed UVs</span><span lang="zh">逐 UV 变换钩子——每张纹理可使用独立变换的 UV</span></td></tr>
+      <tr><td>SHADER_LOCAL_OFFSET</td><td><span lang="en">Vertex position offset in object/local space (driven by texture)</span><span lang="zh">物体/局部空间的顶点位置偏移（由纹理驱动）</span></td></tr>
+      <tr><td>SHADER_WORLD_OFFSET</td><td><span lang="en">Vertex position offset in world space (WPO equivalent)</span><span lang="zh">世界空间的顶点位置偏移（相当于 WPO）</span></td></tr>
+      <tr><td>SHADER_REFRACTION</td><td><span lang="en">Screen-space refraction: distort UVs by depth buffer to simulate glass/water bending</span><span lang="zh">屏幕空间折射：通过深度缓冲扭曲 UV 模拟玻璃/水折射</span></td></tr>
+      <tr><td>USE_CLOUDGI_BAKE</td><td><span lang="en">Cloud GI baking reference mode</span><span lang="zh">云 GI 烘焙参考模式</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <pre><span class="cm">// default.hlsl — Emissive with EMISSIVE_TEXTURE macro</span>
+<span class="kw">float3</span> emissive_color;
+<span class="cm">#if EMISSIVE_TEXTURE</span>
+  emissive_color = <span class="fn">GetColorTextureValue</span>(Tex3, s3, uv0) * EmissiveColor.rgb * Intensity.w;
+<span class="cm">#else</span>
+  emissive_color = tex2.a * albedo_color * EmissiveColor.rgb;  <span class="cm">// tex2.a carries emissive mask</span>
+<span class="cm">#endif</span>
+
+<span class="cm">// Refraction path — depth-aware UV distortion</span>
+<span class="cm">#if SHADER_REFRACTION</span>
+  <span class="kw">float2</span> refract_uv = screen_uv + normal.xy * RefractionStrength;
+  <span class="kw">float</span> refract_depth = <span class="fn">SampleDepth</span>(mgDepthBufferSampler, refract_uv);
+  <span class="cm">// fall back to unrefracted if behind surface</span>
+  refract_uv = refract_depth > input_depth ? refract_uv : screen_uv;
+<span class="cm">#endif</span></pre>
+
+  <div class="legacy">
+    <span lang="en"><strong>Legacy engine (res/shader) difference:</strong> The old engine also has <code>default.hlsl</code> but with different structure. <code>material.hlsl</code> in both engines is functionally identical except the new engine uses <code>ToLinear()</code> instead of <code>srgb2linearf3()</code> for albedo conversion — these are equivalent. The old <code>default.hlsl</code> did not have <code>IMPORT_FROM_UE4</code>, <code>SHADER_REFRACTION</code>, or per-UV customization macros.</span>
+    <span lang="zh"><strong>旧引擎（res/shader）差异：</strong>旧引擎也有 <code>default.hlsl</code>，但结构不同。两个引擎的 <code>material.hlsl</code> 功能上相同，只是新引擎用 <code>ToLinear()</code> 替代 <code>srgb2linearf3()</code>——这两者等价。旧版 <code>default.hlsl</code> 没有 <code>IMPORT_FROM_UE4</code>、<code>SHADER_REFRACTION</code> 或逐 UV 自定义宏。</span>
+  </div>
+
+  <!-- s5 -->
+  <h2 id="s5"><span lang="en">Specialized Material Types</span><span lang="zh">专用材质类型</span></h2>
+
+  <h3><span lang="en">material_skin.hlsl — Pre-Integrated Skin</span><span lang="zh">material_skin.hlsl — 预积分皮肤</span></h3>
+  <p lang="en">Adds two LUT textures for pre-integrated skin shading. Metalness is hardcoded to 0 (skin is always dielectric). The key additions are the LUT samplers and SSS curvature readback:</p>
+  <p lang="zh">为预积分皮肤着色添加两张 LUT 纹理。金属度硬编码为 0（皮肤始终是电介质）。关键增加是 LUT 采样器和 SSS 曲率回读：</p>
+  <pre><span class="cm">// Additional textures: t3 = pre-integrated LUT, t4 = shadow color LUT</span>
+<span class="kw">Texture2D</span> Tex3 : <span class="fn">register</span>(t3);  <span class="cm">// sampled at (0.5*NoL+0.5, curvature)</span>
+<span class="kw">Texture2D</span> Tex4 : <span class="fn">register</span>(t4);  <span class="cm">// sampled at (shadow, curvature)</span>
+<span class="kw">SamplerState</span> s1;                 <span class="cm">// Trilinear_Clamp for LUTs</span>
+
+<span class="kw">float</span>  <span class="fn">GetSSSCurvature</span>(...) { <span class="kw">return</span> <span class="num">1.0</span> - raw.tex2.b; } <span class="cm">// inverted metalness channel</span>
+<span class="kw">float3</span> <span class="fn">GetRawPreintergratedSkin</span>(<span class="kw">float2</span> uv) { <span class="kw">return</span> Tex3.<span class="fn">Sample</span>(s1, uv).rgb; }
+<span class="kw">float3</span> <span class="fn">GetRawSkinShadowColor</span>(<span class="kw">float2</span> uv)    { <span class="kw">return</span> Tex4.<span class="fn">Sample</span>(s1, uv).rgb; }</pre>
+
+  <h3><span lang="en">material_hair.hlsl — Anisotropic Flow Map</span><span lang="zh">material_hair.hlsl — 各向异性流向图</span></h3>
+  <p lang="en">Uses a 4th texture as a <span class="def">hair flow map</span> (Tex3) that encodes the tangent direction along hair strands. The flow map drives the anisotropic tangent stored in <code>mtl.tangent</code>:</p>
+  <p lang="zh">使用第 4 张纹理作为<span class="def">发丝流向图</span>（Tex3），编码沿发丝方向的切线方向。流向图驱动存储在 <code>mtl.tangent</code> 中的各向异性切线：</p>
+  <pre><span class="cm">// Tex3.xy = flow direction in [0,1] → [-1,1]</span>
+<span class="cm">// Tex3.z  = blend weight between flow normal and geometric normal</span>
+<span class="kw">float3</span> flow = raw.tex3.xy * <span class="num">2.0</span> - <span class="num">1.0</span>;
+<span class="kw">float3</span> flow_tangent = <span class="fn">normalize</span>(<span class="fn">mul</span>(<span class="kw">float3</span>(flow, <span class="num">0</span>), TBN));
+<span class="kw">float3</span> final_tangent = <span class="fn">normalize</span>(flow_tangent + raw.tex3.z * Intensity.w * world_normal);
+mtl.tangent = final_tangent;
+<span class="cm">// Hack: stash original world normal in sss_color for the hair shading model</span>
+mtl.sss_color = original_world_normal;</pre>
+
+  <h3><span lang="en">material_toon.hlsl — Toon Step Parameters</span><span lang="zh">material_toon.hlsl — 卡通阶梯参数</span></h3>
+  <p lang="en">Toon materials hijack the <code>sss_color</code> field to pass step-function parameters to the <code>toon.hlsl</code> shading model. This avoids adding new fields to the <code>Material</code> struct:</p>
+  <p lang="zh">卡通材质借用 <code>sss_color</code> 字段向 <code>toon.hlsl</code> 着色模型传递阶梯函数参数。这避免了向 <code>Material</code> 结构体添加新字段：</p>
+  <pre><span class="cm">// Uniforms: toon_threshold, toon_range (the Lerp3 breakpoints)</span>
+<span class="kw">void</span> <span class="fn">GetSSSColor</span>(...) {
+  mtl.sss_color = <span class="kw">float3</span>(toon_threshold, toon_range, <span class="num">0</span>);  <span class="cm">// packed as color</span>
+}
+<span class="cm">// GetEmissive() uses albedo * intensity (glow from base color)</span>
+mtl.emissive = mtl.albedo * Intensity.w * EmissiveColor.rgb;</pre>
+
+  <h3><span lang="en">material_ssss.hlsl — 4S Dual-Lobe SSS</span><span lang="zh">material_ssss.hlsl — 4S 双波瓣次表面散射</span></h3>
+  <p lang="en">The most parameter-rich material, supporting dual-lobe specular (for realistic skin highlight splitting) and physically-based SSS transmittance. Key extra uniforms:</p>
+  <p lang="zh">参数最丰富的材质，支持双波瓣高光（实现真实皮肤高光分裂）和基于物理的 SSS 透射。关键额外 Uniform：</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th><span lang="en">Uniform</span><span lang="zh">Uniform</span></th><th><span lang="en">Content</span><span lang="zh">内容</span></th></tr></thead>
+    <tbody>
+      <tr><td>DualLobeSpecularParams</td><td><span lang="en">r=roughness0, g=roughness1, b=mix factor for two specular lobes</span><span lang="zh">r=粗糙度0，g=粗糙度1，b=两高光波瓣混合系数</span></td></tr>
+      <tr><td>FalloffColor</td><td><span lang="en">SSS falloff color (per-channel absorption when light passes through skin)</span><span lang="zh">SSS 衰减颜色（光线穿过皮肤时的逐通道吸收）</span></td></tr>
+      <tr><td>TransmissionParams</td><td><span lang="en">r=SSS distribution width, g=normal scale, b=thickness quality, a=dielectric IOR</span><span lang="zh">r=SSS 分布宽度，g=法线缩放，b=厚度质量，a=电介质 IOR</span></td></tr>
+      <tr><td>TransmissionTintColor</td><td><span lang="en">Tint color for transmitted (backlit) light</span><span lang="zh">透射（背光）光的着色颜色</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <!-- s6 -->
+  <h2 id="s6"><span lang="en">Material File Map</span><span lang="zh">材质文件地图</span></h2>
+
+  <ul class="file-list">
+    <li><span class="fp">materials/material_common.hlsl</span><span class="fd"><span lang="en">Single helper: <code>MakeMaterialRoughness()</code> = <code>saturate(r)</code>; defines NEOX_IS_IGL default</span><span lang="zh">单一辅助函数：<code>MakeMaterialRoughness()</code>；定义 NEOX_IS_IGL 默认值</span></span></li>
+    <li><span class="fp">materials/material.hlsl</span><span class="fd"><span lang="en">Handwritten standard PBR — 3 textures, separate Get*() functions</span><span lang="zh">手写标准 PBR — 3 张纹理，独立 Get*() 函数</span></span></li>
+    <li><span class="fp">../default.hlsl + default.surf</span><span class="fd"><span lang="en">Material-graph compiled PBR — monolithic CalcMaterialParam(), 4 textures, macro features</span><span lang="zh">材质图编译 PBR — 单体 CalcMaterialParam()，4 张纹理，宏功能</span></span></li>
+    <li><span class="fp">materials/material_skin.hlsl</span><span class="fd"><span lang="en">Pre-integrated skin — 5 textures (adds 2D LUTs for subsurface), metalness = 0</span><span lang="zh">预积分皮肤 — 5 张纹理（添加次表面 2D LUT），金属度=0</span></span></li>
+    <li><span class="fp">materials/material_hair.hlsl</span><span class="fd"><span lang="en">Anisotropic Marschner hair — 4 textures (adds flow map), custom tangent pipeline</span><span lang="zh">各向异性 Marschner 头发 — 4 张纹理（添加流向图），自定义切线管线</span></span></li>
+    <li><span class="fp">materials/material_toon.hlsl</span><span class="fd"><span lang="en">Toon/cel-shaded — packs step params into sss_color; includes toonedge_helper.hlsl</span><span lang="zh">卡通着色 — 将阶梯参数打包到 sss_color；包含 toonedge_helper.hlsl</span></span></li>
+    <li><span class="fp">materials/material_toonedge.hlsl</span><span class="fd"><span lang="en">Silhouette outline pass — vertex extrusion along normal by SilhouetteEdgeWidth</span><span lang="zh">轮廓描边 Pass — 沿法线按 SilhouetteEdgeWidth 挤出顶点</span></span></li>
+    <li><span class="fp">materials/material_ssss.hlsl</span><span class="fd"><span lang="en">4S separable SSS — dual-lobe spec, FalloffColor, TransmissionParams, UE4 normal import</span><span lang="zh">4S 可分离 SSS — 双波瓣高光，衰减颜色，透射参数，UE4 法线导入</span></span></li>
+    <li><span class="fp">materials/material_subsurface.hlsl</span><span class="fd"><span lang="en">Simple single-sided SSS — curvature from tex2.a, color derived from albedo</span><span lang="zh">简单单面 SSS — 从 tex2.a 读取曲率，颜色从反照率导出</span></span></li>
+    <li><span class="fp">materials/material_multi_layered_pbr.hlsl</span><span class="fd"><span lang="en">1-coat layered PBR — 5 textures (+FGD LUT t4, coat normal t5)</span><span lang="zh">1 涂层分层 PBR — 5 张纹理（+FGD LUT t4，涂层法线 t5）</span></span></li>
+    <li><span class="fp">materials/material_multi_layered_pbr2.hlsl</span><span class="fd"><span lang="en">2-coat layered PBR — 6 textures (+2 coat normals t5-t6)</span><span lang="zh">2 涂层分层 PBR — 6 张纹理（+2 涂层法线 t5-t6）</span></span></li>
+    <li><span class="fp">materials/material_multi_layered_pbr3.hlsl</span><span class="fd"><span lang="en">3-coat layered PBR — 7 textures (+3 coat normals t5-t7)</span><span lang="zh">3 涂层分层 PBR — 7 张纹理（+3 涂层法线 t5-t7）</span></span></li>
+    <li><span class="fp">materials/material_terrain.hlsl</span><span class="fd"><span lang="en">Terrain blend material — multi-layer splat mapping</span><span lang="zh">地形混合材质 — 多层溅射贴图</span></span></li>
+    <li><span class="fp">materials/material_glint.hlsl</span><span class="fd"><span lang="en">Glint material setup — feeds GlintDictionary texture and slope-space params to glint.hlsl</span><span lang="zh">闪光材质设置 — 向 glint.hlsl 提供 GlintDictionary 纹理和斜率空间参数</span></span></li>
+  </ul>
+
+  <div class="legacy">
+    <span lang="en"><strong>New vs replaced:</strong> The new engine's <code>default.hlsl</code> replaces the old version — adding <code>IMPORT_FROM_UE4</code>, <code>SHADER_REFRACTION</code>, per-UV customization macros. <code>material.hlsl</code> is nearly identical between both directories (only <code>srgb2linearf3()</code> → <code>ToLinear()</code> rename). New material files added in <code>res_upgrade/</code>: <code>material_ssss.hlsl</code> (4S dual-lobe), <code>material_subsurface.hlsl</code>, <code>material_multi_layered_pbr*.hlsl</code> (3 variants), <code>material_glint.hlsl</code>. All old materials in <code>res/shader/built_in/materials/</code> remain accessible via fallback.</span>
+    <span lang="zh"><strong>新版替换：</strong>新引擎 <code>default.hlsl</code> 替换旧版——新增 <code>IMPORT_FROM_UE4</code>、<code>SHADER_REFRACTION</code>、逐 UV 自定义宏。<code>material.hlsl</code> 在两个目录间几乎相同（仅 <code>srgb2linearf3()</code>→<code>ToLinear()</code> 重命名）。<code>res_upgrade/</code> 中新增材质文件：<code>material_ssss.hlsl</code>（4S 双波瓣）、<code>material_subsurface.hlsl</code>、<code>material_multi_layered_pbr*.hlsl</code>（3 个变体）、<code>material_glint.hlsl</code>。<code>res/shader/built_in/materials/</code> 中的所有旧材质通过回退机制仍然可用。</span>
+  </div>
+
+  <div class="page-nav">
+    <a href="../02-rendering-pipeline/deferred-shading.html" class="prev"><span class="pn-label">&larr; Prev</span><span class="pn-title"><span lang="en">Deferred Shading</span><span lang="zh">延迟渲染</span></span></a>
+    <a href="../03-material-system/multi-layered-pbr.html" class="next"><span class="pn-label">Next &rarr;</span><span class="pn-title"><span lang="en">Multi-Layered PBR</span><span lang="zh">多层 PBR</span></span></a>
+  </div>
+  <footer>NeoX Engine &middot; Material System<br>Source: built_in/materials/ (24 files, new engine)</footer>
+</main>
+</div>
+<script>
+function toggleLang(){var h=document.documentElement;if(h.classList.contains('lang-zh')){h.classList.remove('lang-zh');h.lang='en';document.title='PBR Material System — NeoX Engine';localStorage.setItem('neox-doc-lang','en');}else{h.classList.add('lang-zh');h.lang='zh-CN';document.title='PBR 材质系统 — NeoX 引擎';localStorage.setItem('neox-doc-lang','zh');}}
+if(document.documentElement.classList.contains('lang-zh'))document.title='PBR 材质系统 — NeoX 引擎';
+</script>
+</body>
+</html>

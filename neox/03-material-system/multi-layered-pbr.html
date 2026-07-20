@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Multi-Layered PBR — NeoX Engine</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Gudea">
+  <script>(function(){if(localStorage.getItem('neox-doc-lang')==='zh'){document.documentElement.classList.add('lang-zh');document.documentElement.lang='zh-CN';}})();</script>
+  <style>
+    html:not(.lang-zh) [lang="zh"]{display:none;} html.lang-zh [lang="en"]{display:none;}
+    #lang-btn{position:fixed;top:16px;right:20px;z-index:999;background:#37425d;color:#fff;border:none;border-radius:4px;padding:5px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:Gudea,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.2);transition:background .15s;} #lang-btn:hover{background:#4a5a7a;}
+    *{box-sizing:border-box;margin:0;padding:0;} body{font-family:Gudea,sans-serif;font-size:16px;line-height:1.8;color:#111;background:#eee;}
+    #wrapper{max-width:1100px;margin:0 auto;display:flex;align-items:flex-start;padding:40px 24px;gap:36px;}
+    #sidebar{width:240px;flex-shrink:0;font-size:13px;} #content{flex:1;min-width:0;}
+    #series-nav{margin-bottom:24px;} #series-nav ol,#series-nav li{list-style:none;padding-left:0;}
+    .snav-label{font-size:11px;font-weight:800;color:#2d6a5a;text-transform:uppercase;letter-spacing:.14em;display:block;margin-bottom:10px;padding-bottom:4px;border-bottom:2px solid #2d6a5a;}
+    #series-nav > ol{list-style:none;padding:0;margin:0;} .snav-ch{margin-bottom:10px;}
+    .snav-ch > span{font-size:11px;font-weight:800;letter-spacing:.06em;color:#fff;background:#3d8070;display:block;padding:3px 7px 3px 6px;border-radius:3px;margin-bottom:3px;text-transform:uppercase;}
+    .snav-ch > ol{padding-left:0;margin-top:0;} .snav-item{margin-bottom:1px;}
+    .snav-item a{font-size:13.5px;color:#666;text-decoration:none;display:block;padding:3px 6px;border-left:3px solid transparent;border-radius:0 3px 3px 0;transition:color .12s,background .12s,border-color .12s;}
+    .snav-item a:hover{color:#2d6a5a;background:#edf5f3;border-left-color:#a8d4c8;}
+    .snav-item.active a{color:#2d6a5a;font-weight:700;background:#e2f0ec;border-left-color:#2d6a5a;}
+    #sidebar > h2{font-size:10.5px;font-style:italic;font-weight:400;color:#b0b0b0;margin-bottom:8px;border:none;padding:0;margin-top:20px;padding-top:16px;border-top:1px dashed #ddd;}
+    #sidebar > ol{list-style:none !important;padding:0;margin:0;} #sidebar > ol > li{list-style:none !important;margin-bottom:5px;}
+    #sidebar > ol > li a{color:#666;text-decoration:none;display:block;padding:1px 0;font-size:12px;transition:color .12s;} #sidebar > ol > li a:hover{color:#58A;}
+    .page-header{margin-bottom:32px;padding-bottom:20px;border-bottom:1px solid #ddd;}
+    .page-header .crumb{font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
+    .page-header h1{font-size:1.8rem;font-weight:900;color:#303236;margin-bottom:8px;line-height:1.25;}
+    .page-header .subtitle{font-family:'Courier New',monospace;font-size:13px;color:#777;}
+    h2{color:#37425d;font-size:22px;margin:36px 0 10px;} h3{color:#633739;font-size:17px;margin:24px 0 8px;}
+    p{margin-bottom:14px;} a{color:#58A;text-decoration:none;} a:hover{text-decoration:underline;} strong{color:#222;}
+    .fun{font-family:'Courier New',monospace;color:#2a6496;} .def{color:green;font-weight:600;}
+    code{font-family:'Courier New',monospace;font-size:14px;background:#ddd;border-radius:3px;padding:1px 5px;}
+    pre{background:#282c34;color:#abb2bf;border-radius:5px;padding:16px 18px;overflow-x:auto;margin:14px 0 18px;font-family:'Courier New',monospace;font-size:14px;line-height:1.6;}
+    pre code{background:none;padding:0;color:inherit;}
+    .kw{color:#c678dd;} .fn{color:#61afef;} .cm{color:#5c6370;font-style:italic;} .str{color:#98c379;} .num{color:#d19a66;} .type{color:#e5c07b;}
+    .note{display:block;margin:18px 0;padding:15px;background:#D8F5D8;color:#444;border-radius:5px;border:2px solid #AFDFAF;font-size:15px;line-height:1.7;}
+    .warning{display:block;margin:18px 0;padding:15px;background:#FFD2D2;color:#444;border-radius:5px;border:2px solid #E0B3B3;font-size:15px;line-height:1.7;}
+    .legacy{display:block;margin:18px 0;padding:15px;background:#FFF3CD;color:#444;border-radius:5px;border:2px solid #FFCC5C;font-size:15px;line-height:1.7;}
+    ul,ol{padding-left:22px;margin-bottom:14px;} li{margin-bottom:5px;}
+    .table-wrap{overflow-x:auto;margin:14px 0;} table{border-collapse:collapse;font-size:14px;width:100%;}
+    th,td{padding:8px 12px;border-bottom:1px solid #aaa;text-align:left;} th{border-bottom:2px solid #888;font-weight:700;background:#ddd;} tr:nth-child(even) td{background:#e8e8e8;}
+    td:first-child{font-family:'Courier New',monospace;font-size:13px;color:#2a6496;white-space:nowrap;}
+    .arch-diagram{background:#fff;border:1px solid #ccc;border-radius:5px;padding:22px;margin:16px 0;font-family:'Courier New',monospace;font-size:13px;line-height:1.9;overflow-x:auto;white-space:pre;}
+    .page-nav{display:flex;justify-content:space-between;margin:36px 0 0;padding-top:16px;border-top:1px solid #ddd;font-size:14px;}
+    .page-nav a{color:#58A;text-decoration:none;display:flex;align-items:center;gap:6px;} .page-nav a:hover{text-decoration:underline;}
+    .page-nav .pn-label{font-size:11px;color:#aaa;text-transform:uppercase;display:block;} .page-nav .pn-title{display:block;} .page-nav .prev{text-align:left;} .page-nav .next{text-align:right;}
+    footer{margin-top:48px;padding-top:16px;border-top:1px solid #ccc;font-size:12px;color:#aaa;text-align:center;}
+    @media(max-width:800px){#wrapper{flex-direction:column;padding:20px 16px;}#sidebar{width:100%;}}
+  </style>
+</head>
+<body>
+<button id="lang-btn" onclick="toggleLang()"><span lang="en">中文</span><span lang="zh">English</span></button>
+<div id="wrapper">
+<nav id="sidebar">
+  <div id="series-nav">
+    <span class="snav-label"><span lang="en">Series</span><span lang="zh">系列</span></span>
+    <ol>
+      <li class="snav-ch"><span lang="en">00 Introduction</span><span lang="zh">00 简介</span><ol><li class="snav-item"><a href="../00-introduction/introduction.html"><span lang="en">Introduction</span><span lang="zh">简介</span></a></li></ol></li>
+      <li class="snav-ch"><span lang="en">01 Shader System</span><span lang="zh">01 Shader 系统</span><ol><li class="snav-item"><a href="../01-shader-system/nfx-surf.html"><span lang="en">NFX & SURF Format</span><span lang="zh">NFX & SURF 格式</span></a></li><li class="snav-item"><a href="../01-shader-system/hlsl-dialect.html"><span lang="en">NeoX HLSL Dialect</span><span lang="zh">NeoX HLSL 方言</span></a></li></ol></li>
+      <li class="snav-ch"><span lang="en">02 Rendering Pipeline</span><span lang="zh">02 渲染管线</span><ol><li class="snav-item"><a href="../02-rendering-pipeline/forward-shading.html"><span lang="en">Forward Shading</span><span lang="zh">前向渲染</span></a></li><li class="snav-item"><a href="../02-rendering-pipeline/deferred-shading.html"><span lang="en">Deferred Shading</span><span lang="zh">延迟渲染</span></a></li></ol></li>
+      <li class="snav-ch"><span lang="en">03 Material System</span><span lang="zh">03 材质系统</span><ol><li class="snav-item"><a href="../03-material-system/pbr-material.html"><span lang="en">PBR Material</span><span lang="zh">PBR 材质</span></a></li><li class="snav-item active"><a href="../03-material-system/multi-layered-pbr.html"><span lang="en">Multi-Layered PBR</span><span lang="zh">多层 PBR</span></a></li></ol></li>
+      <li class="snav-ch"><span lang="en">04 Lighting Models</span><span lang="zh">04 光照模型</span><ol><li class="snav-item"><a href="../04-lighting-models/ggx-brdf.html"><span lang="en">GGX BRDF</span><span lang="zh">GGX BRDF</span></a></li><li class="snav-item"><a href="../04-lighting-models/shading-models.html"><span lang="en">16 Shading Models</span><span lang="zh">16 种光照模型</span></a></li></ol></li>
+      <li class="snav-ch"><span lang="en">05 Post Processing</span><span lang="zh">05 后处理</span><ol><li class="snav-item"><a href="../05-post-processing/post-effects.html"><span lang="en">Post Effects Overview</span><span lang="zh">后处理全景</span></a></li></ol></li>
+    </ol>
+  </div>
+  <h2><span lang="en">Contents</span><span lang="zh">目录</span></h2>
+  <ol>
+    <li><a href="#s1"><span lang="en">Layer Stack Concept</span><span lang="zh">图层栈概念</span></a></li>
+    <li><a href="#s2"><span lang="en">Adding-Doubling Algorithm</span><span lang="zh">Adding-Doubling 算法</span></a></li>
+    <li><a href="#s3"><span lang="en">ComputeStatistics</span><span lang="zh">ComputeStatistics</span></a></li>
+    <li><a href="#s4"><span lang="en">Roughness Variance Propagation</span><span lang="zh">粗糙度方差传播</span></a></li>
+    <li><a href="#s5"><span lang="en">FGD Pre-Integration (ibl.hlsl)</span><span lang="zh">FGD 预积分（ibl.hlsl）</span></a></li>
+    <li><a href="#s6"><span lang="en">1/2/3-Coat Variants</span><span lang="zh">1/2/3 涂层变体</span></a></li>
+  </ol>
+</nav>
+
+<main id="content">
+  <div class="page-header">
+    <div class="crumb">NeoX Engine &middot; Material System &middot; Multi-Layered PBR</div>
+    <h1><span lang="en">Multi-Layered PBR — Stack-Lit System</span><span lang="zh">多层 PBR — Stack-Lit 系统</span></h1>
+    <div class="subtitle">res_upgrade/shader/built_in/layered_pbr/ &middot; shading_models/multi_layered_pbr.hlsl</div>
+  </div>
+
+  <!-- s1 -->
+  <h2 id="s1"><span lang="en">Layer Stack Concept</span><span lang="zh">图层栈概念</span></h2>
+
+  <p lang="en">NeoX's Multi-Layered PBR implements the <span class="def">Stack-Lit</span> material model (derived from Frostbite's research). Each material is a stack of optical layers: a dielectric <strong>Coat</strong> layer (like clear lacquer), an absorbing <strong>Medium</strong> layer (like tinted resin), and the opaque <strong>Base</strong> material below. Light bounces between each interface according to the Fresnel equations.</p>
+  <p lang="zh">NeoX 的多层 PBR 实现了 <span class="def">Stack-Lit</span> 材质模型（源自 Frostbite 研究）。每个材质是一个光学层栈：电介质<strong>涂层</strong>（如清漆）、吸收性<strong>介质层</strong>（如有色树脂）和底部不透明<strong>基础材质</strong>。光线按菲涅尔方程在每个界面间反弹。</p>
+
+  <div class="arch-diagram">
++==============================================================+
+|  Stack-Lit Layer Structure (1 coat = NB_COAT_LAYERS=1)       |
++==============================================================+
+|                                                              |
+|  Air (IOR = 1.0)                                             |
+|  ────────────────────────────────────  interface 0           |
+|  [COAT layer]   IOR, roughness, normal map                   |
+|     R01 = Fresnel(IOR)    T01 = 1 - R01                      |
+|                                                              |
+|  [MEDIUM layer]  absorption = exp(-thickness * extinction)   |
+|     T12 = Beer-Lambert transmittance                         |
+|                                                              |
+|  ────────────────────────────────────  interface 1           |
+|  [BASE model]   standard GGX PBR                             |
+|     R_base = GGX(roughness, metalness)                       |
+|                                                              |
+|                   Adding-Doubling                            |
+|  e_R = R01 + T01 * R_base * T10 / (1 - R10 * R_base)        |
+|  ^^ Total reflectance including all inter-layer bounces      |
++==============================================================+</div>
+
+  <p lang="en">The system supports <strong>1, 2, or 3 coat layers</strong> via the <code>NB_COAT_LAYERS</code> macro. Each coat adds one normal map texture (t5, t6, t7) and its own IOR, roughness, thickness, and extinction color parameters.</p>
+  <p lang="zh">系统通过 <code>NB_COAT_LAYERS</code> 宏支持 <strong>1、2 或 3 个涂层</strong>。每个涂层添加一张法线贴图纹理（t5、t6、t7）及其 IOR、粗糙度、厚度和消光颜色参数。</p>
+
+  <!-- s2 -->
+  <h2 id="s2"><span lang="en">Adding-Doubling Algorithm</span><span lang="zh">Adding-Doubling 算法</span></h2>
+
+  <p lang="en">The physical core of the multi-layer model is <span class="fun">ComputeAdding()</span> — it solves the radiative transfer equations iteratively across all layers using the <span class="def">Adding-Doubling method</span>. This correctly accounts for multiple inter-reflections between layer interfaces:</p>
+  <p lang="zh">多层模型的物理核心是 <span class="fun">ComputeAdding()</span>——它使用 <span class="def">Adding-Doubling 方法</span>在所有层上迭代求解辐射传输方程。这正确处理了层界面之间的多次内部反射：</p>
+
+  <pre><span class="cm">// Simplified Adding-Doubling loop (from multi_layered_pbr.hlsl)</span>
+<span class="kw">void</span> <span class="fn">ComputeAdding</span>(<span class="kw">float</span> theta, <span class="type">Material</span> mtl, <span class="type">LightingDataReadOnly</span> data_r) {
+  <span class="cm">// Iteratively compose layers from top to bottom</span>
+  <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; NB_COAT_LAYERS; i++) {
+    <span class="fn">ComputeStatistics</span>(cti, <span class="num">0</span>, i, mtl, ...);  <span class="cm">// Coat</span>
+    <span class="fn">ComputeStatistics</span>(cti, <span class="num">1</span>, i, mtl, ...);  <span class="cm">// Medium (absorption)</span>
+    
+    <span class="cm">// Adding equations: compose stack so far with new layer</span>
+    m_R0i = (T0i * R12 * Ti0) / (<span class="num">1</span> - Ri0 * R12);  <span class="cm">// multiple-bounce contribution</span>
+    e_R0i = R0i + m_R0i;                             <span class="cm">// total reflectance</span>
+    e_T0i = (T0i * T12) / (<span class="num">1</span> - Ri0 * R12);          <span class="cm">// total transmittance</span>
+  }
+  <span class="cm">// Add base layer (GGX)</span>
+  <span class="fn">ComputeStatistics</span>(cti, <span class="num">2</span>, <span class="num">0</span>, mtl, fresnel0);
+  
+  <span class="cm">// Final effective roughness propagated through all layers</span>
+  data_r.ibl_perceptual_roughness[MODEL_LOBE_IDX] =
+    <span class="fn">LinearVarianceToPerceptualRoughness</span>(_s_r0m);
+}</pre>
+
+  <div class="note">
+    <span lang="en"><strong>Why Adding-Doubling?</strong> A naive "multiply Fresnel" approach ignores the light that bounces back upward inside the stack. For a car paint (clear coat over metallic base), ignoring inter-layer reflection underestimates the total reflectance by up to 10-15% at grazing angles. Adding-Doubling computes the exact solution via geometric series: <code>R_total = R01 + T01²·R_base / (1 - R10·R_base)</code>.</span>
+    <span lang="zh"><strong>为什么用 Adding-Doubling？</strong>简单的"乘菲涅尔"方法忽略了在层栈内向上反弹的光。对于汽车漆（清漆覆盖金属底漆），忽略层间反射会在掠射角最多低估 10-15% 的总反射率。Adding-Doubling 通过几何级数精确求解：<code>R_total = R01 + T01²·R_base / (1 - R10·R_base)</code>。</span>
+  </div>
+
+  <!-- s3 -->
+  <h2 id="s3"><span lang="en">ComputeStatistics — Per-Layer Optical Properties</span><span lang="zh">ComputeStatistics — 逐层光学属性</span></h2>
+
+  <p lang="en"><span class="fun">ComputeStatistics()</span> evaluates one layer's contribution at a given incident angle. It handles the three distinct layer types differently:</p>
+  <p lang="zh"><span class="fun">ComputeStatistics()</span> 在给定入射角下计算单个层的贡献。它以不同方式处理三种不同的层类型：</p>
+
+  <div class="table-wrap"><table>
+    <thead><tr>
+      <th><span lang="en">layer_idx</span><span lang="zh">层索引</span></th>
+      <th><span lang="en">Type</span><span lang="zh">类型</span></th>
+      <th><span lang="en">R12 (reflectance)</span><span lang="zh">R12（反射率）</span></th>
+      <th><span lang="en">T12 (transmittance)</span><span lang="zh">T12（透射率）</span></th>
+      <th><span lang="en">Direction change</span><span lang="zh">方向变化</span></th>
+    </tr></thead>
+    <tbody>
+      <tr><td>0 (Coat)</td><td><span lang="en">Dielectric interface</span><span lang="zh">电介质界面</span></td><td><code>FresnelUnpolarized(cti, eta, 1.0)</code></td><td><code>1 - R12</code></td><td><span lang="en">Snell's law refraction → computes new cti</span><span lang="zh">折射定律 → 计算新 cti</span></td></tr>
+      <tr><td>1 (Medium)</td><td><span lang="en">Absorbing volume</span><span lang="zh">吸收性体积</span></td><td><code>0</code></td><td><code>exp(-thickness * extinction / cti)</code></td><td><span lang="en">None (Beer-Lambert only)</span><span lang="zh">无（仅 Beer-Lambert）</span></td></tr>
+      <tr><td>2 (Base)</td><td><span lang="en">Opaque material</span><span lang="zh">不透明材质</span></td><td><code>F_Schlick(fresnel0, cti)</code></td><td><code>0</code></td><td><span lang="en">None</span><span lang="zh">无</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <pre><span class="cm">// Coat layer: full polarisation-resolved Fresnel + refraction angle</span>
+<span class="kw">float</span> <span class="fn">FresnelUnpolarized</span>(<span class="kw">float</span> ct1, <span class="kw">float</span> n1, <span class="kw">float</span> n2) {
+  <span class="kw">float</span> sinT2 = (n1/n2)*(n1/n2) * (<span class="num">1</span> - ct1*ct1);
+  <span class="kw">if</span> (sinT2 > <span class="num">1</span>) <span class="kw">return</span> <span class="num">1</span>;   <span class="cm">// total internal reflection</span>
+  <span class="kw">float</span> ct2 = <span class="fn">sqrt</span>(<span class="num">1</span> - sinT2);
+  <span class="cm">// Rs = ((n1*ct1 - n2*ct2) / (n1*ct1 + n2*ct2))^2</span>
+  <span class="cm">// Rp = ((n1*ct2 - n2*ct1) / (n1*ct2 + n2*ct1))^2</span>
+  <span class="kw">return</span> <span class="num">0.5</span> * (Rs + Rp);    <span class="cm">// unpolarised average</span>
+}
+
+<span class="cm">// Medium layer: Beer-Lambert absorption</span>
+<span class="cm">// thickness in mm; extinction_color is per-channel absorption coefficient</span>
+<span class="kw">float3</span> T12 = <span class="fn">exp</span>(-thickness * extinction_color / cti);</pre>
+
+  <!-- s4 -->
+  <h2 id="s4"><span lang="en">Roughness Variance Propagation</span><span lang="zh">粗糙度方差传播</span></h2>
+
+  <p lang="en">When light refracts through a rough coat layer, the apparent roughness of underlying layers changes. NeoX propagates roughness using <span class="def">linear variance</span> (a representation that makes variances additive):</p>
+  <p lang="zh">当光线折射通过粗糙涂层时，下层的表观粗糙度会改变。NeoX 使用<span class="def">线性方差</span>传播粗糙度（该表示使方差具有可加性）：</p>
+
+  <pre><span class="cm">// Conversion functions (stack_lit.hlsl)</span>
+<span class="kw">float</span> <span class="fn">RoughnessToLinearVariance</span>(<span class="kw">float</span> a) {
+  <span class="kw">return</span> <span class="fn">pow</span>(a, <span class="num">1.1</span>) / (<span class="num">1.0</span> - <span class="fn">pow</span>(a, <span class="num">1.1</span>));
+}
+<span class="kw">float</span> <span class="fn">LinearVarianceToPerceptualRoughness</span>(<span class="kw">float</span> v) {
+  <span class="kw">return</span> <span class="fn">sqrt</span>(<span class="fn">LinearVarianceToRoughness</span>(v));
+}
+
+<span class="cm">// Propagation: combined variance = coat_variance + refracted_base_variance</span>
+<span class="cm">// refracted roughness accounts for the lens-law magnification jacobian:</span>
+<span class="kw">float</span> magnification = (n1 * ct2) / (n2 * ct1);   <span class="cm">// Snell's law jacobian</span>
+<span class="kw">float</span> refracted_variance = base_variance * (magnification * magnification);
+<span class="kw">float</span> total_variance = coat_variance + refracted_variance;</pre>
+
+  <div class="note">
+    <span lang="en"><strong>Why linear variance?</strong> In the spatial frequency domain, convolving two NDF lobes corresponds to adding their variances. Using <code>roughness²</code> directly would be incorrect for non-Gaussian distributions. The <code>pow(a, 1.1)</code> exponent is a practical approximation that makes the GGX NDF variance-additive to within a few percent error across the full roughness range.</span>
+    <span lang="zh"><strong>为什么用线性方差？</strong>在空间频率域，对两个 NDF 波瓣做卷积对应于相加其方差。直接使用 <code>roughness²</code> 对非高斯分布是不正确的。<code>pow(a, 1.1)</code> 指数是一个实用近似，使 GGX NDF 在整个粗糙度范围内以几个百分点的误差内具有方差可加性。</span>
+  </div>
+
+  <!-- s5 -->
+  <h2 id="s5"><span lang="en">FGD Pre-Integration — ibl.hlsl</span><span lang="zh">FGD 预积分 — ibl.hlsl</span></h2>
+
+  <p lang="en">Each coat lobe needs its own <span class="def">FGD (Fresnel-GGX-D) pre-integrated LUT</span>. This is a 2D texture (t4 in all ML-PBR materials) encoding the integrated BRDF over the hemisphere — precomputed at content build time and looked up at runtime:</p>
+  <p lang="zh">每个涂层波瓣需要自己的 <span class="def">FGD（菲涅尔-GGX-D）预积分 LUT</span>。这是一张 2D 纹理（所有 ML-PBR 材质中的 t4），在内容构建时预计算并在运行时查找：</p>
+
+  <pre><span class="cm">// ibl.hlsl — FGD integration (run offline / baking tool)</span>
+<span class="kw">float3</span> <span class="fn">IntegrateGGXAndDisneyDiffuseFGD</span>(<span class="kw">float</span> NdotV, <span class="kw">float</span> roughness,
+                                         <span class="kw">int</span> sampleCount = <span class="num">4096</span>) {
+  <span class="kw">float3</span> acc = <span class="num">0</span>;
+  <span class="kw">for</span>(<span class="kw">int</span> i = <span class="num">0</span>; i &lt; sampleCount; i++) {
+    <span class="kw">float2</span> u = <span class="fn">Hammersley2d</span>(i, sampleCount);    <span class="cm">// low-discrepancy sample</span>
+    <span class="cm">// GGX importance-sampled contribution</span>
+    acc.xy += <span class="fn">ImportanceSampleGGX</span>(u, V, localToWorld, roughness, NdotV, ...);
+    <span class="cm">// Disney diffuse contribution</span>
+    acc.z  += <span class="fn">ImportanceSampleLambert</span>(u, ...);
+  }
+  <span class="kw">return</span> acc / sampleCount;
+  <span class="cm">// Output: (scale=acc.x, bias=acc.y, disneyDiffuse=acc.z)</span>
+}
+
+<span class="cm">// Runtime LUT lookup (multi_layered_pbr.hlsl)</span>
+<span class="kw">void</span> <span class="fn">GetPreIntegratedFGDGGXAndDisneyDiffuse</span>(<span class="type">Texture2D</span> tex, <span class="kw">float</span> NdotV,
+      <span class="kw">float</span> perceptualRoughness, <span class="kw">float3</span> fresnel0,
+      <span class="kw">out float3</span> specFGD, <span class="kw">out float</span> diffFGD, <span class="kw">out float</span> reflectivity) {
+  <span class="kw">float3</span> preFGD = tex.<span class="fn">SampleLevel</span>(s_linear_clamp, <span class="kw">float2</span>(NdotV, perceptualRoughness), <span class="num">0</span>);
+  specFGD     = <span class="fn">lerp</span>(preFGD.xxx, preFGD.yyy, fresnel0);  <span class="cm">// scale + bias * f0</span>
+  diffFGD     = preFGD.z + <span class="num">0.5</span>;
+  reflectivity = <span class="fn">Luminance</span>(specFGD);
+}</pre>
+
+  <div class="table-wrap"><table>
+    <thead><tr>
+      <th><span lang="en">LUT Channel</span><span lang="zh">LUT 通道</span></th>
+      <th><span lang="en">Meaning</span><span lang="zh">含义</span></th>
+      <th><span lang="en">Usage</span><span lang="zh">用途</span></th>
+    </tr></thead>
+    <tbody>
+      <tr><td>R (scale)</td><td><span lang="en">FGD scale — multiply by F0</span><span lang="zh">FGD 缩放系数，乘以 F0</span></td><td><code>specFGD = scale * F0 + bias</code></td></tr>
+      <tr><td>G (bias)</td><td><span lang="en">FGD bias — additive term</span><span lang="zh">FGD 偏置，加法项</span></td><td><span lang="en">Handles off-specular at grazing</span><span lang="zh">处理掠射角的离轴高光</span></td></tr>
+      <tr><td>B (Disney diffuse)</td><td><span lang="en">Pre-integrated Disney diffuse lobe</span><span lang="zh">预积分 Disney 漫反射波瓣</span></td><td><code>diffFGD = preFGD.z + 0.5</code></td></tr>
+    </tbody>
+  </table></div>
+
+  <!-- s6 -->
+  <h2 id="s6"><span lang="en">1 / 2 / 3-Coat Variants</span><span lang="zh">1 / 2 / 3 涂层变体</span></h2>
+
+  <p lang="en">Three material files cover the three coat-layer counts. All are identical in structure except for the <code>NB_COAT_LAYERS</code> value and the additional coat-specific texture slots and uniform arrays:</p>
+  <p lang="zh">三个材质文件涵盖三种涂层数量。所有文件在结构上相同，仅 <code>NB_COAT_LAYERS</code> 值、额外的涂层纹理槽位和 Uniform 数组不同：</p>
+
+  <div class="table-wrap"><table>
+    <thead><tr>
+      <th><span lang="en">File</span><span lang="zh">文件</span></th>
+      <th>NB_COAT_LAYERS</th>
+      <th><span lang="en">Total textures</span><span lang="zh">总纹理数</span></th>
+      <th><span lang="en">Coat normal slots</span><span lang="zh">涂层法线槽位</span></th>
+      <th><span lang="en">Extra uniforms</span><span lang="zh">额外 Uniform</span></th>
+    </tr></thead>
+    <tbody>
+      <tr><td>material_multi_layered_pbr.hlsl</td><td>1</td><td>5</td><td>t5</td><td>CoatInfo01, CoatExtinctionColor01</td></tr>
+      <tr><td>material_multi_layered_pbr2.hlsl</td><td>2</td><td>6</td><td>t5, t6</td><td>CoatInfo01-02, CoatExtinctionColor01-02</td></tr>
+      <tr><td>material_multi_layered_pbr3.hlsl</td><td>3</td><td>7</td><td>t5, t6, t7</td><td>CoatInfo01-03, CoatExtinctionColor01-03</td></tr>
+    </tbody>
+  </table></div>
+
+  <p lang="en">Each <code>CoatInfo</code> float4 packs: <code>(IOR, roughness, thickness, unused)</code>. Each <code>CoatExtinctionColor</code> float4 packs <code>(R, G, B, unused)</code> extinction coefficients for Beer-Lambert absorption per coat.</p>
+  <p lang="zh">每个 <code>CoatInfo</code> float4 打包：<code>(IOR, roughness, thickness, unused)</code>。每个 <code>CoatExtinctionColor</code> float4 打包每个涂层 Beer-Lambert 吸收的 <code>(R, G, B, unused)</code> 消光系数。</p>
+
+  <pre><span class="cm">// Array sizes derived from NB_COAT_LAYERS:</span>
+<span class="cm">// NB_TOTAL_NORMALS  = NB_COAT_LAYERS + 1  (coat normals + base normal)</span>
+<span class="cm">// NB_TOTAL_LOBES    = NB_COAT_LAYERS + 1  (one lobe per normal)</span>
+<span class="cm">// NB_TOTAL_LAYERS   = NB_COAT_LAYERS*2+1  (Coat + Medium) per coat + Base</span>
+
+<span class="cm">// Energy coefficient array tracks what fraction of light reaches each layer</span>
+<span class="kw">float</span> layer_energy_coeff[NB_TOTAL_LAYERS];
+
+<span class="cm">// DirectLighting sums all lobes:</span>
+<span class="kw">for</span> (<span class="kw">int</span> lobe = <span class="num">0</span>; lobe &lt; NB_TOTAL_LOBES; lobe++) {
+  light_specular += specular_gd[lobe] * data_rw.fresnel[lobe]
+                  * layer_energy_coeff[lobe_to_layer[lobe]];
+}</pre>
+
+  <div class="legacy">
+    <span lang="en"><strong>New vs old:</strong> The <code>built_in/layered_pbr/</code> framework files (<code>stack_lit.hlsl</code>, <code>ibl.hlsl</code>, <code>hammersley.hlsl</code>, <code>bsdf/</code>) exist in both directories with largely identical content. The key difference: the new engine adds the three <code>material_multi_layered_pbr*.hlsl</code> driver files in <code>res_upgrade/</code> that wire the framework into the production material pipeline, making it a first-class material type selectable in the editor (up to 3 coat layers). In <code>res/shader/</code> the framework existed but had no production material using it.</span>
+    <span lang="zh"><strong>新旧对比：</strong><code>built_in/layered_pbr/</code> 框架文件（<code>stack_lit.hlsl</code>、<code>ibl.hlsl</code>、<code>hammersley.hlsl</code>、<code>bsdf/</code>）在两个目录中都存在且内容基本相同。关键区别：新引擎在 <code>res_upgrade/</code> 中新增了三个 <code>material_multi_layered_pbr*.hlsl</code> 驱动文件，将框架接入生产材质管线，使其成为可在编辑器中选择的一流材质类型（最多 3 个涂层）。<code>res/shader/</code> 中框架存在但没有生产材质使用。</span>
+  </div>
+
+  <div class="page-nav">
+    <a href="../03-material-system/pbr-material.html" class="prev"><span class="pn-label">&larr; Prev</span><span class="pn-title"><span lang="en">PBR Material</span><span lang="zh">PBR 材质</span></span></a>
+    <a href="../04-lighting-models/ggx-brdf.html" class="next"><span class="pn-label">Next &rarr;</span><span class="pn-title"><span lang="en">GGX BRDF</span><span lang="zh">GGX BRDF</span></span></a>
+  </div>
+  <footer>NeoX Engine &middot; Multi-Layered PBR<br>Source: built_in/layered_pbr/ &middot; shading_models/multi_layered_pbr.hlsl &middot; materials/material_multi_layered_pbr*.hlsl</footer>
+</main>
+</div>
+<script>
+function toggleLang(){var h=document.documentElement;if(h.classList.contains('lang-zh')){h.classList.remove('lang-zh');h.lang='en';document.title='Multi-Layered PBR — NeoX Engine';localStorage.setItem('neox-doc-lang','en');}else{h.classList.add('lang-zh');h.lang='zh-CN';document.title='多层 PBR — NeoX 引擎';localStorage.setItem('neox-doc-lang','zh');}}
+if(document.documentElement.classList.contains('lang-zh'))document.title='多层 PBR — NeoX 引擎';
+</script>
+</body>
+</html>

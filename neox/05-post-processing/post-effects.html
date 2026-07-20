@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Post Effects Overview — NeoX Engine</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Gudea">
+  <script>(function(){if(localStorage.getItem('neox-doc-lang')==='zh'){document.documentElement.classList.add('lang-zh');document.documentElement.lang='zh-CN';}})();</script>
+  <style>
+    html:not(.lang-zh) [lang="zh"]{display:none;} html.lang-zh [lang="en"]{display:none;}
+    #lang-btn{position:fixed;top:16px;right:20px;z-index:999;background:#37425d;color:#fff;border:none;border-radius:4px;padding:5px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:Gudea,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.2);transition:background .15s;} #lang-btn:hover{background:#4a5a7a;}
+    *{box-sizing:border-box;margin:0;padding:0;} body{font-family:Gudea,sans-serif;font-size:16px;line-height:1.8;color:#111;background:#eee;}
+    #wrapper{max-width:1100px;margin:0 auto;display:flex;align-items:flex-start;padding:40px 24px;gap:36px;}
+    #sidebar{width:240px;flex-shrink:0;font-size:13px;} #content{flex:1;min-width:0;}
+    #series-nav{margin-bottom:24px;} #series-nav ol,#series-nav li{list-style:none;padding-left:0;}
+    .snav-label{font-size:11px;font-weight:800;color:#2d6a5a;text-transform:uppercase;letter-spacing:.14em;display:block;margin-bottom:10px;padding-bottom:4px;border-bottom:2px solid #2d6a5a;}
+    #series-nav > ol{list-style:none;padding:0;margin:0;} .snav-ch{margin-bottom:10px;}
+    .snav-ch > span{font-size:11px;font-weight:800;letter-spacing:.06em;color:#fff;background:#3d8070;display:block;padding:3px 7px 3px 6px;border-radius:3px;margin-bottom:3px;text-transform:uppercase;}
+    .snav-ch > ol{padding-left:0;margin-top:0;} .snav-item{margin-bottom:1px;}
+    .snav-item a{font-size:13.5px;color:#666;text-decoration:none;display:block;padding:3px 6px;border-left:3px solid transparent;border-radius:0 3px 3px 0;transition:color .12s,background .12s,border-color .12s;}
+    .snav-item a:hover{color:#2d6a5a;background:#edf5f3;border-left-color:#a8d4c8;}
+    .snav-item.active a{color:#2d6a5a;font-weight:700;background:#e2f0ec;border-left-color:#2d6a5a;}
+    #sidebar > h2{font-size:10.5px;font-style:italic;font-weight:400;color:#b0b0b0;margin-bottom:8px;border:none;padding:0;margin-top:20px;padding-top:16px;border-top:1px dashed #ddd;}
+    #sidebar > ol{list-style:none !important;padding:0;margin:0;} #sidebar > ol > li{list-style:none !important;margin-bottom:5px;}
+    #sidebar > ol > li a{color:#666;text-decoration:none;display:block;padding:1px 0;font-size:12px;transition:color .12s;} #sidebar > ol > li a:hover{color:#58A;}
+    .page-header{margin-bottom:32px;padding-bottom:20px;border-bottom:1px solid #ddd;}
+    .page-header .crumb{font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
+    .page-header h1{font-size:1.8rem;font-weight:900;color:#303236;margin-bottom:8px;line-height:1.25;}
+    .page-header .subtitle{font-family:'Courier New',monospace;font-size:13px;color:#777;}
+    h2{color:#37425d;font-size:22px;margin:36px 0 10px;} h3{color:#633739;font-size:17px;margin:24px 0 8px;}
+    p{margin-bottom:14px;} a{color:#58A;text-decoration:none;} a:hover{text-decoration:underline;} strong{color:#222;}
+    .fun{font-family:'Courier New',monospace;color:#2a6496;} .def{color:green;font-weight:600;}
+    code{font-family:'Courier New',monospace;font-size:14px;background:#ddd;border-radius:3px;padding:1px 5px;}
+    pre{background:#282c34;color:#abb2bf;border-radius:5px;padding:16px 18px;overflow-x:auto;margin:14px 0 18px;font-family:'Courier New',monospace;font-size:14px;line-height:1.6;}
+    pre code{background:none;padding:0;color:inherit;}
+    .kw{color:#c678dd;} .fn{color:#61afef;} .cm{color:#5c6370;font-style:italic;} .str{color:#98c379;} .num{color:#d19a66;} .type{color:#e5c07b;}
+    .note{display:block;margin:18px 0;padding:15px;background:#D8F5D8;color:#444;border-radius:5px;border:2px solid #AFDFAF;font-size:15px;line-height:1.7;}
+    .warning{display:block;margin:18px 0;padding:15px;background:#FFD2D2;color:#444;border-radius:5px;border:2px solid #E0B3B3;font-size:15px;line-height:1.7;}
+    .legacy{display:block;margin:18px 0;padding:15px;background:#FFF3CD;color:#444;border-radius:5px;border:2px solid #FFCC5C;font-size:15px;line-height:1.7;}
+    ul,ol{padding-left:22px;margin-bottom:14px;} li{margin-bottom:5px;}
+    .table-wrap{overflow-x:auto;margin:14px 0;} table{border-collapse:collapse;font-size:14px;width:100%;}
+    th,td{padding:8px 12px;border-bottom:1px solid #aaa;text-align:left;} th{border-bottom:2px solid #888;font-weight:700;background:#ddd;} tr:nth-child(even) td{background:#e8e8e8;}
+    td:first-child{font-family:'Courier New',monospace;font-size:13px;color:#2a6496;white-space:nowrap;}
+    .arch-diagram{background:#fff;border:1px solid #ccc;border-radius:5px;padding:22px;margin:16px 0;font-family:'Courier New',monospace;font-size:13px;line-height:1.9;overflow-x:auto;white-space:pre;}
+    .page-nav{display:flex;justify-content:space-between;margin:36px 0 0;padding-top:16px;border-top:1px solid #ddd;font-size:14px;}
+    .page-nav a{color:#58A;text-decoration:none;display:flex;align-items:center;gap:6px;} .page-nav a:hover{text-decoration:underline;}
+    .page-nav .pn-label{font-size:11px;color:#aaa;text-transform:uppercase;display:block;} .page-nav .pn-title{display:block;} .page-nav .prev{text-align:left;} .page-nav .next{text-align:right;}
+    footer{margin-top:48px;padding-top:16px;border-top:1px solid #ccc;font-size:12px;color:#aaa;text-align:center;}
+    @media(max-width:800px){#wrapper{flex-direction:column;padding:20px 16px;}#sidebar{width:100%;}}
+  </style>
+</head>
+<body>
+<button id="lang-btn" onclick="toggleLang()"><span lang="en">中文</span><span lang="zh">English</span></button>
+<div id="wrapper">
+<nav id="sidebar">
+  <div id="series-nav">
+    <span class="snav-label"><span lang="en">Series</span><span lang="zh">系列</span></span>
+    <ol>
+      <li class="snav-ch"><span lang="en">00 Introduction</span><span lang="zh">00 简介</span><ol><li class="snav-item"><a href="../00-introduction/introduction.html"><span lang="en">Introduction</span><span lang="zh">简介</span></a></li></ol></li>
+      <li class="snav-ch"><span lang="en">01 Shader System</span><span lang="zh">01 Shader 系统</span><ol><li class="snav-item"><a href="../01-shader-system/nfx-surf.html"><span lang="en">NFX & SURF</span><span lang="zh">NFX & SURF</span></a></li><li class="snav-item"><a href="../01-shader-system/hlsl-dialect.html"><span lang="en">HLSL Dialect</span><span lang="zh">HLSL 方言</span></a></li></ol></li>
+      <li class="snav-ch"><span lang="en">02 Rendering Pipeline</span><span lang="zh">02 渲染管线</span><ol><li class="snav-item"><a href="../02-rendering-pipeline/forward-shading.html"><span lang="en">Forward Shading</span><span lang="zh">前向渲染</span></a></li><li class="snav-item"><a href="../02-rendering-pipeline/deferred-shading.html"><span lang="en">Deferred Shading</span><span lang="zh">延迟渲染</span></a></li></ol></li>
+      <li class="snav-ch"><span lang="en">03 Material System</span><span lang="zh">03 材质系统</span><ol><li class="snav-item"><a href="../03-material-system/pbr-material.html"><span lang="en">PBR Material</span><span lang="zh">PBR 材质</span></a></li><li class="snav-item"><a href="../03-material-system/multi-layered-pbr.html"><span lang="en">Multi-Layered PBR</span><span lang="zh">多层 PBR</span></a></li></ol></li>
+      <li class="snav-ch"><span lang="en">04 Lighting Models</span><span lang="zh">04 光照模型</span><ol><li class="snav-item"><a href="../04-lighting-models/ggx-brdf.html"><span lang="en">GGX BRDF</span><span lang="zh">GGX BRDF</span></a></li><li class="snav-item"><a href="../04-lighting-models/shading-models.html"><span lang="en">16 Shading Models</span><span lang="zh">16 种光照模型</span></a></li></ol></li>
+      <li class="snav-ch"><span lang="en">05 Post Processing</span><span lang="zh">05 后处理</span><ol><li class="snav-item active"><a href="../05-post-processing/post-effects.html"><span lang="en">Post Effects Overview</span><span lang="zh">后处理全景</span></a></li></ol></li>
+    </ol>
+  </div>
+  <h2><span lang="en">Contents</span><span lang="zh">目录</span></h2>
+  <ol>
+    <li><a href="#s1"><span lang="en">Pipeline Order</span><span lang="zh">管线顺序</span></a></li>
+    <li><a href="#s2"><span lang="en">ACES Tone Mapping</span><span lang="zh">ACES 色调映射</span></a></li>
+    <li><a href="#s3"><span lang="en">TAA</span><span lang="zh">TAA</span></a></li>
+    <li><a href="#s4"><span lang="en">Bloom</span><span lang="zh">泛光</span></a></li>
+    <li><a href="#s5"><span lang="en">Depth of Field</span><span lang="zh">景深</span></a></li>
+    <li><a href="#s6"><span lang="en">Eye Adaptation</span><span lang="zh">眼睛适应</span></a></li>
+    <li><a href="#s7"><span lang="en">Color Grading (combine_lut)</span><span lang="zh">调色（combine_lut）</span></a></li>
+    <li><a href="#s8"><span lang="en">Final Composite</span><span lang="zh">最终合成</span></a></li>
+    <li><a href="#s9"><span lang="en">Effect Reference</span><span lang="zh">效果参考表</span></a></li>
+  </ol>
+</nav>
+
+<main id="content">
+  <div class="page-header">
+    <div class="crumb">NeoX Engine &middot; Post Processing &middot; Overview</div>
+    <h1><span lang="en">Post Effects Overview</span><span lang="zh">后处理全景</span></h1>
+    <div class="subtitle">res_upgrade/shader/posteffects/ &middot; 52 files &middot; final_composite.hlsl 1412+ lines</div>
+  </div>
+
+  <!-- s1 -->
+  <h2 id="s1"><span lang="en">Pipeline Order — How Effects Chain</span><span lang="zh">管线顺序 — 效果如何串联</span></h2>
+
+  <p lang="en">NeoX's post-processing pipeline is a fixed sequence of render passes. The <code>final_composite.hlsl</code> (1412+ lines) consolidates the final assembly stage — FXAA, bloom, DOF, tone mapping, color grading, sharpening, vignette, and grain all execute in a single pass to minimize bandwidth:</p>
+  <p lang="zh">NeoX 的后处理管线是固定的渲染 Pass 序列。<code>final_composite.hlsl</code>（1412+ 行）整合了最终合成阶段——FXAA、泛光、景深、色调映射、调色、锐化、暗角和胶片颗粒均在单次 Pass 中执行以最小化带宽：</p>
+
+  <div class="arch-diagram">
+Scene (HDR linear) — from forward/deferred pass
+         |
+         v
+[TAA] temporal_aa.hlsl
+  4 quality tiers: HIGH / MEDIUM / LOW / FAST
+         |
+         v
+[Pre-downsamples] downsample.hlsl
+         |
+         +---> [Bloom Bright] bloom_bright.hlsl --------+
+         |       threshold + soft knee                  |
+         |     [Bloom Blur H+V] 5-tap Gaussian          |
+         |       * 3-4 mip levels                       |
+         |                                              |
+         +---> [DOF / Bokeh DOF]                        |
+         |       dof_blur_h, dof_blur_v                 |
+         |       bokeh_dof (SVD separable kernel)       |
+         |                                              |
+         +---> [Sun Shafts] sun_shafts.hlsl             |
+         |       depth-masked radial blur               |
+         |                                              |
+[Eye Adaptation] eye_adaptation.hlsl -----> exposure
+  histogram (64 bins) or avg luminance
+
+[Color Grading LUT] combine_lut.hlsl
+  white balance + film curve + color correct + LUT bake
+         |
+         v
+[FINAL COMPOSITE] final_composite.hlsl  &lt;-- single draw call
+  +-- FXAA (NVIDIA 3.11 preset 5)
+  +-- DOF blend
+  +-- Bokeh DOF blend
+  +-- Sun Shafts add
+  +-- Bloom + dirty lens add
+  +-- Lens Flare (8-ghost hexagon)
+  +-- Tone mapping (ACES or filmic)
+  +-- Color Correction (shadow/mid/highlight per channel)
+  +-- ExpandGamut / BlueCorrection
+  +-- 3D LUT lookup (up to 4 blended LUTs)
+  +-- Chromatic aberration (color fringe)
+  +-- Sharpening (neighbor luminance)
+  +-- Vignette (cos^4 law)
+  +-- Film grain (temporal jitter)
+  +-- Linear → sRGB output
+         |
+         v
+[Velocity] velocity.hlsl  (feeds TAA next frame)
+  ClipToPrevClip reprojection → velocity buffer</div>
+
+  <!-- s2 -->
+  <h2 id="s2"><span lang="en">ACES Tone Mapping — Full Reference Pipeline</span><span lang="zh">ACES 色调映射 — 完整参考管线</span></h2>
+
+  <p lang="en"><code>aces.hlsl</code> (1109 lines) implements the complete Academy Color Encoding System reference pipeline. This is the same standard used in film production. Three main stages:</p>
+  <p lang="zh"><code>aces.hlsl</code>（1109 行）实现了完整的学院色彩编码系统参考管线。这与电影制作中使用的标准相同。三个主要阶段：</p>
+
+  <div class="table-wrap"><table>
+    <thead><tr>
+      <th><span lang="en">Stage</span><span lang="zh">阶段</span></th>
+      <th><span lang="en">Function</span><span lang="zh">函数</span></th>
+      <th><span lang="en">Description</span><span lang="zh">说明</span></th>
+    </tr></thead>
+    <tbody>
+      <tr><td>RRT</td><td><code>RRT(aces)</code></td><td><span lang="en">Reference Rendering Transform: scene-linear → image-state. Glow → red modifier → AP0→AP1 → desaturate 0.96 → 5-control-point log-log spline per channel</span><span lang="zh">参考渲染变换：场景线性→图像状态。辉光→红色修正→AP0→AP1→去饱和 0.96→逐通道 5 控制点对数样条</span></td></tr>
+      <tr><td>ODT (sRGB)</td><td><code>ODT_sRGB_D65(oces)</code></td><td><span lang="en">Output Device Transform: 9-control-point spline → luminance scale (cinema white 48 nit) → dim surround gamma (0.9811) → desaturate 0.93 → AP1→XYZ→D60→D65→sRGB</span><span lang="zh">输出设备变换：9 控制点样条→亮度缩放（影院白 48 尼特）→暗环境 gamma（0.9811）→去饱和 0.93→AP1→XYZ→D60→D65→sRGB</span></td></tr>
+      <tr><td>ODT (HDR)</td><td><code>ODT_1000nits / ODT_2000nits</code></td><td><span lang="en">HDR output: 9-pt spline calibrated for 1000/2000 nit peak, no surround compensation, ST2084 (PQ) EOTF output</span><span lang="zh">HDR 输出：针对 1000/2000 尼特峰值校准的 9 点样条，无环境补偿，ST2084（PQ）EOTF 输出</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <pre><span class="cm">// ACES full path (aces.hlsl)</span>
+<span class="kw">float3</span> <span class="fn">ACESFilm</span>(<span class="kw">float3</span> scene_linear) {
+  <span class="kw">float3</span> aces = <span class="fn">mul</span>(sRGB_to_AP0, scene_linear);  <span class="cm">// scene-linear sRGB → AP0</span>
+  <span class="kw">float3</span> oces = <span class="fn">RRT</span>(aces);                        <span class="cm">// RRT: AP0 → OCES</span>
+  <span class="kw">float3</span> out  = <span class="fn">ODT_sRGB_D65</span>(oces);              <span class="cm">// ODT: OCES → display sRGB</span>
+  <span class="kw">return</span> out;
+}
+
+<span class="cm">// Glow module (applied before RRT desaturation)</span>
+<span class="cm">// yc = rgb_2_yc(rgb)  -- luminance proxy with chroma boost</span>
+<span class="cm">// glow_fwd: linear ramp from full gain at 2/3*mid to zero at 2*mid</span>
+<span class="kw">float</span> <span class="fn">glow_fwd</span>(<span class="kw">float</span> yc, <span class="kw">float</span> glowGain, <span class="kw">float</span> glowMid) {
+  <span class="kw">if</span> (yc &lt;= <span class="num">2</span>/<span class="num">3</span> * glowMid)       <span class="kw">return</span> glowGain;
+  <span class="kw">else if</span> (yc >= <span class="num">2</span> * glowMid)    <span class="kw">return</span> <span class="num">0</span>;
+  <span class="kw">else</span> <span class="kw">return</span> glowGain * (<span class="num">2</span>*glowMid - yc) / (<span class="num">4</span>/<span class="num">3</span> * glowMid);
+}</pre>
+
+  <!-- s3 -->
+  <h2 id="s3"><span lang="en">Temporal Anti-Aliasing (TAA)</span><span lang="zh">时间抗锯齿（TAA）</span></h2>
+
+  <p lang="en"><code>temporal_aa.hlsl</code> (624 lines) implements 4 quality tiers. The highest quality mode uses Catmull-Rom history resampling and variance-based clamping with anti-flicker support:</p>
+  <p lang="zh"><code>temporal_aa.hlsl</code>（624 行）实现 4 个质量等级。最高质量模式使用 Catmull-Rom 历史重采样和带防闪烁支持的方差截断：</p>
+
+  <div class="table-wrap"><table>
+    <thead><tr><th><span lang="en">Quality</span><span lang="zh">质量</span></th><th><span lang="en">Velocity dilation</span><span lang="zh">速度膨胀</span></th><th><span lang="en">History filter</span><span lang="zh">历史滤波</span></th><th><span lang="en">Clamping</span><span lang="zh">截断</span></th><th><span lang="en">Blend factor</span><span lang="zh">混合系数</span></th></tr></thead>
+    <tbody>
+      <tr><td>HIGH</td><td><span lang="en">5-sample cross</span><span lang="zh">5 采样十字</span></td><td>Catmull-Rom 5-tap</td><td><span lang="en">Variance + anti-flicker</span><span lang="zh">方差 + 防闪烁</span></td><td>0.12 adaptive</td></tr>
+      <tr><td>MEDIUM</td><td><span lang="en">5-sample cross</span><span lang="zh">5 采样十字</span></td><td><span lang="en">Weighted bilinear</span><span lang="zh">加权双线性</span></td><td><span lang="en">Variance</span><span lang="zh">方差</span></td><td>0.12 adaptive</td></tr>
+      <tr><td>LOW</td><td><span lang="en">None</span><span lang="zh">无</span></td><td><span lang="en">Central sample</span><span lang="zh">中心采样</span></td><td><span lang="en">Variance simple</span><span lang="zh">简单方差</span></td><td>0.12 fixed</td></tr>
+      <tr><td>FAST</td><td><span lang="en">None</span><span lang="zh">无</span></td><td><span lang="en">5-point gather</span><span lang="zh">5 点采集</span></td><td><span lang="en">Luma only</span><span lang="zh">仅亮度</span></td><td><span lang="en">velocity-based</span><span lang="zh">基于速度</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <pre><span class="cm">// Key TAA steps (HIGH quality path)</span>
+<span class="cm">// 1. Velocity dilation: find closest-depth neighbor in 5-cross</span>
+<span class="cm">// 2. YCoCg color space + tone-mapped weighting (color/(luma+4))</span>
+<span class="cm">// 3. Gaussian-weighted 3x3 current frame filter</span>
+<span class="cm">// 4. Catmull-Rom bicubic history resampling (5-tap)</span>
+<span class="cm">// 5. Variance clamping: sigma = stdDev * (1.5 + localizedAntiFlicker)</span>
+<span class="cm">// 6. ClipHistory to neighbor AABB</span>
+<span class="cm">// 7. Adaptive blend: base 0.12 modulated by speed + depth mismatch</span>
+
+<span class="cm">// Anti-flicker: increase clamping box when neighbor variance is high</span>
+<span class="kw">float</span> localizedAntiFlicker = <span class="fn">saturate</span>(<span class="fn">length</span>(neighborhoodVariance) * antiFlickerStrength);
+sigmaScale = <span class="num">1.5</span> + localizedAntiFlicker;</pre>
+
+  <!-- s4 -->
+  <h2 id="s4"><span lang="en">Bloom — Threshold + Separable Gaussian</span><span lang="zh">泛光 — 阈值 + 可分离高斯</span></h2>
+
+  <p lang="en">Bloom uses a 4-pass pyramid: threshold extraction → 3-4 levels of 5-tap Gaussian blur (separate H + V passes) → composite. The threshold uses a <span class="def">soft knee</span> to avoid hard cutoffs:</p>
+  <p lang="zh">泛光使用 4-Pass 金字塔：阈值提取→3-4 级 5 点高斯模糊（H+V 分离 Pass）→合成。阈值使用<span class="def">软膝盖</span>避免硬截断：</p>
+
+  <pre><span class="cm">// bloom_bright.hlsl — soft threshold</span>
+<span class="kw">float</span> TotalLuminance = <span class="fn">Luminance</span>(LinearColor) * ExposureScale;
+<span class="kw">float</span> BloomAmount = <span class="fn">saturate</span>((TotalLuminance - Threshold) / <span class="num">2.0</span>);
+<span class="kw">return</span> BloomAmount * LinearColor;
+
+<span class="cm">// bloom_blur_h.hlsl — 5-tap Gaussian kernel</span>
+<span class="cm">// weights: {0.38774, 0.24477, 0.24477, 0.06136, 0.06136}</span>
+<span class="cm">// offsets: {0, +1, -1, +2, -2} * BloomWidth / RT_size</span></pre>
+
+  <!-- s5 -->
+  <h2 id="s5"><span lang="en">Depth of Field — Standard + Bokeh SVD</span><span lang="zh">景深 — 标准 + 散景 SVD</span></h2>
+
+  <p lang="en">Two DOF systems are available. Standard DOF is a simple separable Gaussian blur weighted by Circle of Confusion. <span class="def">Bokeh DOF</span> uses SVD (singular value decomposition) approximation to simulate shaped aperture bokeh without expensive full 2D convolution:</p>
+  <p lang="zh">提供两个景深系统。标准景深是按弥散圆加权的简单可分离高斯模糊。<span class="def">散景景深</span>使用 SVD（奇异值分解）近似模拟异形光圈散景，无需昂贵的完整 2D 卷积：</p>
+
+  <div class="table-wrap"><table>
+    <thead><tr><th><span lang="en">System</span><span lang="zh">系统</span></th><th><span lang="en">Quality</span><span lang="zh">质量</span></th><th><span lang="en">Kernel</span><span lang="zh">卷积核</span></th><th><span lang="en">Method</span><span lang="zh">方法</span></th></tr></thead>
+    <tbody>
+      <tr><td>Standard DOF</td><td><span lang="en">Full resolution</span><span lang="zh">全分辨率</span></td><td>Gaussian</td><td><span lang="en">CoC-weighted blur (H then V)</span><span lang="zh">CoC 加权模糊（H 后 V）</span></td></tr>
+      <tr><td>Bokeh DOF LOW</td><td>1/4 res</td><td>7×7</td><td><span lang="en">3-rank SVD: circle / pentagon / hexagon</span><span lang="zh">3 秩 SVD：圆形/五边形/六边形</span></td></tr>
+      <tr><td>Bokeh DOF HIGH</td><td>1/2 res</td><td>13×13</td><td><span lang="en">4-rank SVD: circle / hexagon</span><span lang="zh">4 秩 SVD：圆形/六边形</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <pre><span class="cm">// Bokeh SVD: separable rank-r approximation of aperture kernel</span>
+<span class="cm">// Precomputed U[rank][pixel], S[rank], V[rank][pixel] from SVD of target kernel</span>
+<span class="cm">// Horizontal pass: for each rank r, weight = V[r][x] * S[r]</span>
+<span class="cm">// Vertical pass:   for each rank r, weight = U[r][y]</span>
+<span class="cm">// Bokeh size scales with rcp(CoC) — wider CoC = larger bokeh disc</span></pre>
+
+  <!-- s6 -->
+  <h2 id="s6"><span lang="en">Eye Adaptation — Histogram-Based</span><span lang="zh">眼睛适应 — 基于直方图</span></h2>
+
+  <p lang="en"><code>eye_adaptation.hlsl</code> offers two exposure computation methods. The histogram method uses a 64-bin histogram with percentile outlier removal for more robust metering in high-contrast scenes:</p>
+  <p lang="zh"><code>eye_adaptation.hlsl</code> 提供两种曝光计算方法。直方图方法使用 64 个柱的直方图配合百分位异常值移除，在高对比度场景中实现更稳健的测光：</p>
+
+  <pre><span class="cm">// Basic method: downsampled weighted average</span>
+<span class="kw">float</span> smoothedLum = <span class="fn">lerp</span>(prevLum, targetLum, <span class="num">1</span> - <span class="fn">exp2</span>(-dt * AdaptSpeed));
+exposure = LocalExposureMultipler / <span class="fn">max</span>(<span class="num">0.0001</span>, smoothedLum);
+
+<span class="cm">// Histogram method: 64-bin log-luminance histogram</span>
+<span class="cm">// ComputeAverageLuminanceWithoutOutlier:</span>
+<span class="cm">//   remove bottom LowPercentile% and top HighPercentile% of histogram bins</span>
+<span class="cm">//   compute weighted average of remaining bins</span>
+
+<span class="cm">// AdaptationWeight(nx, slope): center-weighted metering</span>
+<span class="cm">// triangle function: max(1 - 2*slope*|nx - 0.5|, 0)</span>
+<span class="cm">// gives higher weight to center of frame</span></pre>
+
+  <!-- s7 -->
+  <h2 id="s7"><span lang="en">Color Grading — combine_lut.hlsl (677 lines)</span><span lang="zh">调色 — combine_lut.hlsl（677 行）</span></h2>
+
+  <p lang="en"><code>combine_lut.hlsl</code> is the most complete color processing pass, baking a final 3D LUT that encodes white balance, film tone curve, Nuke-style color correction, gamut expansion, and device-specific output into a single texture lookup at runtime:</p>
+  <p lang="zh"><code>combine_lut.hlsl</code> 是最完整的色彩处理 Pass，将白平衡、胶片色调曲线、Nuke 风格色彩校正、色域扩展和设备特定输出烘焙到单个 3D LUT 纹理，在运行时一次查找完成：</p>
+
+  <div class="table-wrap"><table>
+    <thead><tr><th><span lang="en">Stage</span><span lang="zh">阶段</span></th><th><span lang="en">Function</span><span lang="zh">函数</span></th><th><span lang="en">Method</span><span lang="zh">方法</span></th></tr></thead>
+    <tbody>
+      <tr><td>1. White Balance</td><td><code>WhiteBalance(Temp, Tint)</code></td><td><span lang="en">Planckian locus → D65 chromatic adaptation (Bradford)</span><span lang="zh">普朗克轨迹→D65 色适应（Bradford）</span></td></tr>
+      <tr><td>2. Film Curve</td><td><code>FilmToneMap()</code></td><td><span lang="en">ACES-inspired: glow → red modifier → AP0→AP1 → Duiker spline</span><span lang="zh">ACES 启发：辉光→红色修正→AP0→AP1→Duiker 样条</span></td></tr>
+      <tr><td>3. Color Correct</td><td><code>ColorCorrectAll()</code></td><td><span lang="en">Nuke-style: shadow / midtone / highlight — saturation, contrast, gamma, gain, offset per region</span><span lang="zh">Nuke 风格：暗部/中间调/高光——逐区域饱和度、对比度、gamma、增益、偏移</span></td></tr>
+      <tr><td>4. Blue Correct</td><td><code>BlueCorrection()</code></td><td><span lang="en">Desaturate blue channel toward white point for artistic balance</span><span lang="zh">向白点去饱和蓝色通道用于艺术平衡</span></td></tr>
+      <tr><td>5. Gamut Expand</td><td><code>ExpandGamut()</code></td><td><span lang="en">Push colors beyond sRGB toward P3/Wide-Gamut for vivid output</span><span lang="zh">将颜色推向 P3/宽色域以实现鲜艳输出</span></td></tr>
+      <tr><td>6. LUT blend</td><td><code>UnwrappedTexture3DSample()</code></td><td><span lang="en">Up to 4 blended 16^3 3D LUTs (unwrapped to 2D 256×16 strips)</span><span lang="zh">最多 4 个混合的 16^3 3D LUT（展开为 2D 256×16 条带）</span></td></tr>
+      <tr><td>7. Output device</td><td><span lang="en">sRGB / Rec709 / ST2084 1000/2000 nit</span><span lang="zh">sRGB / Rec709 / ST2084 1000/2000 尼特</span></td><td><span lang="en">Gamut: sRGB / P3 / Rec2020 / AP0 / AP1</span><span lang="zh">色域：sRGB / P3 / Rec2020 / AP0 / AP1</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <!-- s8 -->
+  <h2 id="s8"><span lang="en">Final Composite — Everything in One Pass</span><span lang="zh">最终合成 — 单 Pass 完成所有</span></h2>
+
+  <p lang="en">The final composite pass executes all remaining operations in sequence within a single full-screen quad draw. This avoids the bandwidth cost of separate passes for each effect:</p>
+  <p lang="zh">最终合成 Pass 在单次全屏四边形绘制中按顺序执行所有剩余操作。这避免了每个效果独立 Pass 的带宽开销：</p>
+
+  <pre><span class="cm">// final_composite.hlsl — execution order (simplified)</span>
+<span class="kw">float4</span> <span class="fn">ps_main</span>(<span class="type">Fragment</span> input) {
+  <span class="kw">float2</span> uv = input.uv;
+  <span class="kw">float3</span> color = <span class="fn">FXAAPass</span>(SceneColor, uv);   <span class="cm">// FXAA 3.11 preset 5 (32 steps)</span>
+  color = <span class="fn">DOFPass</span>(color, uv, DOFBlur);       <span class="cm">// Gaussian CoC blend</span>
+  color = <span class="fn">BokehDOFPass</span>(color, uv, bokehBuf); <span class="cm">// SVD bokeh blend</span>
+  color += <span class="fn">SunShaftPass</span>(uv);                <span class="cm">// additive volumetric shafts</span>
+  color += <span class="fn">BloomPass</span>(color, BloomTex)       <span class="cm">// + dirty lens overlay</span>
+        + <span class="fn">LensFlarePass</span>(uv, sunPos);        <span class="cm">// 8-ghost hexagon flare</span>
+  color = <span class="fn">TonemapCommonPS</span>(color, uv);       <span class="cm">// ACES + color correct + LUT</span>
+  <span class="cm">// Inside TonemapCommonPS:</span>
+  <span class="cm">//   grain jitter (temporal noise) → chromatic aberration (CA fringe)</span>
+  <span class="cm">//   → sharpen (neighbor luminance difference)</span>
+  <span class="cm">//   → vignette (cos^4 law radial darkening)</span>
+  <span class="cm">//   → grain intensity → color LUT lookup (3D unwrapped)</span>
+  <span class="cm">//   → linear → sRGB gamma</span>
+  <span class="kw">return float4</span>(color, <span class="num">1</span>);
+}</pre>
+
+  <!-- s9 -->
+  <h2 id="s9"><span lang="en">Effect Reference Table</span><span lang="zh">效果参考表</span></h2>
+
+  <div class="table-wrap"><table>
+    <thead><tr>
+      <th><span lang="en">File</span><span lang="zh">文件</span></th>
+      <th><span lang="en">Effect</span><span lang="zh">效果</span></th>
+      <th><span lang="en">Algorithm</span><span lang="zh">算法</span></th>
+    </tr></thead>
+    <tbody>
+      <tr><td>aces.hlsl</td><td>ACES Tone Mapping</td><td><span lang="en">Full ACES reference: RRT + ODT (sRGB / HDR 1000/2000 nit)</span><span lang="zh">完整 ACES 参考：RRT + ODT（sRGB / HDR）</span></td></tr>
+      <tr><td>temporal_aa.hlsl</td><td>TAA</td><td><span lang="en">4 quality tiers; Catmull-Rom history; variance clamping; YCoCg; adaptive blend</span><span lang="zh">4 质量等级；Catmull-Rom 历史；方差截断；YCoCg；自适应混合</span></td></tr>
+      <tr><td>bloom_bright.hlsl</td><td><span lang="en">Bloom threshold</span><span lang="zh">泛光阈值</span></td><td><span lang="en">Soft-knee luminance threshold: <code>(lum - thresh) / 2</code></span><span lang="zh">软膝盖亮度阈值</span></td></tr>
+      <tr><td>bloom_blur_h/v.hlsl</td><td><span lang="en">Bloom blur</span><span lang="zh">泛光模糊</span></td><td><span lang="en">5-tap Gaussian {0.387, 0.245×2, 0.061×2}; multi-mip pyramid</span><span lang="zh">5 点高斯；多级金字塔</span></td></tr>
+      <tr><td>dof_blur_h/v.hlsl</td><td><span lang="en">Standard DOF</span><span lang="zh">标准景深</span></td><td><span lang="en">CoC-weighted separable Gaussian</span><span lang="zh">CoC 加权可分离高斯</span></td></tr>
+      <tr><td>bokeh_dof.hlsl</td><td><span lang="en">Bokeh DOF</span><span lang="zh">散景景深</span></td><td><span lang="en">Low-rank SVD approximation of 7×7 / 13×13 aperture kernel</span><span lang="zh">7×7 / 13×13 光圈核的低秩 SVD 近似</span></td></tr>
+      <tr><td>eye_adaptation.hlsl</td><td><span lang="en">Auto Exposure</span><span lang="zh">自动曝光</span></td><td><span lang="en">64-bin log-luminance histogram + percentile outlier removal; temporal smoothing</span><span lang="zh">64 柱对数亮度直方图 + 百分位异常值移除；时间平滑</span></td></tr>
+      <tr><td>sun_shafts.hlsl</td><td><span lang="en">God Rays</span><span lang="zh">耶稣光</span></td><td><span lang="en">Radial blur from sun position; depth-masked; multi-pass</span><span lang="zh">从太阳位置径向模糊；深度遮蔽；多 Pass</span></td></tr>
+      <tr><td>combine_lut.hlsl</td><td><span lang="en">Color Grading</span><span lang="zh">调色</span></td><td><span lang="en">White balance + filmic curve + Nuke color correct + 4×3D LUT blend; baked to LUT</span><span lang="zh">白平衡 + 胶片曲线 + Nuke 色彩校正 + 4×3D LUT 混合；烘焙到 LUT</span></td></tr>
+      <tr><td>fxaa.hlsl</td><td>FXAA</td><td><span lang="en">NVIDIA FXAA 3.11 preset 5 (32 search steps, edge threshold 1/8, subpix 3/4)</span><span lang="zh">NVIDIA FXAA 3.11 预设 5（32 步搜索，边缘阈值 1/8）</span></td></tr>
+      <tr><td>final_composite.hlsl</td><td><span lang="en">Final Assembly</span><span lang="zh">最终合成</span></td><td><span lang="en">FXAA + DOF + Bloom + Lens Flare + Tone Map + Color Correct + Sharpen + Vignette + Grain (single pass)</span><span lang="zh">FXAA + 景深 + 泛光 + 镜头光晕 + 色调映射 + 调色 + 锐化 + 暗角 + 颗粒（单 Pass）</span></td></tr>
+      <tr><td>color_grading.hlsl</td><td><span lang="en">LUT Pass</span><span lang="zh">LUT Pass</span></td><td><span lang="en">Simple 16^3 3D LUT lookup (gamma-encoded); used for simple per-shot LUT override</span><span lang="zh">简单 16^3 3D LUT 查找（gamma 编码）；用于简单镜头 LUT 覆盖</span></td></tr>
+      <tr><td>velocity.hlsl</td><td><span lang="en">Motion Vectors</span><span lang="zh">运动向量</span></td><td><span lang="en">ClipToPrevClip reprojection; xy velocity → velocity buffer (feeds TAA)</span><span lang="zh">ClipToPrevClip 重投影；xy 速度→速度缓冲（供 TAA 使用）</span></td></tr>
+      <tr><td>lens_flare.hlsl</td><td><span lang="en">Lens Flare</span><span lang="zh">镜头光晕</span></td><td><span lang="en">8-ghost hexagonal bokeh flare with aspect-correct UV and per-ghost color tint</span><span lang="zh">8 幽灵六边形散景光晕，宽高比正确 UV，逐幽灵颜色着色</span></td></tr>
+      <tr><td>filmic_tonemapping.hlsl</td><td><span lang="en">Filmic Curve</span><span lang="zh">胶片曲线</span></td><td><span lang="en">Haarm-Peter Duiker spline approximation (toe + shoulder); used as alternative to ACES</span><span lang="zh">Haarm-Peter Duiker 样条近似（趾部 + 肩部）；用作 ACES 的替代</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="legacy">
+    <span lang="en"><strong>New engine full feature set:</strong> The new engine reads <code>res_upgrade/shader/posteffects/</code> first, then falls back to <code>res/shader/posteffects/</code> for any file not present in <code>res_upgrade/</code>. This means the new engine has <strong>all</strong> post effects from both directories combined. Effects residing in <code>res/shader/posteffects/</code> (available to new engine via fallback): motion blur, radial blur, outline-to-RT pass, volume fog pass, screen-space distortion pass, Kuwahara filter, programmable lens flares, and more. <code>bokeh_dof.hlsl</code> (SVD approximation) is a new addition in <code>res_upgrade/</code> that supplements the standard DOF. <code>aces.hlsl</code> and <code>final_composite.hlsl</code> exist in both directories with identical content — the <code>res_upgrade/</code> versions take priority at runtime.</span>
+    <span lang="zh"><strong>新引擎完整功能集：</strong>新引擎优先读取 <code>res_upgrade/shader/posteffects/</code>，对 <code>res_upgrade/</code> 中不存在的文件回退到 <code>res/shader/posteffects/</code>。这意味着新引擎<strong>拥有两个目录的所有后处理效果</strong>。存放于 <code>res/shader/posteffects/</code> 中的效果（新引擎通过回退机制使用）：运动模糊、径向模糊、outline-to-RT Pass、体积雾 Pass、屏幕空间扭曲 Pass、Kuwahara 滤波器、可编程镜头光晕等。<code>bokeh_dof.hlsl</code>（SVD 近似）是 <code>res_upgrade/</code> 中新增的，补充标准景深。<code>aces.hlsl</code> 和 <code>final_composite.hlsl</code> 在两个目录中均存在且内容相同——运行时 <code>res_upgrade/</code> 版本优先。</span>
+  </div>
+
+  <div class="page-nav">
+    <a href="../04-lighting-models/shading-models.html" class="prev"><span class="pn-label">&larr; Prev</span><span class="pn-title"><span lang="en">16 Shading Models</span><span lang="zh">16 种光照模型</span></span></a>
+    <a href="../00-introduction/introduction.html" class="next"><span class="pn-label">Back to start &rarr;</span><span class="pn-title"><span lang="en">Introduction</span><span lang="zh">简介</span></span></a>
+  </div>
+  <footer>NeoX Engine &middot; Post Effects<br>Source: posteffects/ (52 files) &middot; final_composite.hlsl (1412+ lines) &middot; aces.hlsl (1109 lines)</footer>
+</main>
+</div>
+<script>
+function toggleLang(){var h=document.documentElement;if(h.classList.contains('lang-zh')){h.classList.remove('lang-zh');h.lang='en';document.title='Post Effects Overview — NeoX Engine';localStorage.setItem('neox-doc-lang','en');}else{h.classList.add('lang-zh');h.lang='zh-CN';document.title='后处理全景 — NeoX 引擎';localStorage.setItem('neox-doc-lang','zh');}}
+if(document.documentElement.classList.contains('lang-zh'))document.title='后处理全景 — NeoX 引擎';
+</script>
+</body>
+</html>

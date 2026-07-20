@@ -23,6 +23,7 @@
     #sidebar > h2{font-size:10.5px;font-style:italic;font-weight:400;color:#b0b0b0;margin-bottom:8px;border:none;padding:0;margin-top:20px;padding-top:16px;border-top:1px dashed #ddd;}
     #sidebar > ol{list-style:none !important;padding:0;margin:0;} #sidebar > ol > li{list-style:none !important;margin-bottom:5px;}
     #sidebar > ol > li a{color:#666;text-decoration:none;display:block;padding:1px 0;font-size:12px;transition:color .12s;} #sidebar > ol > li a:hover{color:#58A;}
+    .legacy{display:block;margin:18px 0;padding:15px;background:#FFF3CD;color:#444;border-radius:5px;border:2px solid #FFCC5C;font-size:15px;line-height:1.7;}
     .page-header{margin-bottom:32px;padding-bottom:20px;border-bottom:1px solid #ddd;}
     .page-header .crumb{font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
     .page-header h1{font-size:1.8rem;font-weight:900;color:#303236;margin-bottom:8px;line-height:1.25;}
@@ -40,7 +41,7 @@
     .table-wrap{overflow-x:auto;margin:14px 0;} table{border-collapse:collapse;font-size:14px;width:100%;}
     th,td{padding:8px 12px;border-bottom:1px solid #aaa;text-align:left;} th{border-bottom:2px solid #888;font-weight:700;background:#ddd;} tr:nth-child(even) td{background:#e8e8e8;}
     td:first-child{font-family:'Courier New',monospace;font-size:13px;color:#2a6496;white-space:nowrap;}
-    .arch-diagram{background:#fff;border:1px solid #ccc;border-radius:5px;padding:22px;margin:16px 0;font-family:'Courier New',monospace;font-size:13px;line-height:1.9;overflow-x:auto;}
+    .arch-diagram{background:#fff;border:1px solid #ccc;border-radius:5px;padding:22px;margin:16px 0;font-family:'Courier New',monospace;font-size:13px;line-height:1.9;overflow-x:auto;white-space:pre;}
     .page-nav{display:flex;justify-content:space-between;margin:36px 0 0;padding-top:16px;border-top:1px solid #ddd;font-size:14px;}
     .page-nav a{color:#58A;text-decoration:none;display:flex;align-items:center;gap:6px;} .page-nav a:hover{text-decoration:underline;}
     .page-nav .pn-label{font-size:11px;color:#aaa;text-transform:uppercase;display:block;} .page-nav .pn-title{display:block;} .page-nav .prev{text-align:left;} .page-nav .next{text-align:right;}
@@ -72,6 +73,7 @@
     <li><a href="#s5"><span lang="en">Anisotropic GGX</span><span lang="zh">各向异性 GGX</span></a></li>
     <li><a href="#s6"><span lang="en">Environment BRDF</span><span lang="zh">环境 BRDF</span></a></li>
     <li><a href="#s7"><span lang="en">Full Specular Assembly</span><span lang="zh">完整高光组装</span></a></li>
+    <li><a href="#s8"><span lang="en">New: D_Quadratic & Cloth BRDF</span><span lang="zh">新增：D_Quadratic 与布料 BRDF</span></a></li>
   </ol>
 </nav>
 
@@ -79,7 +81,7 @@
   <div class="page-header">
     <div class="crumb">NeoX Engine &middot; Lighting Models &middot; GGX BRDF</div>
     <h1><span lang="en">GGX BRDF Implementation</span><span lang="zh">GGX BRDF 实现</span></h1>
-    <div class="subtitle">res/shader/built_in/brdf/ggx/brdf.hlsl &middot; 122 lines</div>
+    <div class="subtitle">res_upgrade/shader/built_in/brdf/ggx/brdf.hlsl &middot; 152 lines (New Engine)</div>
   </div>
 
   <!-- s1 -->
@@ -151,11 +153,12 @@
   <p lang="en">The geometry/visibility term accounts for microfacets blocking each other (masking and shadowing). NeoX implements the height-correlated Smith approximation:</p>
   <p lang="zh">几何/可见性项考虑微表面相互遮挡（遮蔽和阴影）。NeoX 实现了高度相关 Smith 近似：</p>
 
-  <pre><span class="kw">float</span> <span class="fn">SmithJointGGXVisibilityTerm</span>(<span class="kw">float</span> NdotL, <span class="kw">float</span> NdotV, <span class="kw">float</span> roughness_pow2) {
+  <pre><span class="cm">// New engine: lambdaV/L computation vectorized into float2</span>
+<span class="kw">float</span> <span class="fn">SmithJointGGXVisibilityTerm</span>(<span class="kw">float</span> NdotL, <span class="kw">float</span> NdotV, <span class="kw">float</span> roughness_pow2) {
   <span class="kw">float</span> a = roughness_pow2;
-  <span class="kw">float</span> lambdaV = NdotL * (NdotV * (<span class="num">1</span> - a) + a);
-  <span class="kw">float</span> lambdaL = NdotV * (NdotL * (<span class="num">1</span> - a) + a);
-  <span class="kw">return</span> <span class="num">0.5</span> * <span class="fn">rcp</span>(<span class="fn">max</span>(lambdaV + lambdaL, FLT_MIN));
+  <span class="kw">float2</span> lambdaVL = <span class="kw">float2</span>(NdotL, NdotV) * (<span class="kw">float2</span>(NdotV, NdotL) * (<span class="num">1</span> - a) + a);
+  <span class="cm">// NOTE: FLT_MIN changed to FLT_MIN_SAFE in new engine for more robust guard</span>
+  <span class="kw">return</span> <span class="num">0.5</span> * <span class="fn">rcp</span>(<span class="fn">max</span>(lambdaVL.x + lambdaVL.y, FLT_MIN_SAFE));
 }
 
 <span class="cm">// Alternative: Schlick approximation (used for anisotropy)</span>
@@ -165,6 +168,11 @@
   <span class="kw">float</span> Vis_SchlickL = NoL * (<span class="num">1</span> - k) + k;
   <span class="kw">return</span> <span class="num">0.25</span> / (Vis_SchlickV * Vis_SchlickL);
 }</pre>
+
+  <div class="legacy">
+    <span lang="en"><strong>New vs replaced:</strong> The new <code>brdf.hlsl</code> (152 lines) replaces the old 122-line version. Smith Joint visibility vectorized from separate scalars to <code>float2</code>. Denominator guard changed from <code>FLT_MIN</code> to <code>FLT_MIN_SAFE</code> (slightly larger safe floor defined in <code>function.hlsl</code>). All old BRDF functions remain (D_GGX, F_Schlick, D_GGXaniso, Vis_Schlick).</span>
+    <span lang="zh"><strong>新版替换：</strong>新 <code>brdf.hlsl</code>（152 行）替换旧版 122 行。Smith Joint 可见性项从独立标量向量化为 <code>float2</code>。分母保护从 <code>FLT_MIN</code> 改为 <code>FLT_MIN_SAFE</code>（在 <code>function.hlsl</code> 中定义的略大安全下限）。所有旧 BRDF 函数保留（D_GGX, F_Schlick, D_GGXaniso, Vis_Schlick）。</span>
+  </div>
 
   <!-- s5 -->
   <h2 id="s5"><span lang="en">Anisotropic GGX</span><span lang="zh">各向异性 GGX</span></h2>
@@ -186,18 +194,28 @@
   <!-- s6 -->
   <h2 id="s6"><span lang="en">Environment BRDF — Split-Sum Approximation</span><span lang="zh">环境 BRDF — 分离求和近似</span></h2>
 
-  <p lang="en">For IBL (Image-Based Lighting), evaluating the full integral is too expensive. NeoX uses the <span class="fun">EnvBRDFApprox</span> from Lazarov 2013 (same as UE4's original implementation):</p>
-  <p lang="zh">对于 IBL（基于图像的光照），计算完整积分太昂贵。NeoX 使用来自 Lazarov 2013 的 <span class="fun">EnvBRDFApprox</span>（与 UE4 原始实现相同）：</p>
+  <p lang="en">For IBL (Image-Based Lighting), evaluating the full integral is too expensive. NeoX uses the <span class="fun">EnvBRDFApprox</span> from Lazarov 2013 (same as UE4's original implementation). In the new engine the LUT math is extracted into a separate <span class="fun">EnvBRDFLUTApprox</span> helper:</p>
+  <p lang="zh">对于 IBL（基于图像的光照），计算完整积分太昂贵。NeoX 使用来自 Lazarov 2013 的 <span class="fun">EnvBRDFApprox</span>（与 UE4 原始实现相同）。新引擎将 LUT 数学提取到独立的 <span class="fun">EnvBRDFLUTApprox</span> 辅助函数中：</p>
 
-  <pre><span class="cm">// [Lazarov 2013, "Getting More Physical in Call of Duty: Black Ops II"]</span>
-<span class="kw">float3</span> <span class="fn">EnvBRDFApprox</span>(<span class="kw">float3</span> SpecularColor, <span class="kw">float</span> Roughness, <span class="kw">float</span> NoV) {
+  <pre><span class="cm">// New engine: LUT math extracted into reusable helper</span>
+<span class="kw">float2</span> <span class="fn">EnvBRDFLUTApprox</span>(<span class="kw">float</span> Roughness, <span class="kw">float</span> NoV) {
   <span class="kw">const float4</span> c0 = { -<span class="num">1</span>, -<span class="num">0.0275</span>, -<span class="num">0.572</span>, <span class="num">0.022</span> };
   <span class="kw">const float4</span> c1 = {  <span class="num">1</span>,  <span class="num">0.0425</span>,  <span class="num">1.04</span>, -<span class="num">0.04</span> };
   <span class="kw">float4</span> r = Roughness * c0 + c1;
   <span class="kw">float</span> a004 = <span class="fn">min</span>(r.x * r.x, <span class="fn">exp2</span>(-<span class="num">9.28</span> * NoV)) * r.x + r.y;
-  <span class="kw">float2</span> AB = <span class="kw">float2</span>(-<span class="num">1.04</span>, <span class="num">1.04</span>) * a004 + r.zw;
+  <span class="kw">return float2</span>(-<span class="num">1.04</span>, <span class="num">1.04</span>) * a004 + r.zw;
+}
+
+<span class="cm">// [Lazarov 2013] Main function now wraps the LUT helper</span>
+<span class="kw">float3</span> <span class="fn">EnvBRDFApprox</span>(<span class="kw">float3</span> SpecularColor, <span class="kw">float</span> Roughness, <span class="kw">float</span> NoV) {
+  <span class="kw">float2</span> AB = <span class="fn">EnvBRDFLUTApprox</span>(Roughness, NoV);
   <span class="kw">return</span> SpecularColor * AB.x + AB.y;
 }</pre>
+
+  <div class="legacy">
+    <span lang="en"><strong>New vs replaced:</strong> <code>EnvBRDFApprox</code> refactored: core LUT math extracted into reusable <code>EnvBRDFLUTApprox</code> helper (also used by the new cloth sheen LUT function). Functionally equivalent to the old single-function version.</span>
+    <span lang="zh"><strong>新版替换：</strong><code>EnvBRDFApprox</code> 重构：核心 LUT 数学提取到可复用的 <code>EnvBRDFLUTApprox</code> 辅助函数中（新布料 Sheen LUT 函数也使用它）。功能上与旧版单函数版本等价。</span>
+  </div>
 
   <!-- s7 -->
   <h2 id="s7"><span lang="en">Full Specular Assembly — How It All Connects</span><span lang="zh">完整高光组装 — 如何组合</span></h2>
@@ -222,18 +240,48 @@ light_specular = <span class="fn">LightingSpecular</span>(...) * data_rw.fresnel
 Final Specular Per Light = D * G * N.L * F * attenuation * light_color
 
   D = GGXTerm_ApproxWithPrecomputedVar(NdotH, roughness²)
-  G = SmithJointGGXVisibilityTerm(NdotL, NdotV, roughness²)
+  G = SmithJointGGXVisibilityTerm(NdotL, NdotV, roughness²)  // vectorized in new engine
   F = F_Schlick(specularColor, VdotH)
 
   Note: The "/ 4*NdotL*NdotV" denominator from Cook-Torrance
   is already folded into the SmithJoint visibility term (the 0.5/rcp).
   The extra NdotL in LightingSpecular cancels with the one in the denominator.</div>
 
+  <!-- s8 -->
+  <h2 id="s8"><span lang="en">New Functions: D_Quadratic &amp; Cloth Sheen BRDF</span><span lang="zh">新增函数：D_Quadratic 与布料 Sheen BRDF</span></h2>
+
+  <p lang="en">The new engine adds a cheaper quadratic NDF approximation and a Sheen BRDF LUT polynomial specifically for the new <code>sheen.hlsl</code> and <code>cloth.hlsl</code> shading models:</p>
+  <p lang="zh">新引擎增加了一个更廉价的二次 NDF 近似和一个专门用于新 <code>sheen.hlsl</code> 和 <code>cloth.hlsl</code> 着色模型的 Sheen BRDF LUT 多项式：</p>
+
+  <pre><span class="cm">// NEW: D_Quadratic — cheap quadratic NDF, cheaper than full GGX</span>
+<span class="cm">// Used for low-quality approximations or special effects</span>
+<span class="kw">float</span> <span class="fn">D_Quadratic</span>(<span class="kw">float</span> a, <span class="kw">float</span> NoH) {
+  <span class="kw">float</span> t = (<span class="num">1</span> - a * a);
+  <span class="kw">return</span> <span class="fn">lerp</span>(<span class="num">1.0</span>, a, t);  <span class="cm">// linearly blends flat vs peaked distribution</span>
+}
+
+<span class="cm">// NEW: EnvClothSheenLUT3rd — polynomial LUT approximation for cloth sheen IBL</span>
+<span class="cm">// Replaces a texture LUT lookup with a rational polynomial approximation</span>
+<span class="kw">float</span> <span class="fn">EnvClothSheenLUT3rd</span>(<span class="kw">float</span> R, <span class="kw">float</span> NoV) {
+  <span class="cm">// a, b, c, Offset = constants baked from the sheen DFG integral</span>
+  <span class="kw">return</span> a * R / (b * R + c * NoV + NoV * R) + Offset;
+}</pre>
+
+  <div class="note">
+    <span lang="en"><strong>Design note:</strong> <code>D_Quadratic</code> is not physically-based but offers a useful artistic approximation for soft/velvety surfaces where full GGX is overkill. <code>EnvClothSheenLUT3rd</code> approximates the same sheen DFG integral that UE5's Substrate cloth uses a texture LUT for — NeoX avoids the texture sample entirely via polynomial math.</span>
+    <span lang="zh"><strong>设计备注：</strong><code>D_Quadratic</code> 不是基于物理的，但对于完整 GGX 过于复杂的柔软/天鹅绒表面提供了有用的艺术化近似。<code>EnvClothSheenLUT3rd</code> 用多项式数学逼近 UE5 Substrate 布料使用纹理 LUT 的 sheen DFG 积分——NeoX 完全避免了纹理采样。</span>
+  </div>
+
+  <div class="legacy">
+    <span lang="en"><strong>New additions:</strong> <code>D_Quadratic</code>, <code>EnvBRDFLUTApprox</code>, and <code>EnvClothSheenLUT3rd</code> are new in the <code>res_upgrade/</code> version of <code>brdf.hlsl</code>. They support the new Cloth and Sheen shading models (Keys 13, 15). The old version in <code>res/</code> had no cloth or sheen model support. Since the new <code>brdf.hlsl</code> takes priority, these functions are always available in the new engine.</span>
+    <span lang="zh"><strong>新增内容：</strong><code>D_Quadratic</code>、<code>EnvBRDFLUTApprox</code> 和 <code>EnvClothSheenLUT3rd</code> 是 <code>res_upgrade/</code> 版 <code>brdf.hlsl</code> 中新增的。它们支持新的 Cloth 和 Sheen 着色模型（键 13、15）。<code>res/</code> 中的旧版没有布料或 Sheen 模型支持。由于新 <code>brdf.hlsl</code> 优先，这些函数在新引擎中始终可用。</span>
+  </div>
+
   <div class="page-nav">
     <a href="../02-rendering-pipeline/deferred-shading.html" class="prev"><span class="pn-label">&larr; Prev</span><span class="pn-title"><span lang="en">Deferred Shading</span><span lang="zh">延迟渲染</span></span></a>
     <a href="../04-lighting-models/shading-models.html" class="next"><span class="pn-label">Next &rarr;</span><span class="pn-title"><span lang="en">13 Shading Models</span><span lang="zh">13 种光照模型</span></span></a>
   </div>
-  <footer>NeoX Engine &middot; GGX BRDF<br>Source: built_in/brdf/ggx/brdf.hlsl (122 lines)</footer>
+  <footer>NeoX Engine &middot; GGX BRDF<br>Source: built_in/brdf/ggx/brdf.hlsl (152 lines, new engine)</footer>
 </main>
 </div>
 <script>

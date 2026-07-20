@@ -24,6 +24,7 @@
     #sidebar > h2{font-size:10.5px;font-style:italic;font-weight:400;color:#b0b0b0;margin-bottom:8px;border:none;padding:0;margin-top:20px;padding-top:16px;border-top:1px dashed #ddd;}
     #sidebar > ol{list-style:none !important;padding:0;margin:0;} #sidebar > ol > li{list-style:none !important;margin-bottom:5px;}
     #sidebar > ol > li a{color:#666;text-decoration:none;display:block;padding:1px 0;font-size:12px;transition:color .12s;} #sidebar > ol > li a:hover{color:#58A;}
+    .legacy{display:block;margin:18px 0;padding:15px;background:#FFF3CD;color:#444;border-radius:5px;border:2px solid #FFCC5C;font-size:15px;line-height:1.7;}
     .page-header{margin-bottom:32px;padding-bottom:20px;border-bottom:1px solid #ddd;}
     .page-header .crumb{font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
     .page-header h1{font-size:1.8rem;font-weight:900;color:#303236;margin-bottom:8px;line-height:1.25;}
@@ -41,7 +42,7 @@
     .table-wrap{overflow-x:auto;margin:14px 0;} table{border-collapse:collapse;font-size:14px;width:100%;}
     th,td{padding:8px 12px;border-bottom:1px solid #aaa;text-align:left;} th{border-bottom:2px solid #888;font-weight:700;background:#ddd;} tr:nth-child(even) td{background:#e8e8e8;}
     td:first-child{font-family:'Courier New',monospace;font-size:13px;color:#2a6496;white-space:nowrap;}
-    .arch-diagram{background:#fff;border:1px solid #ccc;border-radius:5px;padding:22px;margin:16px 0;font-family:'Courier New',monospace;font-size:13px;line-height:1.9;overflow-x:auto;}
+    .arch-diagram{background:#fff;border:1px solid #ccc;border-radius:5px;padding:22px;margin:16px 0;font-family:'Courier New',monospace;font-size:13px;line-height:1.9;overflow-x:auto;white-space:pre;}
     .page-nav{display:flex;justify-content:space-between;margin:36px 0 0;padding-top:16px;border-top:1px solid #ddd;font-size:14px;}
     .page-nav a{color:#58A;text-decoration:none;display:flex;align-items:center;gap:6px;} .page-nav a:hover{text-decoration:underline;}
     .page-nav .pn-label{font-size:11px;color:#aaa;text-transform:uppercase;display:block;}
@@ -80,7 +81,7 @@
   <div class="page-header">
     <div class="crumb">NeoX Engine &middot; Shader System &middot; HLSL Dialect</div>
     <h1><span lang="en">NeoX HLSL Dialect</span><span lang="zh">NeoX HLSL 方言</span></h1>
-    <div class="subtitle">res/shader/built_in/ &middot; function.hlsl &middot; material_common.hlsl</div>
+    <div class="subtitle">res_upgrade/shader/built_in/ &middot; function.hlsl &middot; material_common.hlsl (New Engine)</div>
   </div>
 
   <!-- s1 -->
@@ -253,28 +254,41 @@
 
   <div class="arch-diagram">
 forward_shading.hlsl  (or deferred_shading_gbuffer.hlsl)
-  +-- built_in/shadow/shadow.hlsl          // shadow sampling
+  +-- built_in/shadow/shadow.hlsl          // shadow sampling (Render 3.0: CSM sphere-cull)
   +-- built_in/common/decal.hlsl           // deferred decal application
-  +-- built_in/common/lighting.hlsl        // 1982 lines, the lighting core
-  |     +-- built_in/common/function.hlsl  // 782 lines, math utilities
+  +-- built_in/common/lighting.hlsl        // 1447 lines (was 1982), the lighting core
+  |     +-- built_in/common/function.hlsl  // 977 lines (was 782), math utilities
   |     +-- built_in/brdf/ggx/brdf.hlsl   // BRDF functions
+  |     +-- built_in/common/rect_lighting.hlsl   // NEW: extracted area-light functions
+  |     +-- built_in/common/ssss.hlsl            // NEW: extracted SSS transmittance
+  |     +-- built_in/common/spherical_gaussian.hlsl  // NEW: bent normal SG math
+  |     +-- built_in/common/gbuffer_struct.hlsl  // NEW: shared GBuffer struct
   |     +-- built_in/shading_models/       // per-model lighting
   |           +-- isotropy.hlsl
   |           +-- skin.hlsl
   |           +-- hair.hlsl
   |           +-- clearcoat.hlsl
   |           +-- toon.hlsl
-  |           +-- ... (13 models total)
+  |           +-- cloth.hlsl    (NEW)
+  |           +-- glint.hlsl    (NEW)
+  |           +-- sheen.hlsl    (NEW)
+  |           +-- water.hlsl    (NEW)
+  |           +-- ... (16 models total, was 13)
   +-- built_in/debug/debug.hlsl            // debug visualization
 
 material_*.hlsl (per-material code)
   +-- built_in/materials/material_common.hlsl  // shared material interface</div>
 
-  <!-- s6 -->
-  <h2 id="s6"><span lang="en">Utility Library — function.hlsl (782 lines)</span><span lang="zh">工具函数库 — function.hlsl (782 行)</span></h2>
+  <div class="legacy">
+    <span lang="en"><strong>New vs replaced:</strong> The new <code>lighting.hlsl</code> (1,447 lines) replaces the old monolithic 1,982-line version by extracting area lights, SSS, and SG math into separate files (<code>rect_lighting.hlsl</code>, <code>ssss.hlsl</code>, <code>spherical_gaussian.hlsl</code>). New shading models added: <code>cloth</code>, <code>glint</code>, <code>sheen</code>, <code>water</code> (16 total, up from 13). <code>shading_models/mobile_pbr.hlsl</code> was removed (functionality merged into isotropy). All other shading model files in <code>res/shader/</code> are still accessible to the new engine via fallback.</span>
+    <span lang="zh"><strong>新版替换：</strong>新 <code>lighting.hlsl</code>（1,447 行）通过将区域光、SSS 和 SG 数学提取到独立文件（<code>rect_lighting.hlsl</code>、<code>ssss.hlsl</code>、<code>spherical_gaussian.hlsl</code>）替换了旧版 1,982 行单体版本。新增着色模型：<code>cloth</code>、<code>glint</code>、<code>sheen</code>、<code>water</code>（总计 16 个，从 13 个增加）。<code>shading_models/mobile_pbr.hlsl</code> 已移除（功能合并到 isotropy）。<code>res/shader/</code> 中的所有其他着色模型文件仍通过回退机制对新引擎可用。</span>
+  </div>
 
-  <p lang="en">The <code>function.hlsl</code> library provides optimized math primitives used throughout the entire shader codebase:</p>
-  <p lang="zh"><code>function.hlsl</code> 库提供整个着色器代码库中使用的优化数学原语：</p>
+  <!-- s6 -->
+  <h2 id="s6"><span lang="en">Utility Library — function.hlsl (977 lines)</span><span lang="zh">工具函数库 — function.hlsl (977 行)</span></h2>
+
+  <p lang="en">The <code>function.hlsl</code> library provides optimized math primitives used throughout the entire shader codebase. It grew from 782 to 977 lines in the new engine:</p>
+  <p lang="zh"><code>function.hlsl</code> 库提供整个着色器代码库中使用的优化数学原语。新引擎中从 782 行增长到 977 行：</p>
 
   <div class="table-wrap"><table>
     <thead><tr>
@@ -283,15 +297,24 @@ material_*.hlsl (per-material code)
       <th><span lang="en">Description</span><span lang="zh">说明</span></th>
     </tr></thead>
     <tbody>
-      <tr><td><span lang="en">Power</span><span lang="zh">幂运算</span></td><td><code>Pow2, Pow3, Pow4, Pow5</code></td><td><span lang="en">Faster than pow() — unrolled multiplies</span><span lang="zh">比 pow() 更快——展开乘法</span></td></tr>
+      <tr><td><span lang="en">Power</span><span lang="zh">幂运算</span></td><td><code>Pow2, Pow3, Pow4, Pow5, PositiveClampedZeroPow</code></td><td><span lang="en">Faster than pow() — unrolled multiplies; new: clamp-negative-base variant</span><span lang="zh">比 pow() 更快；新增：负基值截断变体</span></td></tr>
       <tr><td><span lang="en">Fast trig</span><span lang="zh">快速三角</span></td><td><code>acosFast, asinFast, atanFast</code></td><td><span lang="en">Polynomial approximations (max error &lt;0.01)</span><span lang="zh">多项式近似（最大误差 &lt;0.01）</span></td></tr>
-      <tr><td><span lang="en">Color space</span><span lang="zh">色域转换</span></td><td><code>srgb2linear, linear2srgb, RGB2HSV, HSV2RGB</code></td><td><span lang="en">Gamma/linear conversion, hue manipulation</span><span lang="zh">Gamma/线性转换、色相操作</span></td></tr>
+      <tr><td><span lang="en">Color space</span><span lang="zh">色域转换</span></td><td><code>srgb2linear, linear2srgb, RGB2HSV, HSV2RGB, RGB2YCoCg, YCoCg2RGB</code></td><td><span lang="en">Gamma/linear + new YCoCg color space</span><span lang="zh">Gamma/线性 + 新增 YCoCg 色彩空间</span></td></tr>
       <tr><td><span lang="en">Normal encoding</span><span lang="zh">法线编码</span></td><td><span lang="en">6 schemes: Octahedron, Paraboloid...</span><span lang="zh">6 种方案</span></td><td><span lang="en">GBuffer packing for deferred path</span><span lang="zh">延迟路径的 GBuffer 打包</span></td></tr>
-      <tr><td><span lang="en">Bit packing</span><span lang="zh">位打包</span></td><td><code>PackFloatToRGBA, PackHalfFloat</code></td><td><span lang="en">Encode float to RGBA8 for mobile</span><span lang="zh">浮点编码为 RGBA8 用于移动端</span></td></tr>
+      <tr><td><span lang="en">Bit packing</span><span lang="zh">位打包</span></td><td><code>PackFloatToRGBA, PackHalfFloat, PackFloat2ToRGBA, spvUnpackSnorm4x8</code></td><td><span lang="en">Encode float/float2 to RGBA8; new SPIR-V snorm unpack</span><span lang="zh">浮点/float2 编码为 RGBA8；新增 SPIR-V snorm 解包</span></td></tr>
       <tr><td><span lang="en">Dither</span><span lang="zh">抖动</span></td><td><code>Dither16, Dither32, Dither64, Dither17</code></td><td><span lang="en">Bayer matrix patterns for alpha dithering</span><span lang="zh">Bayer 矩阵图案用于 Alpha 抖动</span></td></tr>
-      <tr><td><span lang="en">Depth</span><span lang="zh">深度重建</span></td><td><code>GetViewPositionFromDepth</code></td><td><span lang="en">Reconstruct view-space position from depth</span><span lang="zh">从深度重建视空间位置</span></td></tr>
+      <tr><td><span lang="en">Depth / Position</span><span lang="zh">深度/位置重建</span></td><td><code>GetViewPositionFromDepth, GetWorldPositionFromDepth</code></td><td><span lang="en">Reconstruct view/world-space position from depth (new: world-space via InverseView)</span><span lang="zh">从深度重建视/世界空间位置（新增：通过 InverseView 的世界空间版本）</span></td></tr>
+      <tr><td><span lang="en">Mip level</span><span lang="zh">Mip 级别</span></td><td><code>ComputeMipLevel, ComputeMipLevelAniso</code></td><td><span lang="en">NEW: manual mip level calculation from ddx/ddy</span><span lang="zh">新增：通过 ddx/ddy 手动计算 Mip 级别</span></td></tr>
+      <tr><td><span lang="en">Physical light</span><span lang="zh">物理光照</span></td><td><code>CalculateBlackBody</code></td><td><span lang="en">NEW: black body radiator color from Kelvin temperature</span><span lang="zh">新增：由开尔文温度计算黑体辐射颜色</span></td></tr>
+      <tr><td><span lang="en">Tile memory</span><span lang="zh">Tile 内存</span></td><td><code>GetDepthFromTileMemory, PixelWithDepth</code></td><td><span lang="en">NEW: TBDR on-chip depth readback (mobile)</span><span lang="zh">新增：TBDR 片上深度回读（移动端）</span></td></tr>
+      <tr><td><span lang="en">UV utilities</span><span lang="zh">UV 工具</span></td><td><code>CubeUV2EquirectangularUV</code></td><td><span lang="en">NEW: cubemap to equirectangular UV remapping</span><span lang="zh">新增：立方体贴图到等距矩形 UV 重映射</span></td></tr>
     </tbody>
   </table></div>
+
+  <div class="legacy">
+    <span lang="en"><strong>New vs replaced:</strong> The new <code>function.hlsl</code> (977 lines) replaces the old 782-line version. New functions added: <code>PositiveClampedZeroPow</code>, <code>RGB2YCoCg/YCoCg2RGB</code>, <code>GetWorldPositionFromDepth</code>, <code>PackFloat2ToRGBA</code>, <code>ComputeMipLevel</code>, <code>CalculateBlackBody</code>, tile memory helpers, <code>CubeUV2EquirectangularUV</code>. Bug fixes: <code>srgb2linear_real</code> now explicitly initializes <code>float real = 0.0f</code> (was uninitialized). All old utility functions remain available.</span>
+    <span lang="zh"><strong>新版替换：</strong>新 <code>function.hlsl</code>（977 行）替换旧版 782 行版本。新增函数：<code>PositiveClampedZeroPow</code>、<code>RGB2YCoCg/YCoCg2RGB</code>、<code>GetWorldPositionFromDepth</code>、<code>PackFloat2ToRGBA</code>、<code>ComputeMipLevel</code>、<code>CalculateBlackBody</code>、Tile 内存辅助函数、<code>CubeUV2EquirectangularUV</code>。Bug 修复：<code>srgb2linear_real</code> 现在显式初始化 <code>float real = 0.0f</code>（旧版未初始化）。所有旧版工具函数均保留。</span>
+  </div>
 
   <div class="page-nav">
     <a href="../01-shader-system/nfx-surf.html" class="prev"><span class="pn-label">&larr; Prev</span><span class="pn-title"><span lang="en">NFX & SURF Format</span><span lang="zh">NFX & SURF 格式</span></span></a>

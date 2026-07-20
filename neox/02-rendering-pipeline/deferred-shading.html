@@ -23,6 +23,7 @@
     #sidebar > h2{font-size:10.5px;font-style:italic;font-weight:400;color:#b0b0b0;margin-bottom:8px;border:none;padding:0;margin-top:20px;padding-top:16px;border-top:1px dashed #ddd;}
     #sidebar > ol{list-style:none !important;padding:0;margin:0;} #sidebar > ol > li{list-style:none !important;margin-bottom:5px;}
     #sidebar > ol > li a{color:#666;text-decoration:none;display:block;padding:1px 0;font-size:12px;transition:color .12s;} #sidebar > ol > li a:hover{color:#58A;}
+    .legacy{display:block;margin:18px 0;padding:15px;background:#FFF3CD;color:#444;border-radius:5px;border:2px solid #FFCC5C;font-size:15px;line-height:1.7;}
     .page-header{margin-bottom:32px;padding-bottom:20px;border-bottom:1px solid #ddd;}
     .page-header .crumb{font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
     .page-header h1{font-size:1.8rem;font-weight:900;color:#303236;margin-bottom:8px;line-height:1.25;}
@@ -40,7 +41,7 @@
     .table-wrap{overflow-x:auto;margin:14px 0;} table{border-collapse:collapse;font-size:14px;width:100%;}
     th,td{padding:8px 12px;border-bottom:1px solid #aaa;text-align:left;} th{border-bottom:2px solid #888;font-weight:700;background:#ddd;} tr:nth-child(even) td{background:#e8e8e8;}
     td:first-child{font-family:'Courier New',monospace;font-size:13px;color:#2a6496;white-space:nowrap;}
-    .arch-diagram{background:#fff;border:1px solid #ccc;border-radius:5px;padding:22px;margin:16px 0;font-family:'Courier New',monospace;font-size:13px;line-height:1.9;overflow-x:auto;}
+    .arch-diagram{background:#fff;border:1px solid #ccc;border-radius:5px;padding:22px;margin:16px 0;font-family:'Courier New',monospace;font-size:13px;line-height:1.9;overflow-x:auto;white-space:pre;}
     .page-nav{display:flex;justify-content:space-between;margin:36px 0 0;padding-top:16px;border-top:1px solid #ddd;font-size:14px;}
     .page-nav a{color:#58A;text-decoration:none;display:flex;align-items:center;gap:6px;} .page-nav a:hover{text-decoration:underline;}
     .page-nav .pn-label{font-size:11px;color:#aaa;text-transform:uppercase;display:block;} .page-nav .pn-title{display:block;} .page-nav .prev{text-align:left;} .page-nav .next{text-align:right;}
@@ -77,17 +78,17 @@
   <div class="page-header">
     <div class="crumb">NeoX Engine &middot; Rendering Pipeline &middot; Deferred Shading</div>
     <h1><span lang="en">Deferred Shading Pipeline</span><span lang="zh">延迟渲染管线</span></h1>
-    <div class="subtitle">res/shader/built_in/deferred_shading_gbuffer.hlsl &middot; 109 lines</div>
+    <div class="subtitle">res_upgrade/shader/built_in/deferred_shading_gbuffer.hlsl &middot; 137 lines (New Engine)</div>
   </div>
 
   <!-- s1 -->
   <h2 id="s1"><span lang="en">GBuffer Layout</span><span lang="zh">GBuffer 布局</span></h2>
 
-  <p lang="en">NeoX's deferred path uses a compact <span class="def">3-RT GBuffer</span> for the standard mode, or a <span class="def">5-RT Single-Pass Deferred</span> for mobile (TBDR) optimization. This is significantly simpler than UE5's 5+ RT layout.</p>
-  <p lang="zh">NeoX 的延迟路径标准模式使用紧凑的 <span class="def">3-RT GBuffer</span>，或为移动端（TBDR）优化使用 <span class="def">5-RT 单 Pass 延迟</span>。这比 UE5 的 5+ RT 布局简单得多。</p>
+  <p lang="en">NeoX's deferred path uses a compact <span class="def">3-RT GBuffer</span> for the standard mode, or a <span class="def">5-RT Single-Pass Deferred</span> for mobile (TBDR) optimization. In the new engine the GBuffer layout changed: <strong>Roughness moved from RT1 to RT2</strong>, and the RT names were updated. A new shared <code>gbuffer_struct.hlsl</code> header is now used across all GBuffer passes.</p>
+  <p lang="zh">NeoX 的延迟路径标准模式使用紧凑的 <span class="def">3-RT GBuffer</span>，或为移动端（TBDR）优化使用 <span class="def">5-RT 单 Pass 延迟</span>。新引擎 GBuffer 布局有变化：<strong>Roughness 从 RT1 移到 RT2</strong>，RT 名称也已更新。新引擎所有 GBuffer Pass 现在使用共享的 <code>gbuffer_struct.hlsl</code> 头文件。</p>
 
   <div class="arch-diagram">
-Standard Mode (3 Render Targets):
+Standard Mode (3 Render Targets) — NEW ENGINE:
 +=================================================================+
 |                                                                 |
 |  SV_Target0: <span style="color:#61afef">AlbedoAO</span>                                           |
@@ -95,15 +96,17 @@ Standard Mode (3 Render Targets):
 |  |  R: Alb.R|  G: Alb.G|  B: Alb.B|  A: AO   |  RGBA8/16      |
 |  +----------+----------+----------+----------+                 |
 |                                                                 |
-|  SV_Target1: <span style="color:#61afef">NormalRoughness</span>                                      |
+|  SV_Target1: <span style="color:#61afef">Normal</span>  (renamed from NormalRoughness)               |
 |  +----------+----------+----------+----------+                 |
-|  | R: N.x*  | G: N.y*  | B: N.z*  | A: Rough |  * = 0.5(n+1)  |
+|  | R: N.x*  | G: N.y*  | B: N.z*  | A: (free)|  * = 0.5(n+1)  |
 |  +----------+----------+----------+----------+                 |
+|  NOTE: Roughness moved OUT of this RT                          |
 |                                                                 |
-|  SV_Target2: <span style="color:#61afef">MetallicShadingModelFlags</span>                            |
+|  SV_Target2: <span style="color:#61afef">MetallicRoughnessShadingModelFlags</span>  (renamed)      |
 |  +----------+----------+----------+----------+                 |
-|  |R: Metalic| G: Flags | B: (free)| A: (free)|  Flags/255      |
+|  |R: Metalic| G: Rough. | B: (free)| A: Flags |  Flags=byte    |
 |  +----------+----------+----------+----------+                 |
+|  NOTE: Roughness moved HERE; Flags moved to alpha channel      |
 |                                                                 |
 +=================================================================+
 
@@ -112,42 +115,56 @@ Single-Pass Deferred Mode (5 Render Targets -- Mobile TBDR):
 |  SV_Target0: FinalResult      // direct emissive output         |
 |  SV_Target1: Depth            // manual depth (for GLSL)        |
 |  SV_Target2: AlbedoAO         // same as standard RT0           |
-|  SV_Target3: NormalRoughness  // same as standard RT1           |
-|  SV_Target4: MetallicFlags    // same as standard RT2           |
+|  SV_Target3: Normal           // same as standard RT1 (new)     |
+|  SV_Target4: MetallicRoughnessShadingModelFlags  // new layout  |
 +=================================================================+</div>
+
+  <div class="legacy">
+    <span lang="en"><strong>New vs replaced (GBuffer layout changed):</strong> The new <code>deferred_shading_gbuffer.hlsl</code> changes the GBuffer packing: Roughness moved from <code>NormalRoughness.w</code> (RT1 Alpha) to <code>MetallicRoughnessShadingModelFlags.g</code> (RT2 Green). Flags moved from <code>.g</code> (RT2 Green) to <code>.a</code> (RT2 Alpha). RT1 renamed from <code>NormalRoughness</code> to <code>Normal</code>. RT2 renamed from <code>MetallicShadingModelFlags</code> to <code>MetallicRoughnessShadingModelFlags</code>. The old <code>res/shader/</code> version is no longer used at runtime since the new file takes priority.</span>
+    <span lang="zh"><strong>新版替换（GBuffer 布局变更）：</strong>新 <code>deferred_shading_gbuffer.hlsl</code> 改变了 GBuffer 打包方式：Roughness 从 <code>NormalRoughness.w</code>（RT1 Alpha）移到 <code>MetallicRoughnessShadingModelFlags.g</code>（RT2 Green）。Flags 从 <code>.g</code>（RT2 Green）移到 <code>.a</code>（RT2 Alpha）。RT1 从 <code>NormalRoughness</code> 改名为 <code>Normal</code>。RT2 从 <code>MetallicShadingModelFlags</code> 改名为 <code>MetallicRoughnessShadingModelFlags</code>。旧版在运行时不再使用，新文件优先。</span>
+  </div>
 
   <!-- s2 -->
   <h2 id="s2"><span lang="en">GBuffer Write — ps_main()</span><span lang="zh">GBuffer 写入 — ps_main()</span></h2>
 
-  <p lang="en">The GBuffer pixel shader is remarkably simple — it just fills the Material struct and packs it into render targets:</p>
-  <p lang="zh">GBuffer 像素着色器非常简洁——只需填充 Material 结构体并打包到渲染目标：</p>
+  <p lang="en">The GBuffer pixel shader now includes <code>gbuffer_struct.hlsl</code> (a shared struct definition), and the packed layout changed — Roughness is in RT2.g and Flags are in RT2.a:</p>
+  <p lang="zh">GBuffer 像素着色器现在包含 <code>gbuffer_struct.hlsl</code>（共享结构体定义），打包布局变化——Roughness 在 RT2.g，Flags 在 RT2.a：</p>
 
-  <pre><span class="kw">struct</span> <span class="type">GBuffer</span> {
-  <span class="kw">float4</span> AlbedoAO               : SV_Target0;
-  <span class="kw">float4</span> NormalRoughness         : SV_Target1;
-  <span class="kw">float4</span> MetallicShadingModelFlags : SV_Target2;
+  <pre><span class="cm">// From gbuffer_struct.hlsl (new shared header)</span>
+<span class="kw">struct</span> <span class="type">GBuffer</span> {
+  <span class="kw">float4</span> AlbedoAO                         : SV_Target0;
+  <span class="kw">float4</span> Normal                            : SV_Target1;  <span class="cm">// was NormalRoughness</span>
+  <span class="kw">float4</span> MetallicRoughnessShadingModelFlags : SV_Target2;  <span class="cm">// was MetallicShadingModelFlags</span>
 };
 
 <span class="type">GBuffer</span> <span class="fn">ps_main</span>(<span class="type">Fragment</span> input, <span class="kw">bool</span> is_front_face : SV_IsFrontFace) {
+  <span class="cm">#if ENABLE_VIRTUALTEXTURE_SAMPLEING</span>
+    <span class="fn">SamplingVirtualTexture</span>(input);         <span class="cm">// NEW: VT sampling before material</span>
+  <span class="cm">#endif</span>
   <span class="type">RawData</span> raw_data = <span class="fn">GetRawData</span>(input);
   <span class="type">Material</span> mtl = (<span class="type">Material</span>)<span class="num">0</span>;
   <span class="fn">SetupMaterial</span>(input, raw_data, mtl);
-  <span class="fn">DeferredApplyNewDecal</span>(input, mtl);  <span class="cm">// apply decals</span>
+  <span class="cm">#if DEFERRED_DECAL_ENABLE &amp;&amp; !ENABLE_VIRTUALTEXTURE_SAMPLEING</span>
+    <span class="fn">DeferredApplyNewDecal</span>(input, mtl);     <span class="cm">// conditional guard added</span>
+  <span class="cm">#endif</span>
 
   <span class="type">GBuffer</span> gbuffer;
   gbuffer.AlbedoAO = <span class="kw">float4</span>(mtl.albedo, mtl.occlusion);
-  gbuffer.NormalRoughness = <span class="kw">float4</span>(<span class="num">0.5</span> * (mtl.normal + <span class="num">1.0</span>), mtl.roughness);
+  gbuffer.Normal = <span class="kw">float4</span>(<span class="num">0.5</span> * (mtl.normal + <span class="num">1.0</span>), <span class="num">0</span>);  <span class="cm">// A channel now free</span>
 
-  <span class="cm">// Encode flags into single byte</span>
+  <span class="cm">// Encode flags into alpha byte (was green byte in old engine)</span>
   <span class="kw">uint</span> flags = <span class="num">0</span>;
   flags = <span class="fn">EncodeShadingModel</span>(flags, mtl.shading_model);
-  flags = <span class="fn">EncodeReceiveShadow</span>(flags);          <span class="cm">// if SHADOW_MAP_ENABLE</span>
-  flags = <span class="fn">EncodeClusteredShadingLightProbeVolumeEnable</span>(flags);
+  flags = <span class="fn">EncodeReceiveShadow</span>(flags);
+  <span class="cm">#if SLPV_ENABLE &amp;&amp; LIGHT_PROBE_ENABLE</span>          <span class="cm">// changed condition</span>
+    flags = <span class="fn">EncodeClusteredShadingLightProbeVolumeEnable</span>(flags);
+  <span class="cm">#endif</span>
 
-  gbuffer.MetallicShadingModelFlags = <span class="kw">float4</span>(
+  gbuffer.MetallicRoughnessShadingModelFlags = <span class="kw">float4</span>(
     mtl.metalness,
-    <span class="kw">float</span>(flags) / <span class="num">255.0</span>,
-    <span class="num">0</span>, <span class="num">0</span>
+    mtl.roughness,                        <span class="cm">// NEW: Roughness in .g (was in RT1.a)</span>
+    <span class="num">0</span>,
+    <span class="kw">float</span>(flags) / <span class="num">255.0</span>                   <span class="cm">// Flags in .a (was in .g)</span>
   );
   <span class="kw">return</span> gbuffer;
 }</pre>
@@ -171,18 +188,23 @@ Single-Pass Deferred Mode (5 Render Targets -- Mobile TBDR):
   <!-- s4 -->
   <h2 id="s4"><span lang="en">Flag Encoding System</span><span lang="zh">标志位编码系统</span></h2>
 
-  <p lang="en">The G channel of <code>MetallicShadingModelFlags</code> packs multiple boolean flags into a single byte (0-255). Defined in <code>flags.hlsl</code>:</p>
-  <p lang="zh"><code>MetallicShadingModelFlags</code> 的 G 通道将多个布尔标志打包到单个字节（0-255）中。定义在 <code>flags.hlsl</code>：</p>
+  <p lang="en">The <strong>Alpha</strong> channel of <code>MetallicRoughnessShadingModelFlags</code> packs multiple boolean flags into a single byte (0-255). In the new engine the flags moved from the <em>Green</em> to the <em>Alpha</em> channel. Defined in <code>flags.hlsl</code>:</p>
+  <p lang="zh"><code>MetallicRoughnessShadingModelFlags</code> 的 <strong>Alpha</strong> 通道将多个布尔标志打包到单个字节（0-255）中。新引擎中标志从 <em>Green</em> 通道移到 <em>Alpha</em> 通道。定义在 <code>flags.hlsl</code>：</p>
 
   <div class="table-wrap"><table>
     <thead><tr><th><span lang="en">Flag</span><span lang="zh">标志</span></th><th><span lang="en">Bits</span><span lang="zh">位</span></th><th><span lang="en">Purpose</span><span lang="zh">用途</span></th></tr></thead>
     <tbody>
-      <tr><td>ShadingModel</td><td>bit 0-3</td><td><span lang="en">Which shading model (0=Isotropy, 1=Skin, 2=Hair...)</span><span lang="zh">哪个着色模型</span></td></tr>
+      <tr><td>ShadingModel</td><td>bit 0-3</td><td><span lang="en">Which shading model (0=Isotropy, 1=Skin, 2=Hair...12=Water, 13=Cloth, 14=Glint, 15=Sheen)</span><span lang="zh">哪个着色模型（0-11 同旧版，12=Water, 13=Cloth, 14=Glint, 15=Sheen）</span></td></tr>
       <tr><td>ReceiveShadow</td><td>bit 4</td><td><span lang="en">Whether this pixel receives dynamic shadows</span><span lang="zh">此像素是否接收动态阴影</span></td></tr>
-      <tr><td>LightProbeVolume</td><td>bit 5</td><td><span lang="en">Clustered shading light probe active</span><span lang="zh">聚簇着色光照探针激活</span></td></tr>
+      <tr><td>LightProbeVolume</td><td>bit 5</td><td><span lang="en">SLPV light probe active (condition changed: <code>SLPV_ENABLE &amp;&amp; LIGHT_PROBE_ENABLE</code>)</span><span lang="zh">SLPV 光照探针激活（条件变更）</span></td></tr>
       <tr><td>BakedShadow</td><td>bit 6</td><td><span lang="en">Use baked shadow from light probe</span><span lang="zh">使用来自光照探针的烘焙阴影</span></td></tr>
     </tbody>
   </table></div>
+
+  <div class="legacy">
+    <span lang="en"><strong>New vs replaced:</strong> Flags moved from Green channel to Alpha channel. Light probe condition changed from <code>CLUSTERED_SHADING_LIGHT_PROBE_VOLUME_ENABLE || LIGHT_PROBE_ENABLE</code> to the more concise <code>SLPV_ENABLE &amp;&amp; LIGHT_PROBE_ENABLE</code>. The new GBuffer includes <code>DEFERRED_DECAL_ENABLE</code> and <code>ENABLE_VIRTUALTEXTURE_SAMPLEING</code> guards that did not exist in the old version.</span>
+    <span lang="zh"><strong>新版替换：</strong>Flags 从 Green 通道移到 Alpha 通道。光探针条件从 <code>CLUSTERED_SHADING_LIGHT_PROBE_VOLUME_ENABLE || LIGHT_PROBE_ENABLE</code> 改为更简洁的 <code>SLPV_ENABLE &amp;&amp; LIGHT_PROBE_ENABLE</code>。新 GBuffer 包含旧版中不存在的 <code>DEFERRED_DECAL_ENABLE</code> 和 <code>ENABLE_VIRTUALTEXTURE_SAMPLEING</code> 保护。</span>
+  </div>
 
   <!-- s5 -->
   <h2 id="s5"><span lang="en">NeoX vs UE5 GBuffer Comparison</span><span lang="zh">NeoX vs UE5 GBuffer 对比</span></h2>
@@ -190,14 +212,16 @@ Single-Pass Deferred Mode (5 Render Targets -- Mobile TBDR):
   <div class="table-wrap"><table>
     <thead><tr>
       <th><span lang="en">Aspect</span><span lang="zh">方面</span></th>
-      <th>NeoX</th>
+      <th>NeoX (New Engine)</th>
       <th>UE5.6</th>
     </tr></thead>
     <tbody>
       <tr><td><span lang="en">RT Count</span><span lang="zh">RT 数量</span></td><td><span lang="en">3 (standard) / 5 (single-pass)</span><span lang="zh">3（标准）/ 5（单 Pass）</span></td><td><span lang="en">5-6 (SceneColor + GBuffer A/B/C/D + Velocity)</span><span lang="zh">5-6 个</span></td></tr>
-      <tr><td><span lang="en">Normal Encoding</span><span lang="zh">法线编码</span></td><td><code>0.5*(normal+1)</code><span lang="en"> (RGB8/16)</span></td><td><span lang="en">Octahedron encoding (2-channel)</span><span lang="zh">八面体编码（2 通道）</span></td></tr>
-      <tr><td><span lang="en">Shading Model ID</span><span lang="zh">着色模型 ID</span></td><td><span lang="en">4-bit field in Flags byte</span><span lang="zh">Flags 字节中的 4 位</span></td><td><span lang="en">4-bit in GBufferB.a</span><span lang="zh">GBufferB.a 中 4 位</span></td></tr>
+      <tr><td><span lang="en">Normal Encoding</span><span lang="zh">法线编码</span></td><td><code>0.5*(normal+1)</code><span lang="en"> in RT1 (RGB8/16)</span></td><td><span lang="en">Octahedron encoding (2-channel)</span><span lang="zh">八面体编码（2 通道）</span></td></tr>
+      <tr><td><span lang="en">Roughness slot</span><span lang="zh">Roughness 槽位</span></td><td><span lang="en">RT2.g (new) — freed RT1.a for other use</span><span lang="zh">RT2.g（新）——RT1.a 释放可供他用</span></td><td><span lang="en">GBufferB.a or GBufferC.g</span></td></tr>
+      <tr><td><span lang="en">Shading Model ID</span><span lang="zh">着色模型 ID</span></td><td><span lang="en">4-bit field in <strong>Flags alpha byte</strong> (RT2.a)</span><span lang="zh">Flags alpha 字节中的 4 位（RT2.a）</span></td><td><span lang="en">4-bit in GBufferB.a</span><span lang="zh">GBufferB.a 中 4 位</span></td></tr>
       <tr><td><span lang="en">Custom Data</span><span lang="zh">自定义数据</span></td><td><span lang="en">None (limited by 3 RTs)</span><span lang="zh">无（受 3 RT 限制）</span></td><td><span lang="en">GBufferD (full RGBA for SSS color, cloth, etc.)</span><span lang="zh">GBufferD（完整 RGBA 用于 SSS 颜色等）</span></td></tr>
+      <tr><td><span lang="en">Shared struct</span><span lang="zh">共享结构体</span></td><td><code>gbuffer_struct.hlsl</code><span lang="en"> (new)</span><span lang="zh">（新）</span></td><td><span lang="en">Various headers</span><span lang="zh">各头文件</span></td></tr>
       <tr><td><span lang="en">Bandwidth</span><span lang="zh">带宽</span></td><td><span lang="en">Lower (3 RT = less memory traffic)</span><span lang="zh">更低（3 RT = 更少内存流量）</span></td><td><span lang="en">Higher (5+ RT = more flexibility)</span><span lang="zh">更高（5+ RT = 更多灵活性）</span></td></tr>
     </tbody>
   </table></div>
@@ -211,7 +235,7 @@ Single-Pass Deferred Mode (5 Render Targets -- Mobile TBDR):
     <a href="../02-rendering-pipeline/forward-shading.html" class="prev"><span class="pn-label">&larr; Prev</span><span class="pn-title"><span lang="en">Forward Shading</span><span lang="zh">前向渲染</span></span></a>
     <a href="../03-material-system/pbr-material.html" class="next"><span class="pn-label">Next &rarr;</span><span class="pn-title"><span lang="en">PBR Material</span><span lang="zh">PBR 材质</span></span></a>
   </div>
-  <footer>NeoX Engine &middot; G86 Rendering Pipeline<br>Source: built_in/deferred_shading_gbuffer.hlsl (109 lines)</footer>
+  <footer>NeoX Engine &middot; G86 Rendering Pipeline<br>Source: built_in/deferred_shading_gbuffer.hlsl (137 lines, new engine) &middot; built_in/common/gbuffer_struct.hlsl</footer>
 </main>
 </div>
 <script>

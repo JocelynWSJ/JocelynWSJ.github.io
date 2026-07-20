@@ -52,6 +52,7 @@
     .file-list li:last-child{border-bottom:none;}
     .file-list .fp{font-family:'Courier New',monospace;font-size:13px;color:#58A;min-width:180px;}
     .file-list .fd{color:#555;}
+    .legacy{display:block;margin:18px 0;padding:15px;background:#FFF3CD;color:#444;border-radius:5px;border:2px solid #FFCC5C;font-size:15px;line-height:1.7;}
     .page-nav{display:flex;justify-content:space-between;margin:36px 0 0;padding-top:16px;border-top:1px solid #ddd;font-size:14px;}
     .page-nav a{color:#58A;text-decoration:none;display:flex;align-items:center;gap:6px;}
     .page-nav a:hover{text-decoration:underline;}
@@ -125,7 +126,7 @@
       <span lang="en">NFX & SURF Format</span>
       <span lang="zh">NFX & SURF 格式</span>
     </h1>
-    <div class="subtitle">res/shader/built_in/surf/ &middot; Material Descriptors</div>
+    <div class="subtitle">res_upgrade/shader/built_in/surf/ &middot; Material Descriptors (New Engine)</div>
   </div>
 
   <!-- s1 -->
@@ -425,12 +426,17 @@
   <h2 id="s6"><span lang="en">File Locations — Where to Find Them</span><span lang="zh">文件位置 — 在哪里找到它们</span></h2>
 
   <ul class="file-list">
-    <li><span class="fp">res/shader/*.nfx</span><span class="fd"><span lang="en">Root-level NFX files (~30 files)</span><span lang="zh">根级 NFX 文件（~30 个文件）</span></span></li>
-    <li><span class="fp">res/shader/built_in/surf/</span><span class="fd"><span lang="en">Built-in SURF descriptors (~120 files)</span><span lang="zh">内置 SURF 描述符（~120 个文件）</span></span></li>
-    <li><span class="fp">res/shader/built_in/materials/</span><span class="fd"><span lang="en">Material HLSL implementations (~22 files)</span><span lang="zh">材质 HLSL 实现（~22 个文件）</span></span></li>
-    <li><span class="fp">res/shader/macro_define.xml</span><span class="fd"><span lang="en">Global macro enumeration</span><span lang="zh">全局宏枚举</span></span></li>
-    <li><span class="fp">res/shader/built_in/forward_shading.render</span><span class="fd"><span lang="en">Rendering pipeline declaration (XML)</span><span lang="zh">渲染管线声明（XML）</span></span></li>
+    <li><span class="fp">res_upgrade/shader/*.nfx</span><span class="fd"><span lang="en">Root-level NFX files in new engine (~5 files: asteroid, common_defination, test_for_hlsl, wireframe, debug_common_spirv)</span><span lang="zh">新引擎根级 NFX 文件（约 5 个）</span></span></li>
+    <li><span class="fp">res_upgrade/shader/built_in/surf/</span><span class="fd"><span lang="en">Built-in SURF descriptors (shared with old engine fallback)</span><span lang="zh">内置 SURF 描述符（与旧引擎回退共享）</span></span></li>
+    <li><span class="fp">res_upgrade/shader/built_in/materials/</span><span class="fd"><span lang="en">Material HLSL implementations</span><span lang="zh">材质 HLSL 实现</span></span></li>
+    <li><span class="fp">res_upgrade/shader/built_in/forward_shading.render</span><span class="fd"><span lang="en">Rendering pipeline declaration (XML) — ~280 macros, 16 shading models</span><span lang="zh">渲染管线声明（XML）——约 280 个宏，16 种光照模型</span></span></li>
+    <li><span class="fp">res_upgrade/shader/built_in/nfx/</span><span class="fd"><span lang="en">New: shared NFX fragments / includes for new engine passes</span><span lang="zh">新增：新引擎 Pass 的共享 NFX 片段/包含文件</span></span></li>
   </ul>
+
+  <div class="legacy">
+    <span lang="en"><strong>File resolution:</strong> The new engine reads <code>res_upgrade/shader/</code> first, falling back to <code>res/shader/</code> for any absent file. So the new engine has access to all ~30 root-level NFX files and <code>macro_define.xml</code> in <code>res/shader/</code> via fallback. <code>res_upgrade/shader/</code> contains only ~5 root-level NFX files that replace or supplement the old ones. The new <code>forward_shading.render</code> in <code>res_upgrade/</code> takes priority over the old one and drastically expands the compositor/macro definitions (from ~65 to ~280 macros).</span>
+    <span lang="zh"><strong>文件解析：</strong>新引擎优先读取 <code>res_upgrade/shader/</code>，对不存在的文件回退到 <code>res/shader/</code>。所以新引擎通过回退机制可访问 <code>res/shader/</code> 中所有约 30 个根级 NFX 文件和 <code>macro_define.xml</code>。<code>res_upgrade/shader/</code> 仅包含约 5 个替换或补充旧版的根级 NFX 文件。<code>res_upgrade/</code> 中的新 <code>forward_shading.render</code> 优先于旧版，大幅扩展合成器/宏定义（从约 65 到约 280 个宏）。</span>
+  </div>
 
   <div class="page-nav">
     <a href="../00-introduction/introduction.html" class="prev">

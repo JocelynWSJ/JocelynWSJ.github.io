@@ -46,12 +46,13 @@
     .table-wrap{overflow-x:auto;margin:14px 0;} table{border-collapse:collapse;font-size:14px;width:100%;}
     th,td{padding:8px 12px;border-bottom:1px solid #aaa;text-align:left;} th{border-bottom:2px solid #888;font-weight:700;background:#ddd;} tr:nth-child(even) td{background:#e8e8e8;}
     td:first-child{font-family:'Courier New',monospace;font-size:13px;color:#2a6496;white-space:nowrap;}
-    .arch-diagram{background:#fff;border:1px solid #ccc;border-radius:5px;padding:22px;margin:16px 0;font-family:'Courier New',monospace;font-size:13px;line-height:1.9;overflow-x:auto;}
+    .arch-diagram{background:#fff;border:1px solid #ccc;border-radius:5px;padding:22px;margin:16px 0;font-family:'Courier New',monospace;font-size:13px;line-height:1.9;overflow-x:auto;white-space:pre;}
     .series-map{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0;}
     .series-card{background:#fff;border:1px solid #ccc;border-left:4px solid #3d8070;border-radius:0 5px 5px 0;padding:12px 14px;}
     .series-card h4{font-size:12px;font-weight:800;text-transform:uppercase;color:#3d8070;letter-spacing:.06em;margin-bottom:6px;}
     .series-card ul{padding-left:14px;margin:0;} .series-card li{font-size:13px;margin-bottom:2px;color:#555;}
     .series-card li a{color:#58A;}
+    .legacy{display:block;margin:18px 0;padding:15px;background:#FFF3CD;color:#444;border-radius:5px;border:2px solid #FFCC5C;font-size:15px;line-height:1.7;}
     .page-nav{display:flex;justify-content:flex-end;margin:36px 0 0;padding-top:16px;border-top:1px solid #ddd;font-size:14px;}
     .page-nav a{color:#58A;text-decoration:none;display:flex;align-items:center;gap:6px;}
     .page-nav a:hover{text-decoration:underline;}
@@ -127,7 +128,7 @@
       <span lang="en">Introduction</span>
       <span lang="zh">简介</span>
     </h1>
-    <div class="subtitle">res/shader/ &middot; G86 Project</div>
+    <div class="subtitle">res_upgrade/shader/ &middot; G86 Project (New Engine)</div>
   </div>
 
   <!-- s1 -->
@@ -139,11 +140,27 @@
     is implemented through handwritten HLSL shaders, NFX effect files, and SURF material descriptors. This gives artists 
     unprecedented technical freedom but requires deep understanding of the rendering pipeline to use effectively.
   </p>
+  <p lang="en">
+    This series focuses on the <strong>new engine codebase</strong> at <code>res_upgrade/shader/</code>. 
+    The new engine reads only its own files; it falls back to <code>res/shader/</code> only for files that 
+    <em>do not exist</em> in <code>res_upgrade/</code>. Where the old engine differs in a meaningful way, 
+    a <strong style="color:#a06000">Legacy Engine</strong> callout is provided.
+  </p>
   <p lang="zh">
     NeoX 是网易自研的实时渲染引擎，支持《无尽的拉格朗日》等游戏项目。与商业引擎不同，NeoX 提供<span class="def">完整的 Shader 级控制</span>——
     所有渲染技术都通过手写 HLSL 着色器、NFX 效果文件和 SURF 材质描述符实现。这为美术师提供了前所未有的技术自由度，
     但需要对渲染管线有深入理解才能有效使用。
   </p>
+  <p lang="zh">
+    本系列以<strong>新引擎代码库</strong> <code>res_upgrade/shader/</code> 为主要分析对象。
+    新引擎只读取自身目录中的文件；仅当 <code>res_upgrade/</code> 中<em>不存在</em>某文件时，才回退到 <code>res/shader/</code>。
+    当旧引擎有值得关注的差异时，会以 <strong style="color:#a06000">旧引擎差异</strong> 提示框标出。
+  </p>
+
+  <div class="legacy">
+    <span lang="en"><strong>Dual-directory architecture:</strong> The new engine reads <code>res_upgrade/shader/</code> first; for any file not found there, it falls back to <code>res/shader/</code>. This means the new engine has <strong>all features from both directories combined</strong> — the ~180 root entries in <code>res/shader/</code> are all accessible to the new engine via fallback. <code>res_upgrade/shader/</code> contains only the files that have been replaced or newly added (~21 root entries). The <code>built_in/</code> directory has been significantly expanded in <code>res_upgrade/</code> (45 subdirectories vs 35 in <code>res/</code>) with new systems like Virtual Texture, NxParticle, GAEA terrain, deferred decals, fluid, FSR, wind field, etc.</span>
+    <span lang="zh"><strong>双目录架构：</strong>新引擎优先读取 <code>res_upgrade/shader/</code>；对任何其中找不到的文件，回退到 <code>res/shader/</code>。这意味着新引擎<strong>拥有两个目录的全部功能</strong>——<code>res/shader/</code> 中约 180 个根条目全部通过回退机制可用。<code>res_upgrade/shader/</code> 仅包含已被替换或新增的文件（约 21 个根条目）。<code>res_upgrade/</code> 中 <code>built_in/</code> 目录大幅扩展（45 个子目录 vs <code>res/</code> 中 35 个），新增虚拟纹理、NxParticle、GAEA 地形、延迟贴花、流体、FSR、风场等系统。</span>
+  </div>
 
   <!-- s2 -->
   <h2 id="s2"><span lang="en">Core Architecture</span><span lang="zh">核心架构</span></h2>
@@ -233,8 +250,18 @@ Material Pipeline
       </tr>
       <tr>
         <td><span lang="en">Shading Models</span><span lang="zh">光照模型</span></td>
-        <td><span lang="en">13 models (Isotropy/Skin/Hair/ClearCoat/Toon/SSSS/etc.)</span><span lang="zh">13 种模型（Isotropy/Skin/Hair/ClearCoat/Toon/SSSS等）</span></td>
+        <td><span lang="en">16 models (Isotropy/Skin/Hair/ClearCoat/Toon/SSSS/Water/Cloth/Glint/Sheen/etc.)</span><span lang="zh">16 种模型（新增 Water/Cloth/Glint/Sheen 等）</span></td>
         <td><span lang="en">11 models (no built-in Toon)</span><span lang="zh">11 种模型（无内置 Toon）</span></td>
+      </tr>
+      <tr>
+        <td><span lang="en">Virtual Texture</span><span lang="zh">虚拟纹理</span></td>
+        <td><span lang="en">✓ Full streaming VT system (RVT + adaptive VT + tile memory path)</span><span lang="zh">✓ 完整流式 VT 系统（RVT + 自适应 VT + Tile 内存路径）</span></td>
+        <td><span lang="en">✓ Virtual Shadow Maps (UE5.4+)</span><span lang="zh">✓ 虚拟阴影贴图（UE5.4+）</span></td>
+      </tr>
+      <tr>
+        <td><span lang="en">GPU Particles</span><span lang="zh">GPU 粒子</span></td>
+        <td><span lang="en">✓ NxParticle — compute-shader-driven GPU particle system</span><span lang="zh">✓ NxParticle——计算着色器驱动的 GPU 粒子系统</span></td>
+        <td><span lang="en">✓ Niagara GPU simulation</span><span lang="zh">✓ Niagara GPU 模拟</span></td>
       </tr>
       <tr>
         <td><span lang="en">Multi-Layered PBR</span><span lang="zh">多层 PBR</span></td>
@@ -300,12 +327,14 @@ Material Pipeline
   <h2 id="s6"><span lang="en">How to Read This Series</span><span lang="zh">如何阅读本系列</span></h2>
 
   <p lang="en">
-    This series is structured to mirror the actual shader codebase organization at <code>res/shader/</code>. 
+    This series is structured to mirror the actual shader codebase organization at <code>res_upgrade/shader/</code>. 
     Each article examines a specific subsystem with references to actual file paths in the G86 project.
+    When a feature originates from the old engine (<code>res/shader/</code>), it is clearly marked.
   </p>
   <p lang="zh">
-    本系列按照 <code>res/shader/</code> 中实际 Shader 代码库的组织结构编写。
+    本系列按照 <code>res_upgrade/shader/</code> 中实际 Shader 代码库的组织结构编写。
     每篇文章检查特定子系统，并引用 G86 项目中的实际文件路径。
+    当某功能源自旧引擎（<code>res/shader/</code>）时，会明确标注。
   </p>
 
   <div class="note">

@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>16 Shading Models — NeoX Engine</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Gudea">
+  <script>(function(){if(localStorage.getItem('neox-doc-lang')==='zh'){document.documentElement.classList.add('lang-zh');document.documentElement.lang='zh-CN';}})();</script>
+  <style>
+    html:not(.lang-zh) [lang="zh"]{display:none;} html.lang-zh [lang="en"]{display:none;}
+    #lang-btn{position:fixed;top:16px;right:20px;z-index:999;background:#37425d;color:#fff;border:none;border-radius:4px;padding:5px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:Gudea,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.2);transition:background .15s;} #lang-btn:hover{background:#4a5a7a;}
+    *{box-sizing:border-box;margin:0;padding:0;} body{font-family:Gudea,sans-serif;font-size:16px;line-height:1.8;color:#111;background:#eee;}
+    #wrapper{max-width:1100px;margin:0 auto;display:flex;align-items:flex-start;padding:40px 24px;gap:36px;}
+    #sidebar{width:240px;flex-shrink:0;font-size:13px;} #content{flex:1;min-width:0;}
+    #series-nav{margin-bottom:24px;} #series-nav ol,#series-nav li{list-style:none;padding-left:0;}
+    .snav-label{font-size:11px;font-weight:800;color:#2d6a5a;text-transform:uppercase;letter-spacing:.14em;display:block;margin-bottom:10px;padding-bottom:4px;border-bottom:2px solid #2d6a5a;}
+    #series-nav > ol{list-style:none;padding:0;margin:0;} .snav-ch{margin-bottom:10px;}
+    .snav-ch > span{font-size:11px;font-weight:800;letter-spacing:.06em;color:#fff;background:#3d8070;display:block;padding:3px 7px 3px 6px;border-radius:3px;margin-bottom:3px;text-transform:uppercase;}
+    .snav-ch > ol{padding-left:0;margin-top:0;} .snav-item{margin-bottom:1px;}
+    .snav-item a{font-size:13.5px;color:#666;text-decoration:none;display:block;padding:3px 6px;border-left:3px solid transparent;border-radius:0 3px 3px 0;transition:color .12s,background .12s,border-color .12s;}
+    .snav-item a:hover{color:#2d6a5a;background:#edf5f3;border-left-color:#a8d4c8;}
+    .snav-item.active a{color:#2d6a5a;font-weight:700;background:#e2f0ec;border-left-color:#2d6a5a;}
+    #sidebar > h2{font-size:10.5px;font-style:italic;font-weight:400;color:#b0b0b0;margin-bottom:8px;border:none;padding:0;margin-top:20px;padding-top:16px;border-top:1px dashed #ddd;}
+    #sidebar > ol{list-style:none !important;padding:0;margin:0;} #sidebar > ol > li{list-style:none !important;margin-bottom:5px;}
+    #sidebar > ol > li a{color:#666;text-decoration:none;display:block;padding:1px 0;font-size:12px;transition:color .12s;} #sidebar > ol > li a:hover{color:#58A;}
+    .page-header{margin-bottom:32px;padding-bottom:20px;border-bottom:1px solid #ddd;}
+    .page-header .crumb{font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
+    .page-header h1{font-size:1.8rem;font-weight:900;color:#303236;margin-bottom:8px;line-height:1.25;}
+    .page-header .subtitle{font-family:'Courier New',monospace;font-size:13px;color:#777;}
+    h2{color:#37425d;font-size:22px;margin:36px 0 10px;} h3{color:#633739;font-size:17px;margin:24px 0 8px;}
+    p{margin-bottom:14px;} a{color:#58A;text-decoration:none;} a:hover{text-decoration:underline;} strong{color:#222;}
+    .fun{font-family:'Courier New',monospace;color:#2a6496;} .def{color:green;font-weight:600;}
+    code{font-family:'Courier New',monospace;font-size:14px;background:#ddd;border-radius:3px;padding:1px 5px;}
+    pre{background:#282c34;color:#abb2bf;border-radius:5px;padding:16px 18px;overflow-x:auto;margin:14px 0 18px;font-family:'Courier New',monospace;font-size:14px;line-height:1.6;}
+    pre code{background:none;padding:0;color:inherit;}
+    .kw{color:#c678dd;} .fn{color:#61afef;} .cm{color:#5c6370;font-style:italic;} .str{color:#98c379;} .num{color:#d19a66;} .type{color:#e5c07b;}
+    .note{display:block;margin:18px 0;padding:15px;background:#D8F5D8;color:#444;border-radius:5px;border:2px solid #AFDFAF;font-size:15px;line-height:1.7;}
+    .warning{display:block;margin:18px 0;padding:15px;background:#FFD2D2;color:#444;border-radius:5px;border:2px solid #E0B3B3;font-size:15px;line-height:1.7;}
+    .legacy{display:block;margin:18px 0;padding:15px;background:#FFF3CD;color:#444;border-radius:5px;border:2px solid #FFCC5C;font-size:15px;line-height:1.7;}
+    ul,ol{padding-left:22px;margin-bottom:14px;} li{margin-bottom:5px;}
+    .table-wrap{overflow-x:auto;margin:14px 0;} table{border-collapse:collapse;font-size:14px;width:100%;}
+    th,td{padding:8px 12px;border-bottom:1px solid #aaa;text-align:left;} th{border-bottom:2px solid #888;font-weight:700;background:#ddd;} tr:nth-child(even) td{background:#e8e8e8;}
+    td:first-child{font-family:'Courier New',monospace;font-size:13px;color:#2a6496;white-space:nowrap;}
+    .arch-diagram{background:#fff;border:1px solid #ccc;border-radius:5px;padding:22px;margin:16px 0;font-family:'Courier New',monospace;font-size:13px;line-height:1.9;overflow-x:auto;white-space:pre;}
+    .badge{display:inline-block;font-size:11px;font-weight:700;padding:1px 7px;border-radius:10px;margin-left:4px;vertical-align:middle;}
+    .badge-new{background:#3d8070;color:#fff;}
+    .badge-changed{background:#a06000;color:#fff;}
+    .page-nav{display:flex;justify-content:space-between;margin:36px 0 0;padding-top:16px;border-top:1px solid #ddd;font-size:14px;}
+    .page-nav a{color:#58A;text-decoration:none;display:flex;align-items:center;gap:6px;} .page-nav a:hover{text-decoration:underline;}
+    .page-nav .pn-label{font-size:11px;color:#aaa;text-transform:uppercase;display:block;} .page-nav .pn-title{display:block;} .page-nav .prev{text-align:left;} .page-nav .next{text-align:right;}
+    footer{margin-top:48px;padding-top:16px;border-top:1px solid #ccc;font-size:12px;color:#aaa;text-align:center;}
+    @media(max-width:800px){#wrapper{flex-direction:column;padding:20px 16px;}#sidebar{width:100%;}}
+  </style>
+</head>
+<body>
+<button id="lang-btn" onclick="toggleLang()"><span lang="en">中文</span><span lang="zh">English</span></button>
+<div id="wrapper">
+<nav id="sidebar">
+  <div id="series-nav">
+    <span class="snav-label"><span lang="en">Series</span><span lang="zh">系列</span></span>
+    <ol>
+      <li class="snav-ch"><span lang="en">00 Introduction</span><span lang="zh">00 简介</span><ol><li class="snav-item"><a href="../00-introduction/introduction.html"><span lang="en">Introduction</span><span lang="zh">简介</span></a></li></ol></li>
+      <li class="snav-ch"><span lang="en">01 Shader System</span><span lang="zh">01 Shader 系统</span><ol><li class="snav-item"><a href="../01-shader-system/nfx-surf.html"><span lang="en">NFX & SURF</span><span lang="zh">NFX & SURF</span></a></li><li class="snav-item"><a href="../01-shader-system/hlsl-dialect.html"><span lang="en">HLSL Dialect</span><span lang="zh">HLSL 方言</span></a></li></ol></li>
+      <li class="snav-ch"><span lang="en">02 Rendering Pipeline</span><span lang="zh">02 渲染管线</span><ol><li class="snav-item"><a href="../02-rendering-pipeline/forward-shading.html"><span lang="en">Forward Shading</span><span lang="zh">前向渲染</span></a></li><li class="snav-item"><a href="../02-rendering-pipeline/deferred-shading.html"><span lang="en">Deferred Shading</span><span lang="zh">延迟渲染</span></a></li></ol></li>
+      <li class="snav-ch"><span lang="en">03 Material System</span><span lang="zh">03 材质系统</span><ol><li class="snav-item"><a href="../03-material-system/pbr-material.html"><span lang="en">PBR Material</span><span lang="zh">PBR 材质</span></a></li><li class="snav-item"><a href="../03-material-system/multi-layered-pbr.html"><span lang="en">Multi-Layered PBR</span><span lang="zh">多层 PBR</span></a></li></ol></li>
+      <li class="snav-ch"><span lang="en">04 Lighting Models</span><span lang="zh">04 光照模型</span><ol><li class="snav-item"><a href="../04-lighting-models/ggx-brdf.html"><span lang="en">GGX BRDF</span><span lang="zh">GGX BRDF</span></a></li><li class="snav-item active"><a href="../04-lighting-models/shading-models.html"><span lang="en">16 Shading Models</span><span lang="zh">16 种光照模型</span></a></li></ol></li>
+      <li class="snav-ch"><span lang="en">05 Post Processing</span><span lang="zh">05 后处理</span><ol><li class="snav-item"><a href="../05-post-processing/post-effects.html"><span lang="en">Post Effects Overview</span><span lang="zh">后处理全景</span></a></li></ol></li>
+    </ol>
+  </div>
+  <h2><span lang="en">Contents</span><span lang="zh">目录</span></h2>
+  <ol>
+    <li><a href="#s1"><span lang="en">Model Registry</span><span lang="zh">模型注册表</span></a></li>
+    <li><a href="#s2"><span lang="en">Isotropy — Standard GGX</span><span lang="zh">各向同性 — 标准 GGX</span></a></li>
+    <li><a href="#s3"><span lang="en">Skin & Hair</span><span lang="zh">皮肤与头发</span></a></li>
+    <li><a href="#s4"><span lang="en">Toon & ClearCoat</span><span lang="zh">卡通与清漆</span></a></li>
+    <li><a href="#s5"><span lang="en">New: Cloth, Sheen, Glint</span><span lang="zh">新增：布料、Sheen、闪光</span></a></li>
+    <li><a href="#s6"><span lang="en">New: Water</span><span lang="zh">新增：水面</span></a></li>
+    <li><a href="#s7"><span lang="en">Special: SSS, Eye, Glass...</span><span lang="zh">特殊：SSS、眼睛、玻璃…</span></a></li>
+    <li><a href="#s8"><span lang="en">Shared Infrastructure</span><span lang="zh">共享基础设施</span></a></li>
+  </ol>
+</nav>
+
+<main id="content">
+  <div class="page-header">
+    <div class="crumb">NeoX Engine &middot; Lighting Models &middot; Shading Models</div>
+    <h1><span lang="en">16 Shading Models</span><span lang="zh">16 种光照模型</span></h1>
+    <div class="subtitle">res_upgrade/shader/built_in/shading_models/ &middot; 17 files</div>
+  </div>
+
+  <!-- s1 -->
+  <h2 id="s1"><span lang="en">Model Registry — Key Values in GBuffer</span><span lang="zh">模型注册表 — GBuffer 中的键值</span></h2>
+
+  <p lang="en">Each shading model has a numeric key stored in the GBuffer flags byte (bits 0-3). The enum is declared in <code>forward_shading.render</code>. New engine adds 4 models and removes Mobile_pbr:</p>
+  <p lang="zh">每种着色模型都有一个存储在 GBuffer 标志字节（位 0-3）中的数字键。枚举在 <code>forward_shading.render</code> 中声明。新引擎新增 4 个模型，移除 Mobile_pbr：</p>
+
+  <div class="table-wrap"><table>
+    <thead><tr>
+      <th>Key</th>
+      <th><span lang="en">Model</span><span lang="zh">模型</span></th>
+      <th><span lang="en">File</span><span lang="zh">文件</span></th>
+      <th><span lang="en">Diffuse</span><span lang="zh">漫反射</span></th>
+      <th><span lang="en">Specular</span><span lang="zh">高光</span></th>
+    </tr></thead>
+    <tbody>
+      <tr><td>0</td><td>Isotropy</td><td>isotropy.hlsl</td><td>Lambertian</td><td>GGX (SmithJoint)</td></tr>
+      <tr><td>1</td><td>Skin</td><td>skin.hlsl</td><td><span lang="en">Pre-integrated LUT</span><span lang="zh">预积分 LUT</span></td><td>GGX</td></tr>
+      <tr><td>2</td><td>Hair</td><td>hair.hlsl</td><td><span lang="en">Wrapped Lambert</span><span lang="zh">Wrapped Lambert</span></td><td><span lang="en">Marschner 3-lobe (R/TT/TRT)</span><span lang="zh">Marschner 三波瓣</span></td></tr>
+      <tr><td>3</td><td>ClearCoat</td><td>clearcoat.hlsl</td><td>Lambertian</td><td><span lang="en">GGX base + Kelemen coat</span><span lang="zh">GGX 底层 + Kelemen 涂层</span></td></tr>
+      <tr><td>4</td><td>Toon</td><td>toon.hlsl</td><td><span lang="en">Lerp3 step ramp</span><span lang="zh">Lerp3 阶梯渐变</span></td><td>GGX</td></tr>
+      <tr><td>5</td><td>SSSS (4S)</td><td>isotropy.hlsl<br><em>(SKIN4S macro)</em></td><td><span lang="en">4-pass blur + LUT</span><span lang="zh">4-Pass 模糊 + LUT</span></td><td><span lang="en">Dual-lobe GGX</span><span lang="zh">双波瓣 GGX</span></td></tr>
+      <tr><td>6</td><td>Subsurface</td><td>subsurface.hlsl</td><td><span lang="en">Inward scatter + back</span><span lang="zh">内散射 + 背散射</span></td><td>GGX</td></tr>
+      <tr><td>7</td><td>SubsurfaceTwoSided</td><td>subsurface_two_sided.hlsl</td><td><span lang="en">Wrap + GGX backside</span><span lang="zh">Wrap + GGX 背面</span></td><td>GGX</td></tr>
+      <tr><td>8</td><td>Eye</td><td>eye.hlsl</td><td><span lang="en">Caustic + sclera Lambert</span><span lang="zh">焦散 + 巩膜 Lambert</span></td><td><span lang="en">GGX * PI</span><span lang="zh">GGX * PI</span></td></tr>
+      <tr><td>9</td><td>Glass</td><td>glass.hlsl</td><td><span lang="en">Reflected + refracted env</span><span lang="zh">反射 + 折射环境</span></td><td>GGX</td></tr>
+      <tr><td>10</td><td>Transparent</td><td>transparent.hlsl</td><td>Lambertian</td><td><span lang="en">GGX / opacity^2.2</span><span lang="zh">GGX 除以 opacity^2.2</span></td></tr>
+      <tr><td>11</td><td>MultiLayeredPBR</td><td>multi_layered_pbr.hlsl</td><td><span lang="en">Disney diffuse per-layer</span><span lang="zh">逐层 Disney 漫反射</span></td><td><span lang="en">Adding-Doubling coat stack</span><span lang="zh">Adding-Doubling 涂层栈</span></td></tr>
+      <tr><td>12</td><td>Water <span class="badge badge-new">NEW</span></td><td>water.hlsl</td><td><span lang="en">SSS transmission</span><span lang="zh">SSS 透射</span></td><td><span lang="en">Slope-space NDF</span><span lang="zh">斜率空间 NDF</span></td></tr>
+      <tr><td>13</td><td>Cloth <span class="badge badge-new">NEW</span></td><td>cloth.hlsl</td><td><span lang="en">Wrap diffuse</span><span lang="zh">Wrap 漫反射</span></td><td><span lang="en">InvGGX + Charlie vis</span><span lang="zh">InvGGX + Charlie 可见性</span></td></tr>
+      <tr><td>14</td><td>Glint <span class="badge badge-new">NEW</span></td><td>glint.hlsl</td><td>Lambertian</td><td><span lang="en">Stochastic P22 flakes + GGX</span><span lang="zh">随机 P22 闪片 + GGX</span></td></tr>
+      <tr><td>15</td><td>Sheen <span class="badge badge-new">NEW</span></td><td>sheen.hlsl</td><td>Lambertian</td><td><span lang="en">Charlie D + G + sheen FGD LUT</span><span lang="zh">Charlie D + G + Sheen FGD LUT</span></td></tr>
+      <tr><td>16</td><td>Toon (key shifted) <span class="badge badge-changed">CHANGED</span></td><td></td><td></td><td></td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="legacy">
+    <span lang="en"><strong>Legacy engine difference:</strong> Key 12 was <code>Mobile_pbr</code> (now removed). Keys 12-15 (Water/Cloth/Glint/Sheen) are entirely new. Toon's key shifted from 13 to 16 in <code>forward_shading.render</code>. The Unlit model is not assigned a GBuffer key — it writes nothing to the GBuffer and exits early in the lighting evaluation.</span>
+    <span lang="zh"><strong>旧引擎差异：</strong>键 12 是 <code>Mobile_pbr</code>（现已移除）。键 12-15（Water/Cloth/Glint/Sheen）是全新的。Toon 的键在 <code>forward_shading.render</code> 中从 13 移到 16。Unlit 模型没有分配 GBuffer 键——它不向 GBuffer 写入任何内容，在光照计算中提前退出。</span>
+  </div>
+
+  <h3><span lang="en">Detailed Usage &amp; Performance Guide</span><span lang="zh">详细使用与性能指南</span></h3>
+
+  <div class="table-wrap"><table>
+    <thead><tr>
+      <th><span lang="en">Model</span><span lang="zh">模型</span></th>
+      <th><span lang="en">Best For</span><span lang="zh">最适用于</span></th>
+      <th><span lang="en">Lighting Characteristics</span><span lang="zh">光照特性</span></th>
+      <th><span lang="en">Cost</span><span lang="zh">开销</span></th>
+      <th><span lang="en">Extra Resources</span><span lang="zh">额外资源</span></th>
+    </tr></thead>
+    <tbody>
+      <tr><td>Isotropy</td>
+        <td><span lang="en">Metals, plastics, stone, all hard surfaces; the universal fallback</span><span lang="zh">金属、塑料、石材，所有硬表面；通用默认</span></td>
+        <td><span lang="en">Single GGX specular lobe; energy-conserving Lambert diffuse; smooth-to-rough transition from mirror to matte</span><span lang="zh">单 GGX 高光波瓣；能量守恒 Lambert 漫反射；从镜面到磨砂的平滑过渡</span></td>
+        <td><span lang="en">Low (1 spec eval)</span><span lang="zh">低（1 次高光计算）</span></td>
+        <td><span lang="en">None</span><span lang="zh">无</span></td></tr>
+      <tr><td>Skin</td>
+        <td><span lang="en">Character face/body skin (standard quality); NPCs and mid-range characters</span><span lang="zh">角色面部/身体皮肤（标准质量）；NPC 和中等角色</span></td>
+        <td><span lang="en">Red/orange hue bleeding in shadow terminator via LUT; curvature-dependent scattering; no hard shadow edge on skin</span><span lang="zh">通过 LUT 在明暗分界处产生红/橙色渗透；曲率相关散射；皮肤无硬阴影边缘</span></td>
+        <td><span lang="en">Medium (2 LUT texel fetches + spec)</span><span lang="zh">中（2 次 LUT 纹素获取 + 高光）</span></td>
+        <td><span lang="en">Tex3 (pre-integrated LUT), Tex4 (shadow color LUT)</span><span lang="zh">Tex3（预积分 LUT），Tex4（阴影颜色 LUT）</span></td></tr>
+      <tr><td>Hair</td>
+        <td><span lang="en">Hair strands, fur, eyelashes; any fibrous surface with anisotropic tangent direction</span><span lang="zh">发丝、毛皮、睫毛；任何具有各向异性切线方向的纤维表面</span></td>
+        <td><span lang="en">Two colored specular bands (R+TRT); translucent transmission (TT); color from melanin physics; shifts along hair tangent</span><span lang="zh">两个彩色高光带（R+TRT）；半透射（TT）；来自黑色素物理的颜色；沿发丝切线偏移</span></td>
+        <td><span lang="en">High (3 spec lobes + trig + melanin)</span><span lang="zh">高（3 个高光波瓣 + 三角函数 + 黑色素）</span></td>
+        <td><span lang="en">Tex3 (flow/tangent map); SpecularParam, BackLightParam uniforms</span><span lang="zh">Tex3（流向/切线贴图）；SpecularParam, BackLightParam uniform</span></td></tr>
+      <tr><td>ClearCoat</td>
+        <td><span lang="en">Car paint, lacquered wood, coated metal, phone screens, wet surfaces</span><span lang="zh">汽车漆、漆面木材、涂层金属、手机屏幕、湿润表面</span></td>
+        <td><span lang="en">Two specular highlights — sharp coat reflection on top + underlying rough/metallic; coat darkens base at grazing angles</span><span lang="zh">双高光——上层锐利涂层反射 + 下层粗糙/金属底漆；涂层在掠射角使底层变暗</span></td>
+        <td><span lang="en">Medium (2 spec evals, cheap coat vis)</span><span lang="zh">中（2 次高光计算，廉价涂层可见性项）</span></td>
+        <td><span lang="en">Coat roughness uniform; optional coat normal</span><span lang="zh">涂层粗糙度 uniform；可选涂层法线</span></td></tr>
+      <tr><td>Toon</td>
+        <td><span lang="en">Cel-shaded characters, stylized assets; cartoon/anime aesthetic</span><span lang="zh">卡通角色、风格化资产；动漫美学</span></td>
+        <td><span lang="en">Hard band transitions between 3 color zones (dark/mid/light) controlled by smoothstep thresholds; retains GGX spec for rim highlights</span><span lang="zh">三色区域（暗/中/亮）间的硬带过渡，由 smoothstep 阈值控制；保留 GGX 高光用于边缘</span></td>
+        <td><span lang="en">Low (same as isotropy + step ramp)</span><span lang="zh">低（同各向同性 + 阶梯渐变）</span></td>
+        <td><span lang="en">toon_threshold, toon_range, Dark/Mid/Light_Color uniforms; needs toonedge pass for outlines</span><span lang="zh">toon_threshold, toon_range, Dark/Mid/Light_Color uniform；需要 toonedge Pass 做描边</span></td></tr>
+      <tr><td>SSSS (4S)</td>
+        <td><span lang="en">Hero character close-ups; cinematic quality skin; any case needing visible SSS blur</span><span lang="zh">英雄角色特写；电影级皮肤；需要可见 SSS 模糊的场景</span></td>
+        <td><span lang="en">Multi-pass separable blur in screen space; dual-lobe spec (primary + secondary highlight); transmission for ear/nose translucency</span><span lang="zh">屏幕空间多 Pass 可分离模糊；双波瓣高光（主 + 次高光）；用于耳/鼻半透射</span></td>
+        <td><span lang="en">Very High (multi-pass; 4 render targets per blur axis)</span><span lang="zh">非常高（多 Pass；每个模糊轴 4 个 RT）</span></td>
+        <td><span lang="en">DualLobeSpecularParams, FalloffColor, TransmissionParams; requires engine-side 4S blur passes</span><span lang="zh">DualLobeSpecularParams, FalloffColor, TransmissionParams；需要引擎端 4S 模糊 Pass</span></td></tr>
+      <tr><td>Subsurface</td>
+        <td><span lang="en">Wax, jade, marble, secondary/background characters; cheap SSS approximation</span><span lang="zh">蜡、玉、大理石、次要/背景角色；廉价 SSS 近似</span></td>
+        <td><span lang="en">Soft forward-scatter glow at grazing angles (InScatter); gentle backscatter from occluded areas; single pass, no blur</span><span lang="zh">掠射角处柔和前向散射辉光（InScatter）；遮挡区域轻微背散射；单 Pass，无模糊</span></td>
+        <td><span lang="en">Low (analytical approximation, no extra passes)</span><span lang="zh">低（解析近似，无额外 Pass）</span></td>
+        <td><span lang="en">sss_curvature from Tex2.a * Intensity; sss_color derived from albedo</span><span lang="zh">sss_curvature 来自 Tex2.a * Intensity；sss_color 从反照率导出</span></td></tr>
+      <tr><td>SubsurfaceTwoSided</td>
+        <td><span lang="en">Leaves, thin cloth, petals, paper, lampshades; anything thin that light passes through from behind</span><span lang="zh">树叶、薄布、花瓣、纸张、灯罩；任何光线从背面穿过的薄物体</span></td>
+        <td><span lang="en">Back-lighting wrap: bright rim when lit from behind; GGX-shaped scatter kernel; reverse SH for backface env contribution</span><span lang="zh">背光 wrap：从背面照亮时的明亮边缘；GGX 形散射核；反向 SH 用于背面环境贡献</span></td>
+        <td><span lang="en">Low-Medium (wrap diffuse + GGX scatter term)</span><span lang="zh">低-中（wrap 漫反射 + GGX 散射项）</span></td>
+        <td><span lang="en">sss_color (tint for transmitted light)</span><span lang="zh">sss_color（透射光着色）</span></td></tr>
+      <tr><td>Eye</td>
+        <td><span lang="en">Character eyeballs — iris, pupil, sclera, cornea all in one model</span><span lang="zh">角色眼球——虹膜、瞳孔、巩膜、角膜统一模型</span></td>
+        <td><span lang="en">Cornea caustic brightens iris; sclera uses energy-conserving wrap; Fresnel-modulated reflection; micro-shadow from brow/eyelid</span><span lang="zh">角膜焦散增亮虹膜；巩膜使用能量守恒 wrap；菲涅尔调制反射；来自眉/眼睑的微阴影</span></td>
+        <td><span lang="en">Medium (caustic math + dual-normal evaluation)</span><span lang="zh">中（焦散数学 + 双法线计算）</span></td>
+        <td><span lang="en">IrisMask, IrisDistance, IrisNormal; CausticNormal via binormal channel</span><span lang="zh">IrisMask, IrisDistance, IrisNormal；CausticNormal 通过副法线通道</span></td></tr>
+      <tr><td>Glass</td>
+        <td><span lang="en">Windows, drinking glasses, gems, crystal objects; need to see through the surface</span><span lang="zh">窗户、杯子、宝石、水晶；需要看透表面的物体</span></td>
+        <td><span lang="en">Environment reflection + refraction blended by Fresnel and opacity; no screen-space refraction — samples cubemap in refracted direction</span><span lang="zh">环境反射 + 折射按菲涅尔和不透明度混合；无屏幕空间折射——在折射方向采样立方体贴图</span></td>
+        <td><span lang="en">Medium (2 env samples — reflected + refracted)</span><span lang="zh">中（2 次环境采样——反射 + 折射）</span></td>
+        <td><span lang="en">None extra; relies on env probe quality</span><span lang="zh">无额外资源；依赖环境探针质量</span></td></tr>
+      <tr><td>Transparent</td>
+        <td><span lang="en">Stained glass, colored film, holograms; alpha-blended surfaces that need visible specular</span><span lang="zh">彩色玻璃、色膜、全息；需要可见高光的 Alpha 混合表面</span></td>
+        <td><span lang="en">Standard GGX but specular boosted at low opacity via <code>1/opacity^2.2</code>; prevents spec from being invisible through transparency</span><span lang="zh">标准 GGX 但低不透明度时通过 <code>1/opacity^2.2</code> 提升高光；防止高光在透明中不可见</span></td>
+        <td><span lang="en">Low (same as Isotropy + 1 rcp)</span><span lang="zh">低（同各向同性 + 1 次 rcp）</span></td>
+        <td><span lang="en">None</span><span lang="zh">无</span></td></tr>
+      <tr><td>MultiLayeredPBR</td>
+        <td><span lang="en">Car paint with metallic flakes, gemstones, coated jewelry, multi-material surfaces (up to 3 coats)</span><span lang="zh">带金属片的汽车漆、宝石、涂层珠宝、多材质表面（最多 3 涂层）</span></td>
+        <td><span lang="en">Physically-correct inter-layer bouncing (Adding-Doubling); roughness propagated through coat via variance math; per-coat normal map</span><span lang="zh">物理正确的层间反弹（Adding-Doubling）；粗糙度通过方差数学传播穿过涂层；逐涂层法线贴图</span></td>
+        <td><span lang="en">Very High (N*spec evals + ComputeAdding loop + FGD LUT)</span><span lang="zh">非常高（N*高光计算 + ComputeAdding 循环 + FGD LUT）</span></td>
+        <td><span lang="en">Tex4 (FGD LUT), Tex5-7 (coat normals); CoatInfo/CoatExtinctionColor per coat</span><span lang="zh">Tex4（FGD LUT），Tex5-7（涂层法线）；每涂层 CoatInfo/CoatExtinctionColor</span></td></tr>
+      <tr><td>Water <span class="badge badge-new">NEW</span></td>
+        <td><span lang="en">Ocean surface, rivers, lakes, puddles; needs pre-computed LEAN moment maps from wave simulation</span><span lang="zh">海面、河流、湖泊、水坑；需要从波浪模拟预计算的 LEAN 矩贴图</span></td>
+        <td><span lang="en">Physically-based slope-space NDF; Gaussian covariance → anisotropic highlight shape; multi-sample IBL for rough water; Fresnel at IOR=1.33</span><span lang="zh">物理斜率空间 NDF；高斯协方差→各向异性高光形状；粗糙水面多采样 IBL；IOR=1.33 的菲涅尔</span></td>
+        <td><span lang="en">High (multi-sample env loop: up to 5x5=25 samples)</span><span lang="zh">高（多采样环境循环：最多 5x5=25 次采样）</span></td>
+        <td><span lang="en">Moment texture (LEAN map: Mxx,Myy,Mxy or scalar variance); water_utils uniforms</span><span lang="zh">矩纹理（LEAN 贴图：Mxx,Myy,Mxy 或标量方差）；water_utils uniform</span></td></tr>
+      <tr><td>Cloth <span class="badge badge-new">NEW</span></td>
+        <td><span lang="en">Fabric, curtains, clothing, upholstery; surfaces where fibers produce grazing-angle highlights</span><span lang="zh">织物、窗帘、服装、软垫；纤维在掠射角产生高光的表面</span></td>
+        <td><span lang="en">Inverted specular distribution (bright at edges, dark at center); wrap-diffuse softens shadow transition; fuzz color adds colored rim</span><span lang="zh">反转的高光分布（边缘亮，中心暗）；wrap 漫反射软化阴影过渡；绒毛颜色添加彩色边缘</span></td>
+        <td><span lang="en">Medium (1 InvGGX + 1 standard GGX lerped)</span><span lang="zh">中（1 次 InvGGX + 1 次标准 GGX 插值）</span></td>
+        <td><span lang="en">Cloth blend parameter, FuzzColor (float3); no extra textures needed</span><span lang="zh">Cloth 混合参数，FuzzColor（float3）；无需额外纹理</span></td></tr>
+      <tr><td>Glint <span class="badge badge-new">NEW</span></td>
+        <td><span lang="en">Metallic car paint with sparkle, glitter makeup, snow crystals, iridescent materials; use sparingly (expensive)</span><span lang="zh">带闪片的金属漆、亮粉妆容、雪晶、虹彩材质；谨慎使用（昂贵）</span></td>
+        <td><span lang="en">Thousands of discrete micro-highlights that appear/disappear as view moves; procedurally hashed — no baked flake texture needed; EWA-filtered to prevent aliasing</span><span lang="zh">数千个离散微高光随视角移动出现/消失；程序化哈希——无需烘焙闪片纹理；EWA 滤波防止走样</span></td>
+        <td><span lang="en">Very High (~492 line shader; 3D texture lookup + hash + erfinv + multi-cell eval)</span><span lang="zh">非常高（~492 行着色器；3D 纹理查找 + 哈希 + erfinv + 多单元计算）</span></td>
+        <td><span lang="en">GlintDictionary 3D texture; glint_rate, glint_intensity, micro_relative_area, microfacet_density uniforms; ddx/ddy for EWA filter</span><span lang="zh">GlintDictionary 3D 纹理；glint_rate, glint_intensity, micro_relative_area, microfacet_density uniform；ddx/ddy 用于 EWA 滤波</span></td></tr>
+      <tr><td>Sheen <span class="badge badge-new">NEW</span></td>
+        <td><span lang="en">Velvet, silk, microfiber, peach fuzz; surfaces with soft halo at grazing angles</span><span lang="zh">丝绒、丝绸、超细纤维、桃子绒毛；掠射角有柔和光晕的表面</span></td>
+        <td><span lang="en">Charlie sin-power NDF produces soft dome-shaped highlight wrapping around silhouette; polynomial FGD LUT avoids texture sample</span><span lang="zh">Charlie sin 幂 NDF 产生沿轮廓包裹的柔和穹顶形高光；多项式 FGD LUT 避免纹理采样</span></td>
+        <td><span lang="en">Medium (Charlie D+G + polynomial LUT — no tex fetch)</span><span lang="zh">中（Charlie D+G + 多项式 LUT——无纹理读取）</span></td>
+        <td><span lang="en">sheenColor, sheenRoughness; no extra textures</span><span lang="zh">sheenColor, sheenRoughness；无额外纹理</span></td></tr>
+      <tr><td>Unlit</td>
+        <td><span lang="en">UI elements, skybox, emissive effects, billboards, debug vis; anything that should not receive lighting</span><span lang="zh">UI 元素、天空盒、自发光特效、告示板、调试可视化；任何不应接收光照的物体</span></td>
+        <td><span lang="en">No lighting evaluated at all — output is pure emissive/albedo color; zero spec, zero diffuse</span><span lang="zh">完全不计算光照——输出纯自发光/反照率颜色；零高光、零漫反射</span></td>
+        <td><span lang="en">Minimal (lighting skipped entirely)</span><span lang="zh">极低（完全跳过光照）</span></td>
+        <td><span lang="en">None</span><span lang="zh">无</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="note">
+    <span lang="en"><strong>Performance tip:</strong> Use <strong>Isotropy</strong> (Key 0) for 90%+ of scene geometry. Reserve expensive models for hero assets: <strong>SSSS</strong> for cinematic close-ups only, <strong>Glint</strong> for 1-2 sparkle objects per scene, <strong>MultiLayeredPBR</strong> for key vehicles. <strong>Cloth</strong> and <strong>Sheen</strong> are medium cost and safe for batch usage on all clothing/fabric. <strong>Hair</strong> is high cost but necessary for all character hair — no cheaper alternative exists.</span>
+    <span lang="zh"><strong>性能提示：</strong>场景中 90%+ 的几何体使用 <strong>Isotropy</strong>（键 0）。昂贵模型留给英雄资产：<strong>SSSS</strong> 仅用于电影级特写，<strong>Glint</strong> 每场景 1-2 个闪光物体，<strong>MultiLayeredPBR</strong> 用于关键载具。<strong>Cloth</strong> 和 <strong>Sheen</strong> 中等开销，可安全批量用于所有服装/织物。<strong>Hair</strong> 开销高但所有角色头发都必须使用——没有更廉价的替代方案。</span>
+  </div>
+
+  <!-- s2 -->
+  <h2 id="s2"><span lang="en">Isotropy — Standard GGX PBR</span><span lang="zh">各向同性 — 标准 GGX PBR</span></h2>
+
+  <p lang="en"><code>isotropy.hlsl</code> is the default shading model and the most feature-rich — it doubles as the SSSS 4S model when <code>SKIN4S_ENABLE</code> is set, and supports the <code>TOON_EFFECT</code> variant for cartoon diffuse ramps:</p>
+  <p lang="zh"><code>isotropy.hlsl</code> 是默认着色模型，也是功能最丰富的——当设置 <code>SKIN4S_ENABLE</code> 时它充当 SSSS 4S 模型，并支持 <code>TOON_EFFECT</code> 变体用于卡通漫反射渐变：</p>
+
+  <pre><span class="cm">// Energy compensation for multi-scattering (ENABLE_ENERGY_COMPENSATION)</span>
+<span class="cm">// Prevents too-dark appearance at high roughness</span>
+<span class="kw">float2</span> approxAB = <span class="fn">EnvBRDFLUTApprox</span>(roughness_pow2, n_dot_v);
+energy_compensation = <span class="num">1.0</span> + spec * (<span class="num">1.0</span> / (approxAB.x + approxAB.y) - <span class="num">1.0</span>);
+
+<span class="cm">// Toon diffuse (TOON_EFFECT)</span>
+<span class="kw">float</span> The = <span class="fn">smoothstep</span>(toon_edge.x, toon_edge.y, n_dot_l) * <span class="num">0.5</span>
+           + <span class="fn">smoothstep</span>(toon_edge.y, toon_edge.z, n_dot_l);
+light_diffuse = <span class="fn">Lerp3</span>(Dark_Color, Mid_Color, Light_Color, <span class="num">0.5</span>, The);
+
+<span class="cm">// SKIN4S dual-lobe specular (SKIN4S_SPECULARPASS)</span>
+<span class="kw">float3</span> lobe0 = <span class="fn">LightingSpecular</span>(..., roughness0);
+<span class="kw">float3</span> lobe1 = <span class="fn">LightingSpecular</span>(..., roughness1);
+light_specular = <span class="fn">lerp</span>(lobe0, lobe1, dual_lobe_mix);</pre>
+
+  <!-- s3 -->
+  <h2 id="s3"><span lang="en">Skin &amp; Hair — Biologically-Grounded Models</span><span lang="zh">皮肤与头发 — 基于生物学的模型</span></h2>
+
+  <h3><span lang="en">skin.hlsl — Pre-Integrated Skin</span><span lang="zh">skin.hlsl — 预积分皮肤</span></h3>
+  <p lang="en">Skin scattering is precomputed into a 2D LUT indexed by <code>(0.5*NoL+0.5, curvature)</code>. A second LUT handles shadow coloring — skin shadows have a reddish fringe where light enters at grazing angles. <code>LightNotAffect()</code> always returns false so backface contributions are included:</p>
+  <p lang="zh">皮肤散射预计算到以 <code>(0.5*NoL+0.5, curvature)</code> 为索引的 2D LUT 中。第二张 LUT 处理阴影着色——皮肤阴影在掠射角进光处有红色边缘。<code>LightNotAffect()</code> 始终返回 false，因此包含背面贡献：</p>
+  <pre><span class="cm">// skin.hlsl — Diffuse from pre-integrated LUT</span>
+<span class="kw">float3</span> <span class="fn">LightingDiffuse</span>(...) {
+  <span class="kw">float2</span> lut_uv = <span class="kw">float2</span>(<span class="num">0.5</span> * n_dot_l_raw + <span class="num">0.5</span>, mtl.sss_curvature);
+  <span class="kw">float3</span> skin   = <span class="fn">GetPreintergratedSkin</span>(lut_uv);    <span class="cm">// Tex3.Sample(s1, lut_uv)</span>
+  <span class="kw">float2</span> s_uv   = <span class="kw">float2</span>(shadow, mtl.sss_curvature);
+  <span class="kw">float3</span> shadow_color = <span class="fn">GetShadowSkinColor</span>(s_uv);     <span class="cm">// Tex4.Sample(s1, s_uv)</span>
+  <span class="kw">return</span> skin * shadow_color;
+}</pre>
+
+  <h3><span lang="en">hair.hlsl — Marschner 3-Lobe Model</span><span lang="zh">hair.hlsl — Marschner 三波瓣模型</span></h3>
+  <p lang="en">Hair uses a full Marschner physical model with three scattering lobes: <strong>R</strong> (specular reflection off the cuticle), <strong>TT</strong> (light transmitted through the hair), and <strong>TRT</strong> (transmitted → internal reflection → transmitted). Melanin-based absorption correctly derives the natural hair color from the underlying physics:</p>
+  <p lang="zh">头发使用完整的 Marschner 物理模型，具有三个散射波瓣：<strong>R</strong>（角质层镜面反射）、<strong>TT</strong>（穿过发丝的透射光）和 <strong>TRT</strong>（透射→内反射→透射）。基于黑色素的吸收从底层物理中正确推导出自然发色：</p>
+  <pre><span class="cm">// Marschner NDF — Gaussian in the longitudinal plane</span>
+<span class="kw">float</span> <span class="fn">Hair_g</span>(<span class="kw">float</span> B, <span class="kw">float</span> Theta) {
+  <span class="kw">return</span> <span class="fn">exp</span>(-<span class="num">0.5</span> * Theta*Theta / (B*B)) / (<span class="fn">sqrt</span>(<span class="num">2</span>*PI) * B);
+}
+<span class="cm">// Melanin color model (Eumelanin + Pheomelanin absorption coefficients)</span>
+<span class="cm">// Eumelanin:  sigma_a = (0.506, 0.841, 1.653) * concentration</span>
+<span class="cm">// Pheomelanin sigma_a = (0.343, 0.733, 1.924) * concentration</span>
+<span class="kw">float3</span> <span class="fn">GetHairColorFromMelanin</span>(<span class="kw">float</span> melanin, <span class="kw">float</span> redness, <span class="kw">float3</span> dyeColor) {
+  <span class="kw">float3</span> sigma_a = melanin * <span class="fn">lerp</span>(eu, pheo, redness);
+  <span class="kw">return</span> dyeColor * <span class="fn">exp</span>(-sigma_a);
+}</pre>
+
+  <!-- s4 -->
+  <h2 id="s4"><span lang="en">Toon &amp; ClearCoat</span><span lang="zh">卡通与清漆</span></h2>
+
+  <h3><span lang="en">toon.hlsl — Lerp3 Color Ramp</span><span lang="zh">toon.hlsl — Lerp3 色阶渐变</span></h3>
+  <p lang="en">The toon shading model uses a 3-segment linear interpolation function <span class="fun">Lerp3</span> to map the N·L value to a cel-shaded diffuse. The threshold and range parameters come from the material's <code>sss_color.xy</code> (packed by <code>material_toon.hlsl</code>):</p>
+  <p lang="zh">卡通着色模型使用三段线性插值函数 <span class="fun">Lerp3</span> 将 N·L 值映射到色块漫反射。阈值和范围参数来自材质的 <code>sss_color.xy</code>（由 <code>material_toon.hlsl</code> 打包）：</p>
+  <pre><span class="cm">// Lerp3: piecewise linear ramp over 3 color bands</span>
+<span class="kw">float</span> <span class="fn">Lerp3</span>(<span class="kw">float</span> C, <span class="kw">float</span> B, <span class="kw">float</span> A, <span class="kw">float</span> Middle, <span class="kw">float</span> T) {
+  <span class="kw">return</span>  <span class="fn">lerp</span>(C, B, T / Middle)          * <span class="fn">step</span>(T, Middle)
+        + <span class="fn">lerp</span>(B, A, (T - Middle) / (<span class="num">1</span> - Middle)) * <span class="fn">step</span>(Middle, T);
+}
+<span class="cm">// Usage: T = smoothstep(..., n_dot_l), Middle = 0.5</span>
+<span class="cm">// C=Dark_Color, B=Mid_Color, A=Light_Color read from CB</span></pre>
+
+  <h3><span lang="en">clearcoat.hlsl — Kelemen Visibility</span><span lang="zh">clearcoat.hlsl — Kelemen 可见性</span></h3>
+  <p lang="en">The clear coat layer uses <span class="fun">Vis_Kelemen</span> (a simpler visibility term) and fixes IOR at 1.5 (typical polymer). Energy absorbed by the coat layer attenuates the base layer contribution:</p>
+  <p lang="zh">清漆层使用 <span class="fun">Vis_Kelemen</span>（更简单的可见性项），IOR 固定为 1.5（典型聚合物）。涂层吸收的能量会衰减底层贡献：</p>
+  <pre><span class="cm">// Coat specular: D*Vis_Kelemen*F where F uses IOR=1.5 (F0=0.04)</span>
+<span class="kw">float</span> <span class="fn">Vis_Kelemen</span>(<span class="kw">float</span> VdotH) { <span class="kw">return</span> <span class="num">0.25</span> / (VdotH * VdotH); }
+<span class="kw">float</span> Fc = <span class="fn">Pow5</span>(<span class="num">1</span> - v_dot_h);
+<span class="kw">float</span> F  = Fc + (<span class="num">1</span> - Fc) * <span class="num">0.04</span>;             <span class="cm">// F0 = 0.04</span>
+<span class="kw">float</span> coat_fr = D_GGX(coat_rough_pow2, n_dot_h) * Vis_Kelemen(v_dot_h) * F;
+<span class="kw">float</span> layer_atten = <span class="num">1.0</span> - F;                  <span class="cm">// energy reaching the base layer</span>
+<span class="cm">// Final: base_spec * layer_atten + coat_fr</span></pre>
+
+  <!-- s5 -->
+  <h2 id="s5"><span lang="en">New Models: Cloth, Sheen, Glint</span><span lang="zh">新增模型：布料、Sheen、闪光</span></h2>
+
+  <h3><span lang="en">cloth.hlsl — Inverted GGX for Fabric</span><span lang="zh">cloth.hlsl — 用于织物的反转 GGX</span></h3>
+  <p lang="en">Fabric fibers produce a specular highlight that is strongest at grazing angles (the opposite of smooth surfaces). This is modeled with an <span class="def">inverted GGX NDF</span> and the Neubelt-Pettineo visibility function:</p>
+  <p lang="zh">织物纤维产生在掠射角最强的高光（与光滑表面相反）。这用<span class="def">反转 GGX NDF</span> 和 Neubelt-Pettineo 可见性函数建模：</p>
+  <pre><span class="cm">// D_InvGGX: peaks at GRAZING angles (opposite of normal GGX)</span>
+<span class="kw">float</span> <span class="fn">D_InvGGX</span>(<span class="kw">float</span> a2, <span class="kw">float</span> NoH) {
+  <span class="kw">float</span> d = (NoH - a2 * NoH) * NoH + a2;
+  <span class="kw">return</span> <span class="fn">rcp</span>(PI * (<span class="num">1</span> + <span class="num">4</span>*a2)) * (<span class="num">1</span> + <span class="num">4</span>*a2*a2 / (d*d));
+}
+<span class="cm">// Vis_Cloth: energy-conserving (Neubelt & Pettineo 2013)</span>
+<span class="kw">float</span> <span class="fn">Vis_Cloth</span>(<span class="kw">float</span> NoV, <span class="kw">float</span> NoL) {
+  <span class="kw">return</span> <span class="fn">rcp</span>(<span class="num">4</span> * (NoL + NoV - NoL * NoV));
+}
+<span class="cm">// Blend between GGX and cloth via 'Cloth' parameter:</span>
+<span class="kw">float3</span> spec = <span class="fn">lerp</span>(normal_spec, D_InvGGX * Vis_Cloth * F_Schlick(FuzzColor, VoH), Cloth);</pre>
+
+  <h3><span lang="en">sheen.hlsl — Charlie BRDF for Velvet</span><span lang="zh">sheen.hlsl — 用于丝绒的 Charlie BRDF</span></h3>
+  <p lang="en">Sheen/velvet surfaces use the <span class="def">Charlie BRDF</span> (Estevez &amp; Kulla 2017). The NDF is derived from sin-power distribution to produce the soft glancing highlight characteristic of velvet and microfiber:</p>
+  <p lang="zh">Sheen/丝绒表面使用 <span class="def">Charlie BRDF</span>（Estevez &amp; Kulla 2017）。NDF 来自 sin 幂分布，产生丝绒和超细纤维特有的柔和掠射高光：</p>
+  <pre><span class="cm">// D_Charlie: sin-power NDF peaking at 90° — the "inverted dome" highlight</span>
+<span class="kw">float</span> <span class="fn">D_Charlie</span>(<span class="kw">float</span> roughness, <span class="kw">float</span> NoH) {
+  <span class="kw">float</span> invAlpha = <span class="num">1.0</span> / (roughness * roughness);
+  <span class="kw">float</span> cos2h = NoH * NoH;
+  <span class="kw">float</span> sin2h = <span class="fn">max</span>(<span class="num">1.0</span> - cos2h, <span class="num">0.0078125</span>);
+  <span class="kw">return</span> (<span class="num">2</span> + invAlpha) * <span class="fn">pow</span>(sin2h, invAlpha * <span class="num">0.5</span>) / (<span class="num">2</span> * PI);
+}
+<span class="cm">// Environment BRDF: polynomial fit avoids texture LUT lookup</span>
+<span class="cm">// float EnvClothSheenLUT3rd(R, NoV) = a*R / (b*R + c*NoV + NoV*R) + Offset</span></pre>
+
+  <h3><span lang="en">glint.hlsl — Stochastic Sparkle Flakes (P22 Method)</span><span lang="zh">glint.hlsl — 随机闪片（P22 方法）</span></h3>
+  <p lang="en">The most complex shading model — implements the <span class="def">Stochastic Flakes</span> BRDF for sparkling metallic paint, iridescent surfaces, and glitter. It generates thousands of statistically-correct microfacet highlights without explicit geometry:</p>
+  <p lang="zh">最复杂的着色模型——为闪光金属漆、虹彩表面和亮片实现 <span class="def">随机闪片</span> BRDF。无需显式几何体即可生成数千个统计正确的微表面高光：</p>
+  <pre><span class="cm">// Core: P22 hierarchical discrete NDF</span>
+<span class="cm">// Queries a 3D GlintDictionary texture (precomputed distribution tables)</span>
+<span class="cm">// hashIQ: integer hash → Gaussian-distributed microfacet slopes per cell</span>
+<span class="kw">float3</span> <span class="fn">P22_theta_alpha</span>(<span class="kw">float2</span> slope_h, <span class="kw">float</span> l, <span class="kw">float2</span> s0, <span class="kw">float2</span> t0) {
+  <span class="cm">// For each cell (i,j) in a grid over UV space:</span>
+  <span class="cm">//   1. Hash cell ID to get random slope distribution parameters</span>
+  <span class="cm">//   2. Evaluate Gaussian NDF at query slope vs cell's slope distribution</span>
+  <span class="cm">//   3. Weight by cell microfacet density * cell area</span>
+  <span class="cm">// Return: sum of all nearby cell contributions</span>
+}
+<span class="cm">// EWA filtering prevents temporal aliasing as the view changes</span>
+<span class="cm">// Multi-lob path for filter footprint > 1 cell (far-away glints)</span>
+<span class="cm">// Direct path (ndf_beckmann_anisotropic) for filter footprint ~0</span></pre>
+
+  <!-- s6 -->
+  <h2 id="s6"><span lang="en">New: water.hlsl — Slope-Space Microfacet Model</span><span lang="zh">新增：water.hlsl — 斜率空间微表面模型</span></h2>
+
+  <p lang="en"><code>water.hlsl</code> implements a physically rigorous ocean rendering model based on slope-space statistics. Instead of a standard roughness value, it takes a <strong>statistical moment texture</strong> (LEAN map) encoding the full 2D slope covariance matrix:</p>
+  <p lang="zh"><code>water.hlsl</code> 实现了基于斜率空间统计的物理严格海洋渲染模型。它接受编码完整 2D 斜率协方差矩阵的<strong>统计矩纹理</strong>（LEAN 贴图），而非标准粗糙度值：</p>
+
+  <div class="table-wrap"><table>
+    <thead><tr><th><span lang="en">Macro</span><span lang="zh">宏</span></th><th><span lang="en">NDF Mode</span><span lang="zh">NDF 模式</span></th><th><span lang="en">Input data</span><span lang="zh">输入数据</span></th></tr></thead>
+    <tbody>
+      <tr><td>WATER_MICROFACET_USE_SECONDMOMENT_MAP</td><td><span lang="en">Full 2D Gaussian covariance</span><span lang="zh">完整 2D 高斯协方差</span></td><td><span lang="en">3-component moment texture (Mxx, Myy, Mxy)</span><span lang="zh">3 分量矩纹理（Mxx, Myy, Mxy）</span></td></tr>
+      <tr><td>WATER_MICROFACET_SHADING_USE_CLEAN</td><td><span lang="en">Isotropic Gaussian</span><span lang="zh">各向同性高斯</span></td><td><span lang="en">Scalar variance texture</span><span lang="zh">标量方差纹理</span></td></tr>
+      <tr><td><em>neither</em></td><td>Blinn-Phong fallback</td><td><span lang="en">Standard roughness</span><span lang="zh">标准粗糙度</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <pre><span class="cm">// Full IBL path: multi-sample integration over slope space</span>
+<span class="kw">float3</span> <span class="fn">MicrofacetReflection</span>(<span class="type">Material</span> mtl, <span class="kw">float3</span> V, ...) {
+  <span class="cm">// NumSamples == 1: direct environment sample (cheapest)</span>
+  <span class="cm">// NumSamples &gt; 1: jittered Gaussian grid in slope space</span>
+  <span class="kw">for</span>(<span class="kw">int</span> i = <span class="num">0</span>; i &lt; NumSamples; i++) <span class="kw">for</span>(<span class="kw">int</span> j = <span class="num">0</span>; j &lt; NumSamples; j++) {
+    <span class="kw">float2</span> slope = mean + jitter[i][j];           <span class="cm">// Gaussian-distributed slope</span>
+    <span class="kw">float3</span> NN    = <span class="fn">normalize</span>(<span class="kw">float3</span>(-slope.x, <span class="num">1</span>, -slope.y));
+    <span class="kw">float3</span> R     = <span class="fn">reflect</span>(-V, NN);              <span class="cm">// per-sample reflection</span>
+    <span class="kw">float</span>  mip   = <span class="fn">ComputeReflectionMip</span>(roughness);
+    color += <span class="fn">SampleEnvCube</span>(R, mip) * (VdotNN / ZdotNN); <span class="cm">// projected area weight</span>
+  }
+}
+<span class="cm">// Fresnel: roughness-modulated with exp(-2.69 * sigma^2) correction</span>
+<span class="cm">// IOR = 1.33 (water at visible light frequencies)</span></pre>
+
+  <!-- s7 -->
+  <h2 id="s7"><span lang="en">Special Models: SSS, Eye, Glass, Transparent, Unlit</span><span lang="zh">特殊模型：SSS、眼睛、玻璃、透明、无光照</span></h2>
+
+  <h3><span lang="en">subsurface.hlsl &amp; subsurface_two_sided.hlsl</span><span lang="zh">subsurface.hlsl 与 subsurface_two_sided.hlsl</span></h3>
+  <p lang="en">Simple analytical SSS approximation. The single-sided variant approximates forward scattering via a tight power function; the two-sided variant adds a wrap-diffuse term for thin surfaces like leaves:</p>
+  <p lang="zh">简单的解析 SSS 近似。单面变体通过紧凑幂函数近似正向散射；双面变体为树叶等薄表面添加 wrap-diffuse 项：</p>
+  <pre><span class="cm">// subsurface: InScatter = pow(saturate(-dot(L,V)), 12) * lerp(3, 0.1, Opacity)</span>
+<span class="cm">// subsurface_two_sided: WrapNoL = saturate((-NoL + 0.5) / 1.5^2)</span>
+<span class="cm">//   Scatter = D_GGX(0.36, saturate(-VoL))  (wide GGX as scatter kernel)</span></pre>
+
+  <h3><span lang="en">eye.hlsl — Caustic + Sclera</span><span lang="zh">eye.hlsl — 焦散 + 巩膜</span></h3>
+  <p lang="en">Eye rendering needs separate handling for iris and sclera. The iris uses a caustic term to simulate the focusing effect of the cornea; the sclera uses wrapped Lambert diffuse. A micro-shadow term handles sub-surface AO:</p>
+  <p lang="zh">眼睛渲染需要分别处理虹膜和巩膜。虹膜使用焦散项模拟角膜的聚焦效果；巩膜使用 Wrapped Lambert 漫反射。微阴影项处理次表面 AO：</p>
+  <pre><span class="cm">// Caustic: simulates iris focus via bent CausticNormal</span>
+CausticNormal = <span class="fn">normalize</span>(<span class="fn">lerp</span>(IrisNormal, -N, IrisMask * IrisDistance));
+Caustic = <span class="num">0.6</span> + <span class="num">0.2</span>*(Power+<span class="num">1</span>) * <span class="fn">pow</span>(<span class="fn">dot</span>(CausticNormal, L), Power);
+<span class="cm">// Micro-shadow (SHOW_UE4_MODE)</span>
+micro_shadow = <span class="fn">saturate</span>(<span class="fn">abs</span>(n_dot_l) + <span class="num">2</span>*occlusion*occlusion - <span class="num">1</span>);</pre>
+
+  <h3><span lang="en">glass.hlsl — Blended Refraction</span><span lang="zh">glass.hlsl — 混合折射</span></h3>
+  <p lang="en">Glass pre-computes both a reflected and a refracted world direction, then blends environment samples in the <code>EnvLighting()</code> pass — no screen-space refraction:</p>
+  <p lang="zh">玻璃预计算反射和折射世界方向，然后在 <code>EnvLighting()</code> 通道中混合环境采样——没有屏幕空间折射：</p>
+  <pre><span class="cm">// refract_world precomputed in CalcLightingData(view)</span>
+refract_world = <span class="fn">refract</span>(v.direction, N, <span class="num">1.0</span>);
+<span class="cm">// EnvLighting blends: reflected_env + refracted_env * (1 - opacity)</span></pre>
+
+  <h3><span lang="en">transparent.hlsl — Alpha Energy Compensation</span><span lang="zh">transparent.hlsl — Alpha 能量补偿</span></h3>
+  <p lang="en">Thin transparent surfaces (e.g. stained glass, colored film) would appear too dark at low opacity if standard GGX is used. Transparent divides specular by <code>pow(opacity, 2.2)</code> to compensate — less opaque = brighter reflection to conserve energy:</p>
+  <p lang="zh">薄透明表面（如彩色玻璃、色膜）在低不透明度时使用标准 GGX 会显得太暗。Transparent 将高光除以 <code>pow(opacity, 2.2)</code> 补偿——透明度越低 = 反射越亮以守恒能量：</p>
+  <pre>light_specular /= <span class="fn">pow</span>(mtl.opacity, <span class="num">2.2</span>);
+env_spec       /= <span class="fn">pow</span>(mtl.opacity, <span class="num">2.2</span>);</pre>
+
+  <!-- s8 -->
+  <h2 id="s8"><span lang="en">Shared Infrastructure — shading_models_common.hlsl</span><span lang="zh">共享基础设施 — shading_models_common.hlsl</span></h2>
+
+  <p lang="en">All shading models include <code>shading_models_common.hlsl</code>, which provides the shared environment sampling, reflection probe, and IBL functions:</p>
+  <p lang="zh">所有着色模型都包含 <code>shading_models_common.hlsl</code>，提供共享的环境采样、反射探针和 IBL 函数：</p>
+
+  <div class="table-wrap"><table>
+    <thead><tr><th><span lang="en">Function</span><span lang="zh">函数</span></th><th><span lang="en">Description</span><span lang="zh">说明</span></th></tr></thead>
+    <tbody>
+      <tr><td>SampleReflectionMap()</td><td><span lang="en">Unified probe sampling: cubemap / equirectangular / paraboloid / octahedron + reflection probe instancing + SSR blend</span><span lang="zh">统一探针采样：立方体贴图/等距矩形/抛物面/八面体 + 反射探针实例化 + SSR 混合</span></td></tr>
+      <tr><td>EnvironmentSpecular()</td><td><span lang="en">Wraps SampleReflectionMap with mip-from-roughness + parallax correction (sphere/box)</span><span lang="zh">封装 SampleReflectionMap，含粗糙度到 Mip 映射 + 视差校正（球/盒）</span></td></tr>
+      <tr><td>GetSpecularFromMaterial()</td><td><code>lerp(specular*0.08, albedo, metalness)</code><span lang="en"> — F0 from IOR 1.5</span><span lang="zh"> — 来自 IOR 1.5 的 F0</span></td></tr>
+      <tr><td>GetOffSpecularPeakReflectionDir()</td><td><span lang="en">Blend reflect/normal by roughness for off-specular peak IBL</span><span lang="zh">按粗糙度混合反射/法线方向用于离轴高光 IBL</span></td></tr>
+      <tr><td>CalcPlanarReflections()</td><td><span lang="en">Planar reflection UV via PlanarReflectionMatrix</span><span lang="zh">通过 PlanarReflectionMatrix 计算平面反射 UV</span></td></tr>
+      <tr><td>ProjectedCubemapDirection()</td><td><span lang="en">Sphere- or box-projected cubemap for parallax-correct local reflections</span><span lang="zh">球体或盒体投影立方体贴图，用于视差正确的局部反射</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="page-nav">
+    <a href="../04-lighting-models/ggx-brdf.html" class="prev"><span class="pn-label">&larr; Prev</span><span class="pn-title"><span lang="en">GGX BRDF</span><span lang="zh">GGX BRDF</span></span></a>
+    <a href="../05-post-processing/post-effects.html" class="next"><span class="pn-label">Next &rarr;</span><span class="pn-title"><span lang="en">Post Effects Overview</span><span lang="zh">后处理全景</span></span></a>
+  </div>
+  <footer>NeoX Engine &middot; 16 Shading Models<br>Source: built_in/shading_models/ (17 files) &middot; built_in/common/lighting.hlsl</footer>
+</main>
+</div>
+<script>
+function toggleLang(){var h=document.documentElement;if(h.classList.contains('lang-zh')){h.classList.remove('lang-zh');h.lang='en';document.title='16 Shading Models — NeoX Engine';localStorage.setItem('neox-doc-lang','en');}else{h.classList.add('lang-zh');h.lang='zh-CN';document.title='16 种光照模型 — NeoX 引擎';localStorage.setItem('neox-doc-lang','zh');}}
+if(document.documentElement.classList.contains('lang-zh'))document.title='16 种光照模型 — NeoX 引擎';
+</script>
+</body>
+</html>

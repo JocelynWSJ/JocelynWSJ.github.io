@@ -41,9 +41,10 @@
     .table-wrap{overflow-x:auto;margin:14px 0;} table{border-collapse:collapse;font-size:14px;width:100%;}
     th,td{padding:8px 12px;border-bottom:1px solid #aaa;text-align:left;} th{border-bottom:2px solid #888;font-weight:700;background:#ddd;} tr:nth-child(even) td{background:#e8e8e8;}
     td:first-child{font-family:'Courier New',monospace;font-size:13px;color:#2a6496;white-space:nowrap;}
-    .arch-diagram{background:#fff;border:1px solid #ccc;border-radius:5px;padding:22px;margin:16px 0;font-family:'Courier New',monospace;font-size:13px;line-height:1.9;overflow-x:auto;}
+    .arch-diagram{background:#fff;border:1px solid #ccc;border-radius:5px;padding:22px;margin:16px 0;font-family:'Courier New',monospace;font-size:13px;line-height:1.9;overflow-x:auto;white-space:pre;}
     .file-list{list-style:none;padding:0;margin:12px 0;} .file-list li{padding:6px 0;border-bottom:1px solid #e0dcdd;display:flex;align-items:baseline;gap:10px;font-size:14px;} .file-list li:last-child{border-bottom:none;}
     .file-list .fp{font-family:'Courier New',monospace;font-size:13px;color:#58A;min-width:200px;} .file-list .fd{color:#555;}
+    .legacy{display:block;margin:18px 0;padding:15px;background:#FFF3CD;color:#444;border-radius:5px;border:2px solid #FFCC5C;font-size:15px;line-height:1.7;}
     .page-nav{display:flex;justify-content:space-between;margin:36px 0 0;padding-top:16px;border-top:1px solid #ddd;font-size:14px;}
     .page-nav a{color:#58A;text-decoration:none;display:flex;align-items:center;gap:6px;} .page-nav a:hover{text-decoration:underline;}
     .page-nav .pn-label{font-size:11px;color:#aaa;text-transform:uppercase;display:block;} .page-nav .pn-title{display:block;} .page-nav .prev{text-align:left;} .page-nav .next{text-align:right;}
@@ -81,67 +82,94 @@
   <div class="page-header">
     <div class="crumb">NeoX Engine &middot; Rendering Pipeline &middot; Forward Shading</div>
     <h1><span lang="en">Forward Shading Pipeline</span><span lang="zh">前向渲染管线</span></h1>
-    <div class="subtitle">res/shader/built_in/forward_shading.hlsl &middot; 285 lines</div>
+    <div class="subtitle">res_upgrade/shader/built_in/forward_shading.hlsl &middot; 502 lines (New Engine)</div>
   </div>
 
   <!-- s1 -->
   <h2 id="s1"><span lang="en">Pipeline Overview</span><span lang="zh">管线概览</span></h2>
 
-  <p lang="en">NeoX's primary rendering path is <span class="def">forward shading</span> — every visible pixel evaluates its material and all affecting lights in a single pass. This is configured by <code>forward_shading.render</code> (the pipeline declaration XML).</p>
-  <p lang="zh">NeoX 的主要渲染路径是<span class="def">前向着色</span>——每个可见像素在单次 Pass 中计算其材质和所有影响光源。这由 <code>forward_shading.render</code>（管线声明 XML）配置。</p>
+  <p lang="en">NeoX's primary rendering path is <span class="def">forward shading</span> — every visible pixel evaluates its material and all affecting lights in a single pass. This is configured by <code>forward_shading.render</code> (the pipeline declaration XML). The new engine's shader grew from 285 to <strong>502 lines</strong> with major new feature additions.</p>
+  <p lang="zh">NeoX 的主要渲染路径是<span class="def">前向着色</span>——每个可见像素在单次 Pass 中计算其材质和所有影响光源。这由 <code>forward_shading.render</code>（管线声明 XML）配置。新引擎着色器从 285 行增长到 <strong>502 行</strong>，新增了大量特性。</p>
 
   <div class="arch-diagram">
 +=====================================================================+
-|              NeoX Forward Shading -- Single Pass Flow                |
+|              NeoX Forward Shading -- Single Pass Flow (New Engine)   |
 +=====================================================================+
 |                                                                     |
-|  <span style="color:#61afef">vs_main()</span>                                                          |
+|  <span style="color:#61afef">vs_main(Vertex input, uint vertex_id, uint instanceID)</span>             |
 |  +-------------------------------------------------------------+   |
+|  |  00  ApplyUE4Scale()             // import-from-UE4 compat  |   |
 |  |  01  TransformCommonVertex()     // model-&gt;world            |   |
+|  |        OR TransformCommonVertexImposter() (FOLIAGEIMPOSTER)  |   |
 |  |  02  ApplyVertexOffsetLocal()    // vertex animation        |   |
-|  |  03  DoSkin()                    // GPU skinning (optional) |   |
-|  |  04  Transform(world_mat)        // world position          |   |
-|  |  05  SetupFragment()             // pack interpolants       |   |
-|  |  06  DepthBias / Skybox / Bake   // special modes           |   |
+|  |  03  SetupFragmentAfterLocalOffset()                        |   |
+|  |  04  DoSkin() / DoSkin8()        // 4 or 8-bone GPU skinning|   |
+|  |  05  Transform(world_mat)        // world position          |   |
+|  |  06  ApplyCustomizedUV()         // NEW: custom UV          |   |
+|  |  07  ApplyVertexOffsetWorld()    // WPO world space         |   |
+|  |  08  SetupFragment()             // pack interpolants       |   |
+|  |  09  ENABLE_REFLECTION_PROBE_INSTANCING / USE_GAEA_COLOR_PICK  |   |
+|  |  10  DepthBias / Skybox / Bake / IS_PARABOLOID              |   |
 |  +-------------------------------------------------------------+   |
 |                            v  rasterize                              |
 |  <span style="color:#61afef">ps_main()</span>                                                          |
 |  +-------------------------------------------------------------+   |
-|  |  07  GetRawData()                // sample all textures     |   |
-|  |  08  SetupMaterial()             // fill Material struct    |   |
-|  |  09  CalcLightingData()          // precompute NdotV etc.   |   |
-|  |  10  for each Light:                                        |   |
-|  |        +-- Shadow sampling                                  |   |
+|  |  11  ENABLE_VIRTUALTEXTURE_SAMPLEING: SamplingVirtualTexture|   |
+|  |  12  GetRawData()                // sample all textures     |   |
+|  |  13  SetupMaterial()             // fill Material struct    |   |
+|  |  14  PARTICLE_SYSTEM_GPU: clip dead particles               |   |
+|  |  15  CalcLightingData()          // precompute NdotV etc.   |   |
+|  |  16  for each Light:                                        |   |
+|  |        +-- Shadow sampling (Render 3.0 CSM / paraboloid)    |   |
 |  |        +-- DirectLighting() -&gt; diffuse + specular           |   |
 |  |        +-- accumulate                                       |   |
-|  |  11  EnvLighting()               // SH + IBL reflection    |   |
-|  |  12  Apply fog, emissive, AO                                |   |
-|  |  13  Tone mapping (ACES)                                    |   |
-|  |  14  Output SV_Target0                                      |   |
+|  |  17  EnvLighting()               // SH + IBL + bent normal  |   |
+|  |  18  Apply fog, emissive, AO                                |   |
+|  |  19  USE_PIXEL_DEPTH_OFFSET: ApplyPixelDepthOffset()        |   |
+|  |  20  LDR correction (ALPHA_TO_COVERAGE / SSS curvature)     |   |
+|  |  21  Tone mapping (ACES)                                    |   |
+|  |  22  NaN guard: -min(-pixel.Color, 0.0)                     |   |
+|  |  23  Output: SV_Target0 [+ optional VT write / HLOD bake]   |   |
 |  +-------------------------------------------------------------+   |
 +=====================================================================+</div>
 
   <!-- s2 -->
   <h2 id="s2"><span lang="en">Vertex Shader Stage</span><span lang="zh">顶点着色器阶段</span></h2>
 
-  <p lang="en">The vertex shader performs geometry transformation with support for GPU skinning (up to 90 bones), vertex animation, and special projection modes:</p>
-  <p lang="zh">顶点着色器执行几何变换，支持 GPU 蒙皮（最多 90 根骨骼）、顶点动画和特殊投影模式：</p>
+  <p lang="en">The vertex shader performs geometry transformation with support for GPU skinning (up to 90 bones with 4 weights, or 8 weights with <code>GPU_SKIN_8_ENABLE</code>), vertex animation, foliage imposter rendering, and special projection modes. Two new parameters were added: <code>SV_VertexID</code> and <code>SV_InstanceID</code>:</p>
+  <p lang="zh">顶点着色器执行几何变换，支持 GPU 蒙皮（4 权重最多 90 根骨骼，或通过 <code>GPU_SKIN_8_ENABLE</code> 支持 8 权重）、顶点动画、植被 Imposter 渲染和特殊投影模式。新增了两个参数 <code>SV_VertexID</code> 和 <code>SV_InstanceID</code>：</p>
 
-  <h3><span class="step">01</span><span lang="en">Transform Chain</span><span lang="zh">变换链</span></h3>
-  <pre><span class="type">Fragment</span> <span class="fn">vs_main</span>(<span class="type">Vertex</span> input) {
-  <span class="type">CommonVertex</span> vert = <span class="fn">TransformCommonVertex</span>(input, vert_inter);
-  <span class="fn">ApplyVertexOffsetLocal</span>(vert, vert.position);  <span class="cm">// material-driven offset</span>
+  <h3><span class="step">01</span><span lang="en">Transform Chain (New Engine)</span><span lang="zh">变换链（新引擎）</span></h3>
+  <pre><span class="type">Fragment</span> <span class="fn">vs_main</span>(<span class="type">Vertex</span> input,
+                  <span class="kw">uint</span> vertex_id   : SV_VertexID,    <span class="cm">// NEW</span>
+                  <span class="kw">uint</span> instanceID  : SV_InstanceID) { <span class="cm">// NEW</span>
+  <span class="cm">#if IMPORT_FROM_UE4</span>
+    <span class="fn">ApplyUE4Scale</span>();  <span class="cm">// scale compensation for UE4-exported assets</span>
+  <span class="cm">#endif</span>
+  <span class="cm">#if FOLIAGEIMPOSTER_ENABLED</span>
+    <span class="type">CommonVertex</span> vert = <span class="fn">TransformCommonVertexImposter</span>(input, vertex_id, vert_inter);
+  <span class="cm">#else</span>
+    <span class="type">CommonVertex</span> vert = <span class="fn">TransformCommonVertex</span>(input, vert_inter);
+  <span class="cm">#endif</span>
+  <span class="fn">ApplyVertexOffsetLocal</span>(vert, vert.position);
+  <span class="fn">SetupFragmentAfterLocalOffset</span>(...);     <span class="cm">// NEW intermediate setup step</span>
 
   <span class="cm">#if GPU_SKIN_ENABLE</span>
-    <span class="fn">DoSkin</span>(vert.blendWeights, vert.blendIndices,
-           vert.position, vert.normal, vert.tangent);
+    <span class="fn">DoSkin</span>(vert.blendWeights, vert.blendIndices, ...);
+  <span class="cm">#elif GPU_SKIN_8_ENABLE</span>
+    <span class="fn">DoSkin</span>(..., texcoord5, texcoord6, ...);  <span class="cm">// NEW 8-bone skinning</span>
   <span class="cm">#endif</span>
 
   <span class="kw">float4</span> world_position = <span class="fn">Transform</span>(vert.world_mat, vert.position);
-  <span class="fn">PresetupFragment</span>(...);
-  <span class="fn">ApplyVertexOffsetWorld</span>(...);  <span class="cm">// world-space WPO</span>
-  <span class="fn">SetupFragment</span>(...);           <span class="cm">// pack all interpolants</span>
+  <span class="fn">ApplyCustomizedUV</span>(frag, vert);           <span class="cm">// NEW custom UV transform</span>
+  <span class="fn">ApplyVertexOffsetWorld</span>(...);
+  <span class="fn">SetupFragment</span>(...);
 }</pre>
+
+  <div class="legacy">
+    <span lang="en"><strong>New vs replaced (res_upgrade → res fallback):</strong> The new engine's <code>forward_shading.hlsl</code> in <code>res_upgrade/</code> replaces the old 285-line version. New features added by the replacement: <code>SV_VertexID</code>/<code>SV_InstanceID</code> parameters, <code>FOLIAGEIMPOSTER_ENABLED</code>, <code>GPU_SKIN_8_ENABLE</code>, <code>IMPORT_FROM_UE4</code>, <code>ApplyCustomizedUV</code>, and <code>SetupFragmentAfterLocalOffset</code>. The old version (4-weight skinning only, no vertex ID) is no longer used at runtime since the new file takes priority.</span>
+    <span lang="zh"><strong>新版替换（res_upgrade → res 回退）：</strong>新引擎 <code>res_upgrade/</code> 中的 <code>forward_shading.hlsl</code> 替换了旧版 285 行版本。替换新增功能：<code>SV_VertexID</code>/<code>SV_InstanceID</code> 参数、<code>FOLIAGEIMPOSTER_ENABLED</code>、<code>GPU_SKIN_8_ENABLE</code>、<code>IMPORT_FROM_UE4</code>、<code>ApplyCustomizedUV</code> 和 <code>SetupFragmentAfterLocalOffset</code>。旧版（仅 4 权重蒙皮，无顶点 ID）在运行时不再使用，因为新文件优先。</span>
+  </div>
 
   <h3><span class="step">02</span><span lang="en">Special Projection Modes</span><span lang="zh">特殊投影模式</span></h3>
 
@@ -151,7 +179,10 @@
       <tr><td>IS_PARABOLOID</td><td><code>#if IS_PARABOLOID</code></td><td><span lang="en">Dual-paraboloid shadow maps for omni lights</span><span lang="zh">全向光源双抛物面阴影贴图</span></td></tr>
       <tr><td>IS_SKYBOX</td><td><code>#if IS_SKYBOX</code></td><td><span lang="en">Force depth to far plane (z = w*0.9999)</span><span lang="zh">强制深度到远平面</span></td></tr>
       <tr><td>TEXTURE_BAKE</td><td><code>#if TEXTURE_BAKE</code></td><td><span lang="en">UV-space rendering for lightmap baking</span><span lang="zh">UV 空间渲染用于光照贴图烘焙</span></td></tr>
-      <tr><td>DEPTH_BIAS</td><td><code>#if DEPTH_BIAS</code></td><td><span lang="en">Manual depth offset (shadow bias)</span><span lang="zh">手动深度偏移（阴影偏差）</span></td></tr>
+      <tr><td>DEPTH_BIAS</td><td><code>#if DEPTH_BIAS</code></td><td><span lang="en">Manual depth offset (shadow bias) — now uses <code>DepthBiasParam</code> resource</span><span lang="zh">手动深度偏移；现使用 <code>DepthBiasParam</code> 资源</span></td></tr>
+      <tr><td>FOLIAGEIMPOSTER_ENABLED</td><td><code>#if FOLIAGEIMPOSTER_ENABLED</code></td><td><span lang="en">NEW: Use imposter vertex transform for billboarded foliage</span><span lang="zh">新增：使用 Imposter 顶点变换实现告示板植被</span></td></tr>
+      <tr><td>PARTICLE_SYSTEM_GPU</td><td><code>#if PARTICLE_SYSTEM_GPU</code></td><td><span lang="en">NEW: Clip dead GPU particles in vs_main; cull in ps_main</span><span lang="zh">新增：在 vs_main 中剔除死亡 GPU 粒子</span></td></tr>
+      <tr><td>HLOD_BAKE</td><td><code>#if HLOD_BAKE</code></td><td><span lang="en">NEW: Separate HLOD_Pixel output path for HLOD texture baking</span><span lang="zh">新增：用于 HLOD 纹理烘焙的独立输出路径</span></td></tr>
     </tbody>
   </table></div>
 
@@ -190,35 +221,43 @@
   <!-- s4 -->
   <h2 id="s4"><span lang="en">Lighting Loop — How Lights Are Evaluated</span><span lang="zh">光照循环 — 光源如何计算</span></h2>
 
-  <p lang="en">Inside <code>lighting.hlsl</code> (1982 lines), the main lighting function iterates over all active lights. Each light goes through shadow evaluation, then calls the active shading model's <span class="fun">DirectLighting()</span>:</p>
-  <p lang="zh">在 <code>lighting.hlsl</code>（1982 行）中，主光照函数遍历所有活动光源。每个光源经过阴影计算，然后调用当前着色模型的 <span class="fun">DirectLighting()</span>：</p>
+  <p lang="en">Inside <code>lighting.hlsl</code> (1447 lines, new engine), the main lighting function iterates over all active lights. Point and spot lights are now unified under a single <span class="fun">PunctualLighting()</span> function with <code>PunctualLightParams</code> structs. Each light calls the active shading model's <span class="fun">DirectLighting()</span>:</p>
+  <p lang="zh">在 <code>lighting.hlsl</code>（新引擎 1447 行）中，主光照函数遍历所有活动光源。点光和聚光灯现在通过 <code>PunctualLightParams</code> 结构体统一到单个 <span class="fun">PunctualLighting()</span> 函数。每个光源调用当前着色模型的 <span class="fun">DirectLighting()</span>：</p>
 
   <div class="arch-diagram">
 Lighting(input, mtl, v)
   |
   +-- CalcLightingData(mtl, v, data_r)       // precompute NdotV, spec, diff
   |
-  +-- for each Light[i]:
-  |     +-- compute n_dot_l
-  |     +-- if LightNotAffect(n_dot_l) --&gt; skip
-  |     +-- CalcLightingData(light, mtl, v, n_dot_l, data_r, data_rw)
-  |     +-- shadow = SampleShadowMap()       // CSM / paraboloid
-  |     +-- data_rw.atten = light.atten * shadow
-  |     +-- DirectLighting(input, mtl, data_r, data_rw,
-  |              --&gt; light_diffuse, light_specular, light_transmission)
-  |              +-- LightingDiffuse()       // model-specific
-  |              +-- LightingSpecular()      // GGX or model-specific
+  +-- MainLighting()                          // directional (was ShadowLighting)
+  |     +-- CSM shadow (Render 3.0 sphere-cull)
+  |     +-- ENABLE_SSS_TRANSMITTANCE: CalcTransmittanceThickness
+  |     +-- SpecularScale from DirLightAttr[2].w  (NEW)
+  |
+  +-- for each PunctualLight[i]:             // unified point + spot
+  |     +-- GetPunctualLightParameter()      // structured param access
+  |     +-- CalcPunctualLightAttenuation()   // inv-sq + exponential falloff
+  |     +-- GetPunctualLightShadow()         // point (cubemap) or spot
+  |     +-- PunctualLighting()               // single function (was 4 functions)
+  |
+  +-- for each RectLight[i]:
+  |     +-- GetRectLightParameter()
+  |     +-- CalcRectLighting()              // from rect_lighting.hlsl
+  |
+  +-- ApplyDeferredDecal()                  // NEW: tile-memory DBuffer decals
   |
   +-- EnvLighting(input, mtl, v, data_r, result)
-  |     +-- SH diffuse                      // spherical harmonics
+  |     +-- SH diffuse
   |     +-- EnvironmentSpecular()           // reflection probe + IBL
-  |     +-- EnvBRDFApprox()                 // split-sum approximation
+  |     +-- EnvBRDFApprox()
+  |     +-- ApplyBentNormal()               // NEW: SG-based AO occlusion
+  |     +-- AOMultiBounce()                 // NEW: multi-bounce colored AO
   |
-  +-- return LightingResult { direct_diff, direct_spec, env_diff, env_spec }</div>
+  +-- return LightingResult { direct_diff *= INV_PI, direct_spec, env_diff, env_spec }</div>
 
-  <div class="note">
-    <span lang="en"><strong>Key difference from UE5:</strong> NeoX evaluates ALL lights in a single shader invocation (classic forward). UE5's forward path uses Clustered Shading — a 3D froxel grid bins lights by tile, reducing per-pixel light iteration cost. NeoX relies on the engine to limit active light count per draw call.</span>
-    <span lang="zh"><strong>与 UE5 的关键差异：</strong>NeoX 在单次着色器调用中计算所有光源（经典前向）。UE5 的前向路径使用聚簇着色——3D Froxel 网格按 Tile 分箱光源，降低逐像素光源迭代开销。NeoX 依赖引擎限制每次绘制调用的活动光源数量。</span>
+  <div class="legacy">
+    <span lang="en"><strong>New vs replaced:</strong> The new <code>lighting.hlsl</code> replaces the old 1,982-line monolithic version. Old had 4 separate functions (<code>PointLightingNonShadow</code>, <code>PointLightingShadow</code>, <code>SpotLightingNonShadow</code>, <code>SpotLightingShadow</code>) → now unified into one <code>PunctualLighting()</code>. New additions: <code>ENABLE_SSS_TRANSMITTANCE</code> (Poisson-disk shadow depth for skin), <code>ApplyBentNormal</code> (SG-based AO), <code>AOMultiBounce</code>, <code>ApplyDeferredDecal</code> (tile-memory DBuffer). Cluster parameter naming changed from <code>ClusterParam0-4</code> to semantic names.</span>
+    <span lang="zh"><strong>新版替换：</strong>新 <code>lighting.hlsl</code> 替换了旧版 1,982 行的单体版本。旧版有 4 个独立光照函数（<code>PointLightingNonShadow/Shadow</code>、<code>SpotLightingNonShadow/Shadow</code>）→ 现统一为 <code>PunctualLighting()</code>。新增功能：<code>ENABLE_SSS_TRANSMITTANCE</code>（泊松盘阴影深度用于皮肤）、<code>ApplyBentNormal</code>（SG AO）、<code>AOMultiBounce</code>、<code>ApplyDeferredDecal</code>（Tile 内存 DBuffer）。集群参数命名从 <code>ClusterParam0-4</code> 变更为语义化名称。</span>
   </div>
 
   <!-- s5 -->
@@ -227,30 +266,48 @@ Lighting(input, mtl, v)
   <div class="table-wrap"><table>
     <thead><tr><th><span lang="en">Mode</span><span lang="zh">模式</span></th><th><span lang="en">Macro</span><span lang="zh">宏</span></th><th><span lang="en">What it does</span><span lang="zh">功能</span></th></tr></thead>
     <tbody>
-      <tr><td>SKIN4S_ENABLE</td><td><code>SKIN4S_SPECULARPASS</code></td><td><span lang="en">4-pass subsurface scattering (split diffuse/specular)</span><span lang="zh">4-Pass 次表面散射（分离漫反射/高光）</span></td></tr>
+      <tr><td>SKIN4S_ENABLE</td><td><code>SKIN4S_SPECULARPASS</code></td><td><span lang="en">4-pass SSS (split diffuse/specular); now encodes curvature into alpha channel</span><span lang="zh">4-Pass 次表面散射；现将曲率编码到 Alpha 通道</span></td></tr>
       <tr><td>TOON_EFFECT</td><td><code>#if TOON_EFFECT</code></td><td><span lang="en">Toon shading via Lerp3 color ramp</span><span lang="zh">通过 Lerp3 色阶实现卡通着色</span></td></tr>
       <tr><td>IMAGE_DECAL_ENABLE</td><td><code>#if IMAGE_DECAL_ENABLE</code></td><td><span lang="en">Apply projected image decals to GBuffer</span><span lang="zh">应用投影图片贴花到 GBuffer</span></td></tr>
+      <tr><td>ALPHA_TO_COVERAGE_ENABLE</td><td><code>#if ALPHA_TO_COVERAGE_ENABLE</code></td><td><span lang="en">NEW: Analytic alpha-to-coverage via ddx/ddy for smooth edges</span><span lang="zh">新增：通过 ddx/ddy 实现解析 Alpha 覆盖，平滑边缘</span></td></tr>
+      <tr><td>INSTANCE_TRANSPARENCY</td><td><code>#if INSTANCE_TRANSPARENCY</code></td><td><span lang="en">NEW: Per-instance transparency via <code>ClipIfPixelTransparent()</code></span><span lang="zh">新增：通过 <code>ClipIfPixelTransparent()</code> 实现逐实例透明</span></td></tr>
+      <tr><td>ENABLE_VIRTUALTEXTURE_SAMPLEING</td><td><code>#if ENABLE_VIRTUALTEXTURE_SAMPLEING</code></td><td><span lang="en">NEW: Virtual texture streaming — <code>SamplingVirtualTexture()</code> before material setup; alternate output via <code>WriteVirtualTexture()</code></span><span lang="zh">新增：虚拟纹理流式采样，材质初始化前调用；可通过 <code>WriteVirtualTexture()</code> 输出</span></td></tr>
+      <tr><td>USE_PIXEL_DEPTH_OFFSET</td><td><code>#if USE_PIXEL_DEPTH_OFFSET</code></td><td><span lang="en">NEW: Per-pixel depth offset (PDO) written to <code>SV_Depth</code> + tile memory</span><span lang="zh">新增：逐像素深度偏移，写入 <code>SV_Depth</code> 及 Tile 内存</span></td></tr>
+      <tr><td>USE_GAEA_COLOR_PICK</td><td><code>#if USE_GAEA_COLOR_PICK</code></td><td><span lang="en">NEW: GAEA terrain — write model type + instance ID for color picking</span><span lang="zh">新增：GAEA 地形——写入模型类型和实例 ID 用于颜色拾取</span></td></tr>
       <tr><td>DEBUG_DATA</td><td><code>#if DEBUG_DATA</code></td><td><span lang="en">Output material properties as color for debugging</span><span lang="zh">输出材质属性为颜色用于调试</span></td></tr>
-      <tr><td>RECORD_MODE</td><td><code>#if RECORD_MODE</code></td><td><span lang="en">Record rendering data for replay</span><span lang="zh">记录渲染数据用于回放</span></td></tr>
+      <tr><td>RECORD_MODE</td><td><code>#if RECORD_MODE</code></td><td><span lang="en">Record rendering data for replay (now in separate Record_ForwardShading compositor)</span><span lang="zh">记录渲染数据用于回放（现在独立的 Record_ForwardShading 合成器中）</span></td></tr>
     </tbody>
   </table></div>
+
+  <div class="legacy">
+    <span lang="en"><strong>New vs replaced:</strong> The new <code>forward_shading.hlsl</code> adds: <code>ALPHA_TO_COVERAGE_ENABLE</code>, <code>INSTANCE_TRANSPARENCY</code>, <code>ENABLE_VIRTUALTEXTURE_SAMPLEING</code>, <code>USE_PIXEL_DEPTH_OFFSET</code>, <code>USE_GAEA_COLOR_PICK</code>, HLOD bake path. Removed from old version: <code>EMISSIVE_CIRCADIAN</code>, <code>DISTANCE_OPACITY_ENABLE</code>. NaN guard changed from conditional to unconditional <code>-min(-pixel.Color, 0.0)</code>. <code>RECORD_MODE</code> moved to a separate <code>Record_ForwardShading</code> compositor (no longer inline).</span>
+    <span lang="zh"><strong>新版替换：</strong>新 <code>forward_shading.hlsl</code> 新增：<code>ALPHA_TO_COVERAGE_ENABLE</code>、<code>INSTANCE_TRANSPARENCY</code>、<code>ENABLE_VIRTUALTEXTURE_SAMPLEING</code>、<code>USE_PIXEL_DEPTH_OFFSET</code>、<code>USE_GAEA_COLOR_PICK</code>、HLOD 烘焙路径。从旧版中移除：<code>EMISSIVE_CIRCADIAN</code>、<code>DISTANCE_OPACITY_ENABLE</code>。NaN 防护从条件改为无条件 <code>-min(-pixel.Color, 0.0)</code>。<code>RECORD_MODE</code> 移到独立的 <code>Record_ForwardShading</code> 合成器（不再内联）。</span>
+  </div>
 
   <!-- s6 -->
   <h2 id="s6"><span lang="en">Source Files</span><span lang="zh">源码文件</span></h2>
 
   <ul class="file-list">
-    <li><span class="fp">built_in/forward_shading.hlsl</span><span class="fd"><span lang="en">Main forward shader (285 lines) — vs_main + ps_main</span><span lang="zh">主前向着色器（285 行）— vs_main + ps_main</span></span></li>
-    <li><span class="fp">built_in/forward_shading.render</span><span class="fd"><span lang="en">Pipeline declaration XML — all compositor definitions</span><span lang="zh">管线声明 XML — 所有合成器定义</span></span></li>
-    <li><span class="fp">built_in/common/lighting.hlsl</span><span class="fd"><span lang="en">Lighting core (1982 lines) — light loop + shading dispatch</span><span lang="zh">光照核心（1982 行）— 光源循环 + 着色分发</span></span></li>
-    <li><span class="fp">built_in/shadow/shadow.hlsl</span><span class="fd"><span lang="en">Shadow map sampling (CSM + paraboloid)</span><span lang="zh">阴影贴图采样（CSM + 抛物面）</span></span></li>
+    <li><span class="fp">built_in/forward_shading.hlsl</span><span class="fd"><span lang="en">Main forward shader (502 lines, new engine) — vs_main + ps_main</span><span lang="zh">主前向着色器（502 行，新引擎）— vs_main + ps_main</span></span></li>
+    <li><span class="fp">built_in/forward_shading.render</span><span class="fd"><span lang="en">Pipeline declaration XML — ~280 macros, 16 shading models, 9 new VF models</span><span lang="zh">管线声明 XML — 约 280 个宏，16 种光照模型，9 个新 VF 模型</span></span></li>
+    <li><span class="fp">built_in/common/lighting.hlsl</span><span class="fd"><span lang="en">Lighting core (1447 lines) — light loop + shading dispatch (unified PunctualLighting)</span><span lang="zh">光照核心（1447 行）— 光源循环 + 着色分发（统一 PunctualLighting）</span></span></li>
+    <li><span class="fp">built_in/common/rect_lighting.hlsl</span><span class="fd"><span lang="en">NEW: Extracted area/rect light functions</span><span lang="zh">新增：提取的区域/矩形光函数</span></span></li>
+    <li><span class="fp">built_in/common/ssss.hlsl</span><span class="fd"><span lang="en">NEW: Extracted SSS transmittance functions</span><span lang="zh">新增：提取的 SSS 透射函数</span></span></li>
+    <li><span class="fp">built_in/common/spherical_gaussian.hlsl</span><span class="fd"><span lang="en">NEW: Bent normal SG math for AO occlusion</span><span lang="zh">新增：用于 AO 遮挡的弯曲法线 SG 数学</span></span></li>
+    <li><span class="fp">built_in/shadow/shadow.hlsl</span><span class="fd"><span lang="en">Shadow map sampling — Render 3.0 CSM with sphere-cull cascade selection</span><span lang="zh">阴影贴图采样 — Render 3.0 CSM 带包围球 Cascade 选择</span></span></li>
     <li><span class="fp">built_in/common/decal.hlsl</span><span class="fd"><span lang="en">Deferred decal application</span><span lang="zh">延迟贴花应用</span></span></li>
   </ul>
+
+  <div class="legacy">
+    <span lang="en"><strong>New vs replaced:</strong> The new <code>forward_shading.render</code> replaces the old one (which had ~65 macros and 13 shading models). <code>POINT_LIGHTING_ENABLE</code> + <code>SPOT_LIGHTING_ENABLE</code> unified to <code>PUNCTUAL_LIGHTING_ENABLE</code>. New compositors added: <code>WaterSystem</code>, <code>NxParticle</code>, <code>Gpu_Particle_Compute</code>, <code>SSTDecode</code>, <code>FluidDepth</code>. Stencil writing changed from enabled to disabled. All project-specific shaders in <code>res/shader/</code> (buildings, ships, particles, etc.) remain accessible via fallback.</span>
+    <span lang="zh"><strong>新版替换：</strong>新 <code>forward_shading.render</code> 替换旧版（旧版约 65 个宏和 13 种光照模型）。<code>POINT_LIGHTING_ENABLE</code>/<code>SPOT_LIGHTING_ENABLE</code> 统一为 <code>PUNCTUAL_LIGHTING_ENABLE</code>。新增合成器：<code>WaterSystem</code>、<code>NxParticle</code>、<code>Gpu_Particle_Compute</code>、<code>SSTDecode</code>、<code>FluidDepth</code>。模板写入从启用改为禁用。<code>res/shader/</code> 中的所有项目专用着色器（建筑、舰船、粒子等）通过回退机制仍然可用。</span>
+  </div>
 
   <div class="page-nav">
     <a href="../01-shader-system/hlsl-dialect.html" class="prev"><span class="pn-label">&larr; Prev</span><span class="pn-title"><span lang="en">NeoX HLSL Dialect</span><span lang="zh">NeoX HLSL 方言</span></span></a>
     <a href="../02-rendering-pipeline/deferred-shading.html" class="next"><span class="pn-label">Next &rarr;</span><span class="pn-title"><span lang="en">Deferred Shading</span><span lang="zh">延迟渲染</span></span></a>
   </div>
-  <footer>NeoX Engine &middot; G86 Rendering Pipeline<br>Source: built_in/forward_shading.hlsl (285 lines)</footer>
+  <footer>NeoX Engine &middot; G86 Rendering Pipeline<br>Source: built_in/forward_shading.hlsl (502 lines, new engine)</footer>
 </main>
 </div>
 <script>

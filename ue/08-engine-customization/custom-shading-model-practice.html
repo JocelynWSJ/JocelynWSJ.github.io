@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Practice: Adding Toon &amp; MyCustom1 Shading Models</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Gudea">
+  <script>(function(){if(localStorage.getItem('ue-doc-lang')==='zh'){document.documentElement.classList.add('lang-zh');document.documentElement.lang='zh-CN';}})();</script>
+  <style>
+    html:not(.lang-zh) [lang="zh"]{display:none;} html.lang-zh [lang="en"]{display:none;}
+    #lang-btn{position:fixed;top:16px;right:20px;z-index:999;background:#37425d;color:#fff;border:none;border-radius:4px;padding:5px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:Gudea,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.2);transition:background .15s;} #lang-btn:hover{background:#4a5a7a;}
+    *{box-sizing:border-box;margin:0;padding:0;} body{font-family:Gudea,sans-serif;font-size:16px;line-height:1.8;color:#111;background:#eee;}
+    #wrapper{max-width:1100px;margin:0 auto;display:flex;align-items:flex-start;padding:40px 24px;gap:36px;}
+    #sidebar{width:240px;flex-shrink:0;font-size:13px;}
+    #sidebar > h2 {
+      font-size: 10.5px; font-style: italic; font-weight: 400;
+      color: #b0b0b0; letter-spacing: 0; text-transform: none;
+      margin-bottom: 8px; border: none; padding: 0;
+      margin-top: 20px; padding-top: 16px;
+      border-top: 1px dashed #ddd;
+    }
+    #sidebar > ol > li a {
+      color: #666; text-decoration: none; display: block;
+      padding: 1px 0; font-size: 12px; transition: color .12s;
+    }
+    #sidebar > ol > li a:hover { color: #58A; }
+    #sidebar > ol > li a::before { content: none; }
+    #content{flex:1;min-width:0;}
+    .page-header{margin-bottom:32px;padding-bottom:20px;border-bottom:1px solid #ddd;}
+    .page-header .crumb{font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
+    .page-header h1{font-size:1.8rem;font-weight:900;color:#303236;margin-bottom:8px;line-height:1.25;}
+    .page-header .subtitle{font-family:'Courier New',monospace;font-size:13px;color:#777;}
+    h2{color:#37425d;font-size:22px;margin:36px 0 10px;} h3{color:#633739;font-size:17px;margin:24px 0 8px;}
+    p{margin-bottom:14px;} a{color:#58A;text-decoration:none;} a:hover{text-decoration:underline;} strong{color:#222;}
+    .fun{font-family:'Courier New',monospace;color:#2a6496;} .def{color:green;font-weight:600;}
+    code{font-family:'Courier New',monospace;font-size:14px;background:#ddd;border-radius:3px;padding:1px 5px;}
+    pre{background:#282c34;color:#abb2bf;border-radius:5px;padding:16px 18px;overflow-x:auto;margin:14px 0 18px;font-family:'Courier New',monospace;font-size:13.5px;line-height:1.6;}
+    pre code{background:none;padding:0;color:inherit;} .kw{color:#c678dd;} .fn{color:#61afef;} .cm{color:#5c6370;font-style:italic;} .str{color:#98c379;} .num{color:#d19a66;} .type{color:#e5c07b;}
+    .note{display:block;margin:18px 0;padding:15px;background:#D8F5D8;color:#444;border-radius:5px;border:2px solid #AFDFAF;font-size:15px;line-height:1.7;}
+    .warning{display:block;margin:18px 0;padding:15px;background:#FFD2D2;color:#444;border-radius:5px;border:2px solid #E0B3B3;font-size:15px;line-height:1.7;}
+    ul,ol{padding-left:22px;margin-bottom:14px;} li{margin-bottom:5px;}
+    .table-wrap{overflow-x:auto;margin:14px 0;} table{border-collapse:collapse;font-size:14px;width:100%;}
+    th,td{padding:8px 12px;border-bottom:1px solid #aaa;text-align:left;} th{border-bottom:2px solid #888;font-weight:700;background:#ddd;} tr:nth-child(even) td{background:#e8e8e8;}
+    td:first-child{font-family:'Courier New',monospace;font-size:13px;color:#2a6496;white-space:nowrap;}
+    .file-list{list-style:none;padding:0;margin:12px 0;} .file-list li{padding:8px 0;border-bottom:1px solid #ccc;display:flex;flex-direction:column;gap:4px;font-size:14px;} .file-list li:last-child{border-bottom:none;} .file-list .fp{font-family:'Courier New',monospace;font-size:13px;color:#58A;word-break:break-all;} .file-list .fd{color:#555;padding-left:4px;}
+    footer{margin-top:48px;padding-top:16px;border-top:1px solid #ccc;font-size:12px;color:#aaa;text-align:center;}
+    @media(max-width:800px){#wrapper{flex-direction:column;padding:20px 16px;}#sidebar{width:100%;position:static;max-height:none;margin-bottom:24px;}}
+    /* == Series Navigation == */
+    #series-nav { margin-bottom: 24px; padding-bottom: 0; }
+    #series-nav ol, #series-nav li { list-style: none; padding-left: 0; }
+    .snav-label { font-size: 11px; font-weight: 800; color: #37425d; text-transform: uppercase; letter-spacing: .14em; display: block; margin-bottom: 10px; padding-bottom: 4px; border-bottom: 2px solid #37425d; }
+    #series-nav > ol { list-style: none; padding: 0; margin: 0; } #series-nav ol { list-style: none; padding: 0; margin: 0; }
+    .snav-ch { margin-bottom: 10px; }
+    .snav-ch > span { font-size: 11px; font-weight: 800; letter-spacing: .06em; color: #fff; background: #5a6a80; display: block; padding: 3px 7px 3px 6px; border-radius: 3px; margin-bottom: 3px; text-transform: uppercase; }
+    .snav-ch > ol { padding-left: 0; margin-top: 0; }
+    .snav-item { margin-bottom: 1px; }
+    .snav-item a { font-size: 13.5px; color: #666; text-decoration: none; display: block; padding: 3px 6px; border-left: 3px solid transparent; border-radius: 0 3px 3px 0; transition: color .12s, background .12s, border-color .12s; }
+    .snav-item a:hover { color: #37425d; background: #f0f2f5; border-left-color: #c0cad8; }
+    .snav-item.active > a { color: #37425d; font-weight: 700; background: #e8ecf4; border-left-color: #37425d; }
+    .page-nav { display: flex; justify-content: space-between; align-items: center; margin: 36px 0 0; padding-top: 16px; border-top: 1px solid #ddd; font-size: 14px; }
+    .page-nav a { color: #58A; text-decoration: none; display: flex; align-items: center; gap: 6px; max-width: 42%; }
+    .page-nav a:hover { text-decoration: underline; }
+    .page-nav .pn-label { font-size: 11px; color: #aaa; text-transform: uppercase; display: block; }
+    .page-nav .pn-title { display: block; }
+    .page-nav .prev { text-align: left; } .page-nav .next { text-align: right; } .page-nav .spacer { flex: 1; }
+    .snav-children{display:block;list-style:none;padding:2px 0 4px 10px;margin:1px 0 0;border-left:2px solid #dde3ee;}
+    .snav-subitem{margin-bottom:1px;}
+    .snav-subitem a{font-size:12px;color:#888;text-decoration:none;display:block;padding:2px 4px 2px 8px;border-left:2px solid transparent;border-radius:0 3px 3px 0;transition:color .12s,background .12s,border-color .12s;}
+    .snav-subitem a:hover{color:#37425d;background:#f0f2f5;border-left-color:#c0cad8;}
+    .snav-subitem.active a{color:#37425d;font-weight:700;background:#e8ecf4;border-left-color:#37425d;}
+    /* step badges */
+    .step-badge{display:inline-block;background:#37425d;color:#fff;font-size:11px;font-weight:800;border-radius:3px;padding:2px 8px;margin-right:8px;letter-spacing:.05em;vertical-align:middle;}
+    .diff-add{color:#98c379;} .diff-ctx{color:#abb2bf;}
+  </style>
+</head>
+<body>
+<button id="lang-btn" onclick="toggleLang()"><span lang="en">中文</span><span lang="zh">English</span></button>
+<div id="wrapper">
+<nav id="sidebar">
+  <div id="series-nav">
+    <span class="snav-label"><span lang="en">Series</span><span lang="zh">系列</span></span>
+    <ol>
+      <li class="snav-ch"><span lang="en">00 Overview</span><span lang="zh">00 概述</span>
+        <ol><li class="snav-item"><a href="../00-overview/introduction.html"><span lang="en">Introduction</span><span lang="zh">系列简介</span></a></li></ol>
+      </li>
+      <li class="snav-ch"><span lang="en">01 Rendering Pipeline</span><span lang="zh">01 渲染管线</span>
+        <ol>
+          <li class="snav-item"><a href="../01-rendering-pipeline/deferred-shading.html"><span lang="en">Deferred Rendering</span><span lang="zh">延迟渲染</span></a></li>
+          <li class="snav-item"><a href="../01-rendering-pipeline/forward-shading.html"><span lang="en">Forward Rendering</span><span lang="zh">前向渲染</span></a></li>
+        </ol>
+      </li>
+      <li class="snav-ch"><span lang="en">02 Engine Infrastructure</span><span lang="zh">02 引擎基础设施</span>
+        <ol>
+          <li class="snav-item"><a href="../02-engine-infrastructure/rdg-compiler.html"><span lang="en">RDG — Render Dependency Graph</span><span lang="zh">RDG 渲染依赖图</span></a></li>
+          <li class="snav-item"><a href="../02-engine-infrastructure/thread-concurrency.html"><span lang="en">Thread Concurrency</span><span lang="zh">线程并发</span></a></li>
+          <li class="snav-item"><a href="../02-engine-infrastructure/virtual-texture.html"><span lang="en">Virtual Texture Streaming</span><span lang="zh">虚拟纹理流送</span></a></li>
+        </ol>
+      </li>
+      <li class="snav-ch"><span lang="en">03 Lighting &amp; Shadows</span><span lang="zh">03 光照与阴影</span>
+        <ol>
+          <li class="snav-item"><a href="../03-lighting-shadows/lighting-architecture.html"><span lang="en">Lighting Architecture</span><span lang="zh">光照架构</span></a></li>
+          <li class="snav-item"><a href="../03-lighting-shadows/virtual-shadow-maps.html"><span lang="en">Virtual Shadow Maps</span><span lang="zh">虚拟阴影贴图</span></a></li>
+        </ol>
+      </li>
+      <li class="snav-ch"><span lang="en">04 Material &amp; Shader System</span><span lang="zh">04 材质与着色器系统</span>
+        <ol>
+          <li class="snav-item"><a href="../04-material-shader/material-translation.html"><span lang="en">Shader Compilation &amp; Architecture</span><span lang="zh">着色器编译与架构</span></a></li>
+          <li class="snav-item"><a href="../04-material-shader/shading-models-reference.html"><span lang="en">Shading Models Reference</span><span lang="zh">着色模型参考</span></a></li>
+          <li class="snav-item"><a href="../04-material-shader/usf-hlsl-guide.html"><span lang="en">USF / HLSL Writing Guide</span><span lang="zh">USF / HLSL 编写指南</span></a></li>
+        </ol>
+      </li>
+      <li class="snav-ch"><span lang="en">05 UE5 Core Technologies</span><span lang="zh">05 UE5 核心技术</span>
+        <ol>
+          <li class="snav-item"><a href="../05-ue5-core/nanite-rasterizer.html"><span lang="en">Nanite — Virtual Geometry</span><span lang="zh">Nanite 虚拟几何</span></a></li>
+          <li class="snav-item"><a href="../05-ue5-core/lumen-raytracing.html"><span lang="en">Lumen — Dynamic GI</span><span lang="zh">Lumen 动态全局光照</span></a></li>
+        </ol>
+      </li>
+      <li class="snav-ch"><span lang="en">06 Post-Processing &amp; Effects</span><span lang="zh">06 后处理与屏幕效果</span>
+        <ol>
+          <li class="snav-item"><a href="../06-post-processing/post-processing.html"><span lang="en">Post-Processing Pipeline</span><span lang="zh">后处理管线</span></a></li>
+          <li class="snav-item"><a href="../06-post-processing/screen-space-effects.html"><span lang="en">Screen Space Effects</span><span lang="zh">屏幕空间效果</span></a></li>
+        </ol>
+      </li>
+      <li class="snav-ch"><span lang="en">07 Specialized Rendering</span><span lang="zh">07 专项渲染</span>
+        <ol>
+          <li class="snav-item"><a href="../07-specialized-rendering/volumetric-atmosphere.html"><span lang="en">Volumetric Fog &amp; Atmosphere</span><span lang="zh">体积雾与大气</span></a></li>
+          <li class="snav-item"><a href="../07-specialized-rendering/water-rendering.html"><span lang="en">Water Rendering</span><span lang="zh">水体渲染</span></a></li>
+          <li class="snav-item"><a href="../07-specialized-rendering/hair-groom-rendering.html"><span lang="en">Hair &amp; Groom</span><span lang="zh">毛发渲染</span></a></li>
+        </ol>
+      </li>
+      <li class="snav-ch"><span lang="en">08 Engine Customization</span><span lang="zh">08 引擎定制</span>
+        <ol>
+          <li class="snav-item active">
+            <a href="../08-engine-customization/custom-shading-model.html"><span lang="en">Custom Shading Model</span><span lang="zh">自定义着色模型</span></a>
+            <ol class="snav-children">
+              <li class="snav-subitem active"><a href="custom-shading-model-practice.html"><span lang="en">Practice: Toon &amp; MyCustom1</span><span lang="zh">实践：Toon 与 MyCustom1</span></a></li>
+            </ol>
+          </li>
+          <li class="snav-item"><a href="../08-engine-customization/niagara-gpu-compute.html"><span lang="en">Niagara GPU Compute</span><span lang="zh">Niagara GPU 计算</span></a></li>
+        </ol>
+      </li>
+      <li class="snav-ch"><span lang="en">09 Performance &amp; Profiling</span><span lang="zh">09 性能与分析</span>
+        <ol>
+          <li class="snav-item"><a href="../09-profiling/hardware-profiling.html"><span lang="en">Hardware Profiling</span><span lang="zh">硬件性能分析</span></a></li>
+        </ol>
+      </li>
+    </ol>
+  </div>
+
+  <h2><span lang="en">Contents</span><span lang="zh">目录</span></h2>
+  <ol>
+    <li><a href="#s1"><span lang="en">Goal &amp; Constraints</span><span lang="zh">目标与约束</span></a></li>
+    <li><a href="#s2"><span lang="en">Slot Assignment</span><span lang="zh">槽位分配</span></a></li>
+    <li><a href="#s3"><span lang="en">Files Modified</span><span lang="zh">修改的文件</span></a></li>
+    <li><a href="#s4"><span lang="en">Detailed Code Changes</span><span lang="zh">代码修改详情</span></a></li>
+    <li><a href="#s5"><span lang="en">Rebuilding the Engine</span><span lang="zh">重新构建引擎</span></a></li>
+    <li><a href="#s6"><span lang="en">Iterating on Shaders</span><span lang="zh">迭代着色器</span></a></li>
+    <li><a href="#s7"><span lang="en">Git Workflow</span><span lang="zh">Git 工作流</span></a></li>
+    <li><a href="#s8"><span lang="en">Next Steps</span><span lang="zh">后续步骤</span></a></li>
+  </ol>
+</nav>
+<main id="content">
+  <div class="page-header">
+    <div class="crumb">Unreal Engine 5.6 &middot; Engine Customization &middot; Practice Record</div>
+    <h1><span lang="en">Practice: Adding Toon &amp; MyCustom1 Shading Models</span><span lang="zh">实践：添加 Toon 与 MyCustom1 着色模型</span></h1>
+    <div class="subtitle">UE 5.6.1 source &middot; 8 files modified &middot; 2 new shading model slots</div>
+  </div>
+
+  <!-- ===================== S1 ===================== -->
+  <h2 id="s1"><span lang="en">Goal &amp; Constraints</span><span lang="zh">目标与约束</span></h2>
+  <p lang="en">This page records the process of adding two new shading model slots to a forked UE 5.6.1 source build:</p>
+  <p lang="zh">本页记录在 fork 的 UE 5.6.1 源码中添加两个新着色模型槽的过程：</p>
+  <ul>
+    <li lang="en"><strong>MSM_Toon</strong> — a cel-shading (toon) model with a 3-step diffuse ramp and hard specular highlight, functional in the legacy (non-Substrate) deferred pipeline.</li>
+    <li lang="zh"><strong>MSM_Toon</strong> — 卡通渲染模型，使用 3 级漫反射渐变和硬高光，在旧版（非 Substrate）延迟管线中可用。</li>
+    <li lang="en"><strong>MSM_MyCustom1</strong> — a reserved placeholder slot that currently falls back to DefaultLit BxDF; ready for a custom BxDF implementation later.</li>
+    <li lang="zh"><strong>MSM_MyCustom1</strong> — 保留的占位符槽，当前回退到 DefaultLit BxDF；待后续实现自定义 BxDF。</li>
+  </ul>
+
+  <p lang="en">The fundamental hardware constraint is that the shading model ID is packed into the <strong>lower 4 bits</strong> of the <code>GBufferB.a</code> channel (shared with <code>SelectiveOutputMask</code> in the upper 4 bits). This gives a hard maximum of <strong>16 unique IDs (0–15)</strong>.</p>
+  <p lang="zh">根本的硬件约束是：着色模型 ID 被打包到 <code>GBufferB.a</code> 通道的<strong>低 4 位</strong>（与高 4 位的 <code>SelectiveOutputMask</code> 共享）。这给出了 <strong>16 个唯一 ID（0–15）</strong>的硬性上限。</p>
+
+  <div class="table-wrap"><table>
+    <thead><tr>
+      <th><span lang="en">Before</span><span lang="zh">修改前</span></th>
+      <th><span lang="en">After</span><span lang="zh">修改后</span></th>
+    </tr></thead>
+    <tbody>
+      <tr><td><span lang="en">MSM_NUM = 13 (slots 0–12 used)</span><span lang="zh">MSM_NUM = 13（已用 0–12）</span></td><td><span lang="en">MSM_NUM = 15 (slots 0–14 used)</span><span lang="zh">MSM_NUM = 15（已用 0–14）</span></td></tr>
+      <tr><td><span lang="en">SHADINGMODELID_NUM = 14</span><span lang="zh">SHADINGMODELID_NUM = 14</span></td><td><span lang="en">SHADINGMODELID_NUM = 15</span><span lang="zh">SHADINGMODELID_NUM = 15</span></td></tr>
+      <tr><td><span lang="en">2 free GBuffer slots (13, 14)</span><span lang="zh">2 个空闲 GBuffer 槽（13、14）</span></td><td><span lang="en">1 free GBuffer slot (15)</span><span lang="zh">1 个空闲 GBuffer 槽（15）</span></td></tr>
+      <tr><td><span lang="en">ShadingModelMask : 14 bits</span><span lang="zh">ShadingModelMask : 14 位</span></td><td><span lang="en">ShadingModelMask : 15 bits</span><span lang="zh">ShadingModelMask : 15 位</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="warning">
+    <span lang="en"><strong>Only 1 slot left.</strong> After this change, only GBuffer slot 15 remains. Adding another shading model beyond that requires redesigning the GBuffer packing — expanding the ShadingModelID from 4 bits to 5 bits, which is a much larger engine modification affecting many more shader files.</span>
+    <span lang="zh"><strong>仅剩 1 个槽位。</strong>此次修改后，只剩下 GBuffer 槽 15。在此之后再添加着色模型需要重新设计 GBuffer 打包方式——将 ShadingModelID 从 4 位扩展为 5 位，这是一个影响更多着色器文件的更大引擎修改。</span>
+  </div>
+
+  <!-- ===================== S2 ===================== -->
+  <h2 id="s2"><span lang="en">Slot Assignment</span><span lang="zh">槽位分配</span></h2>
+  <div class="table-wrap"><table>
+    <thead><tr>
+      <th>C++ Enum</th>
+      <th><span lang="en">Value</span><span lang="zh">值</span></th>
+      <th>SHADINGMODELID_* (shader)</th>
+      <th><span lang="en">Debug Color</span><span lang="zh">调试颜色</span></th>
+      <th><span lang="en">BxDF (legacy path)</span><span lang="zh">BxDF（旧版路径）</span></th>
+    </tr></thead>
+    <tbody>
+      <tr><td>MSM_Toon</td><td>13</td><td>SHADINGMODELID_SUBSTRATE_TOON (reused)</td><td><span lang="en">Orange</span><span lang="zh">橙色</span></td><td>ToonBxDF_Legacy</td></tr>
+      <tr><td>MSM_MyCustom1</td><td>14</td><td>SHADINGMODELID_MYCUSTOM1 (new)</td><td><span lang="en">Purple</span><span lang="zh">紫色</span></td><td>DefaultLitBxDF (placeholder)</td></tr>
+    </tbody>
+  </table></div>
+  <p lang="en"><code>SHADINGMODELID_SUBSTRATE_TOON</code> (13) was already defined in <code>ShadingCommon.ush</code> for the Substrate pipeline's toon variant. By assigning <code>MSM_Toon = 13</code>, the same GBuffer slot is reused, and both paths (Substrate and legacy) write the same ID. The existing Substrate <code>ToonBxDF</code> handles the Substrate path; the new <code>ToonBxDF_Legacy</code> handles the non-Substrate path.</p>
+  <p lang="zh"><code>SHADINGMODELID_SUBSTRATE_TOON</code>（13）在 <code>ShadingCommon.ush</code> 中已为 Substrate 管线的 Toon 变体定义。通过将 <code>MSM_Toon = 13</code>，相同的 GBuffer 槽被复用，两条路径（Substrate 和旧版）写入相同 ID。现有的 Substrate <code>ToonBxDF</code> 处理 Substrate 路径；新的 <code>ToonBxDF_Legacy</code> 处理非 Substrate 路径。</p>
+
+  <!-- ===================== S3 ===================== -->
+  <h2 id="s3"><span lang="en">Files Modified — Summary</span><span lang="zh">修改文件汇总</span></h2>
+  <ul class="file-list">
+    <li>
+      <span class="fp">Engine/Source/Runtime/Engine/Classes/Engine/EngineTypes.h</span>
+      <span class="fd"><span lang="en">Added <code>MSM_Toon</code> and <code>MSM_MyCustom1</code> to the <code>EMaterialShadingModel</code> enum before <code>MSM_NUM</code>. MSM_NUM is now 15.</span><span lang="zh">在 <code>EMaterialShadingModel</code> 枚举中 <code>MSM_NUM</code> 之前添加了 <code>MSM_Toon</code> 和 <code>MSM_MyCustom1</code>。MSM_NUM 现在为 15。</span></span>
+    </li>
+    <li>
+      <span class="fp">Engine/Shaders/Private/ShadingCommon.ush</span>
+      <span class="fd"><span lang="en">Added <code>SHADINGMODELID_MYCUSTOM1 14</code>; bumped <code>SHADINGMODELID_NUM</code> to 15; added orange/purple debug colors for both new models in <code>GetShadingModelColor()</code>.</span><span lang="zh">添加了 <code>SHADINGMODELID_MYCUSTOM1 14</code>；将 <code>SHADINGMODELID_NUM</code> 增至 15；在 <code>GetShadingModelColor()</code> 中为两个新模型添加了橙色/紫色调试颜色。</span></span>
+    </li>
+    <li>
+      <span class="fp">Engine/Shaders/Private/ShadingModelsMaterial.ush</span>
+      <span class="fd"><span lang="en">Added <code>#if MATERIAL_SHADINGMODEL_MYCUSTOM1</code> GBuffer encoding block after the existing Toon block. (The Toon block already existed for the Substrate path.)</span><span lang="zh">在现有 Toon 块之后添加了 <code>#if MATERIAL_SHADINGMODEL_MYCUSTOM1</code> GBuffer 编码块。（Toon 块已为 Substrate 路径存在。）</span></span>
+    </li>
+    <li>
+      <span class="fp">Engine/Shaders/Private/ShadingModels.ush</span>
+      <span class="fd"><span lang="en">Added <code>ToonBxDF_Legacy()</code> outside the <code>SUBSTRATE_ENABLED</code> guard (3-step ramp + hard specular). Updated <code>IntegrateBxDF()</code>: Toon dispatches to <code>ToonBxDF_Legacy</code> on non-Substrate / <code>ToonBxDF</code> on Substrate; MyCustom1 dispatches to <code>DefaultLitBxDF</code> as placeholder.</span><span lang="zh">在 <code>SUBSTRATE_ENABLED</code> 保护外添加了 <code>ToonBxDF_Legacy()</code>（3 级渐变 + 硬高光）。更新了 <code>IntegrateBxDF()</code>：Toon 在非 Substrate 路径分发到 <code>ToonBxDF_Legacy</code>，在 Substrate 路径分发到 <code>ToonBxDF</code>；MyCustom1 分发到 <code>DefaultLitBxDF</code> 作为占位符。</span></span>
+    </li>
+    <li>
+      <span class="fp">Engine/Source/Runtime/Engine/Private/Materials/HLSLMaterialTranslator.cpp</span>
+      <span class="fd"><span lang="en">Extended the <code>MATERIAL_SHADINGMODEL_TOON</code> condition to also fire on <code>HasShadingModel(MSM_Toon)</code>. Added a new block for <code>MATERIAL_SHADINGMODEL_MYCUSTOM1</code>.</span><span lang="zh">扩展了 <code>MATERIAL_SHADINGMODEL_TOON</code> 条件，使其也在 <code>HasShadingModel(MSM_Toon)</code> 时触发。添加了 <code>MATERIAL_SHADINGMODEL_MYCUSTOM1</code> 的新块。</span></span>
+    </li>
+    <li>
+      <span class="fp">Engine/Source/Runtime/Engine/Private/Materials/MaterialIRToHLSLTranslator.cpp</span>
+      <span class="fd"><span lang="en">Added <code>MSM_Toon</code> and <code>MSM_MyCustom1</code> cases to <code>GetShadingModelParameterName()</code>. Without this, the IR translator path would hit <code>UE_MIR_UNREACHABLE()</code> and crash at shader compile time.</span><span lang="zh">在 <code>GetShadingModelParameterName()</code> 中添加了 <code>MSM_Toon</code> 和 <code>MSM_MyCustom1</code> 的 case。若不添加，IR 翻译器路径会触发 <code>UE_MIR_UNREACHABLE()</code> 并在着色器编译时崩溃。</span></span>
+    </li>
+    <li>
+      <span class="fp">Engine/Source/Runtime/Engine/Private/Materials/MaterialShader.cpp</span>
+      <span class="fd"><span lang="en">Added name strings <code>"MSM_Toon"</code> and <code>"MSM_MyCustom1"</code> to the shading model name switch (used for permutation key generation). Also added both to the <code>HasAnyShadingModel</code> list for the lit-material shader stats counter.</span><span lang="zh">在着色模型名称 switch（用于排列键生成）中添加了名称字符串 <code>"MSM_Toon"</code> 和 <code>"MSM_MyCustom1"</code>。还将两者添加到 <code>HasAnyShadingModel</code> 列表中，用于 lit 材质着色器统计计数器。</span></span>
+    </li>
+    <li>
+      <span class="fp">Engine/Source/Runtime/Engine/Public/Materials/MaterialRelevance.h</span>
+      <span class="fd"><span lang="en"><code>ShadingModelMask</code>: 14 → 15 bits (to cover bit index 14 for MSM_MyCustom1). <code>SubstrateClosureCountMask</code>: 8 → 7 bits to keep the first <code>uint32</code> at exactly 32 bits.</span><span lang="zh"><code>ShadingModelMask</code>：14 → 15 位（覆盖 MSM_MyCustom1 的位索引 14）。<code>SubstrateClosureCountMask</code>：8 → 7 位，以保持第一个 <code>uint32</code> 正好为 32 位。</span></span>
+    </li>
+  </ul>
+
+  <!-- ===================== S4 ===================== -->
+  <h2 id="s4"><span lang="en">Detailed Code Changes</span><span lang="zh">代码修改详情</span></h2>
+
+  <h3><span class="step-badge">1</span>EngineTypes.h — C++ Enum</h3>
+  <pre><span class="cm">// Engine/Source/Runtime/Engine/Classes/Engine/EngineTypes.h</span>
+<span class="diff-ctx">  MSM_Strata          UMETA(DisplayName="Substrate", Hidden),</span>
+<span class="diff-add">+ MSM_Toon            UMETA(DisplayName="Toon"),</span>
+<span class="diff-add">+ MSM_MyCustom1       UMETA(DisplayName="My Custom 1"),</span>
+<span class="diff-ctx">  MSM_NUM             UMETA(Hidden),   <span class="cm">// was 13, now 15</span></span></pre>
+
+  <h3><span class="step-badge">2</span>ShadingCommon.ush — Shader IDs &amp; Debug Colors</h3>
+  <pre><span class="cm">// Engine/Shaders/Private/ShadingCommon.ush</span>
+<span class="diff-ctx">  #define SHADINGMODELID_SUBSTRATE_TOON  13  <span class="cm">// reused as Toon ID</span></span>
+<span class="diff-add">+ #define SHADINGMODELID_MYCUSTOM1       14</span>
+<span class="diff-ctx">  #define SHADINGMODELID_NUM             </span><span class="diff-add">15</span>  <span class="cm">// was 14</span>
+
+<span class="cm">// In GetShadingModelColor() — switch branch:</span>
+<span class="diff-add">+ case SHADINGMODELID_SUBSTRATE_TOON: return float3(1.0f, 0.5f, 0.0f); <span class="cm">// Orange</span></span>
+<span class="diff-add">+ case SHADINGMODELID_MYCUSTOM1:      return float3(0.5f, 0.0f, 1.0f); <span class="cm">// Purple</span></span></pre>
+
+  <h3><span class="step-badge">3</span>ShadingModelsMaterial.ush — GBuffer Encoding</h3>
+  <pre><span class="cm">// Engine/Shaders/Private/ShadingModelsMaterial.ush</span>
+<span class="diff-ctx">  #if MATERIAL_SHADINGMODEL_TOON
+      else if (ShadingModel == SHADINGMODELID_SUBSTRATE_TOON)
+      { /* GBuffer.CustomData is used */ }
+  #endif</span>
+<span class="diff-add">+ #if MATERIAL_SHADINGMODEL_MYCUSTOM1
++     else if (ShadingModel == SHADINGMODELID_MYCUSTOM1)
++     { /* No custom GBuffer data yet — extend here when needed */ }
++ #endif</span></pre>
+
+  <h3><span class="step-badge">4</span>ShadingModels.ush — BxDF &amp; Dispatch</h3>
+  <p lang="en">A new <code>ToonBxDF_Legacy()</code> function is added outside the <code>SUBSTRATE_ENABLED</code> guard for the non-Substrate path. It implements a simple 3-step diffuse ramp and a hard specular blob (<code>step(0.5, pow(NoH, specPow))</code>).</p>
+  <p lang="zh">在 <code>SUBSTRATE_ENABLED</code> 保护外添加了新的 <code>ToonBxDF_Legacy()</code> 函数，用于非 Substrate 路径。它实现了简单的 3 级漫反射渐变和硬高光（<code>step(0.5, pow(NoH, specPow))</code>）。</p>
+  <pre><span class="cm">// Engine/Shaders/Private/ShadingModels.ush</span>
+<span class="cm">// Added just before IntegrateBxDF(), outside #if SUBSTRATE_ENABLED:</span>
+<span class="diff-add">+ FDirectLighting <span class="fn">ToonBxDF_Legacy</span>(FGBufferData GBuffer, half3 N, half3 V,
++                                  FAreaLight AreaLight, FShadowTerms Shadow)
++ {
++     BxDFContext Context;
++     Init(Context, N, V, AreaLight.SpecularL);
++     SphereMaxNoH(Context, AreaLight.SphereSinAlpha, true);
++     float NoL = max(0.0f, dot(N, AreaLight.DiffuseL));
++
++     // 3-step diffuse ramp
++     float Ramp = NoL &lt; 0.3f ? 0.0f : (NoL &lt; 0.6f ? 0.5f : 1.0f);
++
++     // Hard specular highlight
++     float SpecPow  = max(1.0f, (1.0f - GBuffer.Roughness) * 64.0f);
++     float HardSpec = step(0.5f, pow(saturate(Context.NoH), SpecPow));
++
++     FDirectLighting Lighting;
++     Lighting.Diffuse    = AreaLight.FalloffColor * GBuffer.DiffuseColor  * Ramp     * Shadow.SurfaceShadow;
++     Lighting.Specular   = AreaLight.FalloffColor * GBuffer.SpecularColor * HardSpec * Shadow.SurfaceShadow;
++     Lighting.Transmission = 0;
++     return Lighting;
++ }</span>
+
+<span class="cm">// In IntegrateBxDF() dispatch switch:</span>
+<span class="diff-ctx">  // was: #if SUBSTRATE_ENABLED / case SHADINGMODELID_SUBSTRATE_TOON / #endif
+  // now:</span>
+<span class="diff-add">+ #if SUBSTRATE_ENABLED
++     case SHADINGMODELID_SUBSTRATE_TOON:
++         return ToonBxDF(GBuffer, N, V, AreaLight, Shadow);
++ #else
++     case SHADINGMODELID_SUBSTRATE_TOON:  // MSM_Toon in the legacy pipeline
++         return ToonBxDF_Legacy(GBuffer, N, V, AreaLight, Shadow);
++ #endif
++     case SHADINGMODELID_MYCUSTOM1:
++         return DefaultLitBxDF(GBuffer, N, V, AreaLight, Shadow); <span class="cm">// placeholder</span></span></pre>
+
+  <h3><span class="step-badge">5</span>HLSLMaterialTranslator.cpp — Shader Defines</h3>
+  <pre><span class="cm">// Engine/Source/.../HLSLMaterialTranslator.cpp</span>
+<span class="diff-ctx">  // was: only fires for Substrate Toon feature flag
+  if (EnumHasAnyFlags(...SubstrateMaterialBsdfFeatures, ESubstrateBsdfFeature::Toon))</span>
+<span class="diff-add">+ // now: also fires for the C++ MSM_Toon enum
++ if (EnvironmentDefines->HasShadingModel(MSM_Toon) ||
++     EnumHasAnyFlags(...SubstrateMaterialBsdfFeatures, ESubstrateBsdfFeature::Toon))</span>
+  <span class="diff-ctx">{
+      OutEnvironment.SetDefine(TEXT("MATERIAL_SHADINGMODEL_TOON"), TEXT("1"));
+  }</span>
+<span class="diff-add">+ if (EnvironmentDefines->HasShadingModel(MSM_MyCustom1))
++ {
++     OutEnvironment.SetDefine(TEXT("MATERIAL_SHADINGMODEL_MYCUSTOM1"), TEXT("1"));
++ }</span></pre>
+
+  <h3><span class="step-badge">6</span>MaterialIRToHLSLTranslator.cpp — IR Translator</h3>
+  <pre><span class="cm">// Engine/Source/.../MaterialIRToHLSLTranslator.cpp — GetShadingModelParameterName()</span>
+<span class="diff-ctx">  case MSM_ThinTranslucent: return TEXT("MATERIAL_SHADINGMODEL_THIN_TRANSLUCENT");</span>
+<span class="diff-add">+ case MSM_Toon:            return TEXT("MATERIAL_SHADINGMODEL_TOON");
++ case MSM_MyCustom1:       return TEXT("MATERIAL_SHADINGMODEL_MYCUSTOM1");</span>
+<span class="diff-ctx">  default: UE_MIR_UNREACHABLE();</span></pre>
+
+  <h3><span class="step-badge">7</span>MaterialShader.cpp — Name Switch &amp; Stats</h3>
+  <pre><span class="cm">// Name switch (used for permutation key generation):</span>
+<span class="diff-ctx">  case MSM_ThinTranslucent: ShadingModelName = TEXT("MSM_ThinTranslucent"); break;</span>
+<span class="diff-add">+ case MSM_Toon:            ShadingModelName = TEXT("MSM_Toon"); break;
++ case MSM_MyCustom1:       ShadingModelName = TEXT("MSM_MyCustom1"); break;</span>
+
+<span class="cm">// Lit-shader stats counter — HasAnyShadingModel list:</span>
+<span class="diff-ctx">  ShadingModels.HasAnyShadingModel({ MSM_DefaultLit, ..., MSM_ThinTranslucent</span><span class="diff-add">, MSM_Toon, MSM_MyCustom1</span><span class="diff-ctx"> })</span></pre>
+
+  <h3><span class="step-badge">8</span>MaterialRelevance.h — Bitfield Expansion</h3>
+  <pre><span class="cm">// Engine/Source/Runtime/Engine/Public/Materials/MaterialRelevance.h</span>
+<span class="cm">// First uint32 must stay at exactly 32 bits total:</span>
+<span class="diff-ctx">  // 15 + 4 + 6 + 7 = 32 bits ✓</span>
+<span class="diff-add">+ uint32 ShadingModelMask        : 15;  // was 14 — expanded to cover bit 14 (MSM_MyCustom1)</span>
+<span class="diff-ctx">  uint32 SubstrateTileTypeMask   :  4;</span>
+<span class="diff-ctx">  uint32 SubstrateUintPerPixel   :  6;</span>
+<span class="diff-add">+ uint32 SubstrateClosureCountMask:  7;  // was 8 — reduced by 1 to balance the uint32</span></pre>
+
+  <!-- ===================== S5 ===================== -->
+  <h2 id="s5"><span lang="en">Rebuilding the Engine</span><span lang="zh">重新构建引擎</span></h2>
+
+  <h3><span lang="en">Prerequisites (one-time)</span><span lang="zh">前置条件（仅一次）</span></h3>
+  <ul>
+    <li lang="en"><strong>Visual Studio 2022</strong> with workloads: <em>Desktop development with C++</em> and <em>Game development with C++</em></li>
+    <li lang="zh"><strong>Visual Studio 2022</strong>，需包含工作负载：<em>使用 C++ 的桌面开发</em> 和 <em>使用 C++ 的游戏开发</em></li>
+    <li lang="en">Individual components: <strong>.NET 6 SDK</strong>, <strong>Windows 10/11 SDK</strong></li>
+    <li lang="zh">单个组件：<strong>.NET 6 SDK</strong>、<strong>Windows 10/11 SDK</strong></li>
+  </ul>
+
+  <h3><span lang="en">Step 1 — Download Dependencies</span><span lang="zh">步骤 1 — 下载依赖</span></h3>
+  <p lang="en">Run once after cloning. Downloads ~30 GB of binary dependencies not stored in git.</p>
+  <p lang="zh">clone 后运行一次。下载约 30 GB 的 git 中未存储的二进制依赖。</p>
+  <pre><span class="cm"># Run as Administrator in the repo root</span>
+Setup.bat</pre>
+
+  <h3><span lang="en">Step 2 — Generate Project Files</span><span lang="zh">步骤 2 — 生成项目文件</span></h3>
+  <p lang="en">Creates <code>UE5.sln</code>. Re-run any time new <code>.cpp</code> / <code>.h</code> files are added.</p>
+  <p lang="zh">创建 <code>UE5.sln</code>。每次添加新 <code>.cpp</code> / <code>.h</code> 文件时重新运行。</p>
+  <pre>GenerateProjectFiles.bat</pre>
+
+  <h3><span lang="en">Step 3 — Build</span><span lang="zh">步骤 3 — 构建</span></h3>
+  <p lang="en">Open <code>UE5.sln</code> in Visual Studio 2022, set configuration to <strong>Development Editor / Win64</strong>, right-click <code>UE5</code> → Build. Or use the command line for faster incremental builds:</p>
+  <p lang="zh">在 Visual Studio 2022 中打开 <code>UE5.sln</code>，将配置设为 <strong>Development Editor / Win64</strong>，右键 <code>UE5</code> → 生成。或使用命令行进行更快的增量构建：</p>
+  <pre><span class="cm"># Incremental build from command line (recommended after source changes)</span>
+Engine\Build\BatchFiles\Build.bat UnrealEditor Win64 Development -WaitMutex -FromMsBuild</pre>
+
+  <div class="note">
+    <span lang="en"><strong>Build scope:</strong> Our changes only touch the <code>Engine</code> module (EngineTypes, Material translators, MaterialShader, MaterialRelevance). This is an incremental build — only the affected modules recompile. Expect <strong>10–30 minutes</strong> rather than the multi-hour full build time.</span>
+    <span lang="zh"><strong>构建范围：</strong>我们的修改只涉及 <code>Engine</code> 模块（EngineTypes、Material 翻译器、MaterialShader、MaterialRelevance）。这是一次增量构建——只有受影响的模块重新编译。预计 <strong>10–30 分钟</strong>，而不是数小时的完整构建时间。</span>
+  </div>
+
+  <h3><span lang="en">Step 4 — Verify in Editor</span><span lang="zh">步骤 4 — 在编辑器中验证</span></h3>
+  <pre>Engine\Binaries\Win64\UnrealEditor.exe</pre>
+  <p lang="en">Create a new Material asset. Click the <strong>Shading Model</strong> dropdown. You should see <strong>Toon</strong> and <strong>My Custom 1</strong> in the list.</p>
+  <p lang="zh">创建一个新的材质资产。点击 <strong>Shading Model</strong> 下拉菜单。你应该在列表中看到 <strong>Toon</strong> 和 <strong>My Custom 1</strong>。</p>
+
+  <!-- ===================== S6 ===================== -->
+  <h2 id="s6"><span lang="en">Iterating on Shaders Without Rebuild</span><span lang="zh">无需重新构建即可迭代着色器</span></h2>
+  <p lang="en">Once the C++ side is compiled once, all visual changes to the BxDF (ramp shape, specular style, etc.) live entirely in <code>ShadingModels.ush</code>. These are HLSL shader files — they are compiled at editor launch by the shader compiler, not by the C++ build system. You can hot-reload them in-editor:</p>
+  <p lang="zh">一旦 C++ 侧编译完成，BxDF 的所有视觉修改（渐变形状、高光风格等）完全存在于 <code>ShadingModels.ush</code> 中。这些是 HLSL 着色器文件——它们在编辑器启动时由着色器编译器编译，而不是由 C++ 构建系统编译。你可以在编辑器中热重载它们：</p>
+  <pre><span class="cm"># In the UE editor console (backtick ` to open):</span>
+recompileshaders changed</pre>
+  <p lang="en">The workflow for visual iteration is therefore:</p>
+  <p lang="zh">因此，视觉迭代的工作流程为：</p>
+  <div class="table-wrap"><table>
+    <thead><tr>
+      <th><span lang="en">Change Type</span><span lang="zh">修改类型</span></th>
+      <th><span lang="en">File</span><span lang="zh">文件</span></th>
+      <th><span lang="en">Action Required</span><span lang="zh">所需操作</span></th>
+    </tr></thead>
+    <tbody>
+      <tr><td><span lang="en">Diffuse ramp, specular shape, rim light, etc.</span><span lang="zh">漫反射渐变、高光形状、边缘光等</span></td><td>ShadingModels.ush</td><td><code>recompileshaders changed</code></td></tr>
+      <tr><td><span lang="en">GBuffer custom data layout</span><span lang="zh">GBuffer 自定义数据布局</span></td><td>ShadingModelsMaterial.ush</td><td><code>recompileshaders changed</code></td></tr>
+      <tr><td><span lang="en">Debug visualization color</span><span lang="zh">调试可视化颜色</span></td><td>ShadingCommon.ush</td><td><code>recompileshaders changed</code></td></tr>
+      <tr><td><span lang="en">New material input pin (CustomData)</span><span lang="zh">新材质输入引脚（CustomData）</span></td><td>MaterialAttributeDefinitionMap.cpp + .ush</td><td><span lang="en">C++ rebuild required</span><span lang="zh">需要 C++ 重新构建</span></td></tr>
+      <tr><td><span lang="en">New shading model slot</span><span lang="zh">新着色模型槽</span></td><td><span lang="en">All 8 files above</span><span lang="zh">上述全部 8 个文件</span></td><td><span lang="en">C++ rebuild required</span><span lang="zh">需要 C++ 重新构建</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <!-- ===================== S7 ===================== -->
+  <h2 id="s7"><span lang="en">Git Workflow</span><span lang="zh">Git 工作流</span></h2>
+  <p lang="en">The repository is forked from Epic's <code>release</code> branch. Committing custom engine changes directly on <code>release</code> mixes your work with Epic's upstream commits, making future upstream merges difficult. The recommended approach is to keep your changes on a dedicated branch:</p>
+  <p lang="zh">该仓库是从 Epic 的 <code>release</code> 分支 fork 的。直接在 <code>release</code> 上提交自定义引擎修改会将你的工作与 Epic 的上游提交混合，使未来的上游合并变得困难。推荐的方法是将你的修改保留在专用分支上：</p>
+  <pre><span class="cm"># Create a personal branch from the current state of release</span>
+git checkout -b custom/shading-models
+
+<span class="cm"># Stage and commit only the 8 modified files</span>
+git add Engine/Source/Runtime/Engine/Classes/Engine/EngineTypes.h
+git add Engine/Shaders/Private/ShadingCommon.ush
+git add Engine/Shaders/Private/ShadingModelsMaterial.ush
+git add Engine/Shaders/Private/ShadingModels.ush
+git add Engine/Source/Runtime/Engine/Private/Materials/HLSLMaterialTranslator.cpp
+git add Engine/Source/Runtime/Engine/Private/Materials/MaterialIRToHLSLTranslator.cpp
+git add Engine/Source/Runtime/Engine/Private/Materials/MaterialShader.cpp
+git add Engine/Source/Runtime/Engine/Public/Materials/MaterialRelevance.h
+git commit -m "Add MSM_Toon and MSM_MyCustom1 shading models"</pre>
+
+  <p lang="en">When Epic releases a patch and you want to pull it:</p>
+  <p lang="zh">当 Epic 发布补丁并且你想拉取时：</p>
+  <pre><span class="cm"># Sync your release branch with upstream</span>
+git fetch upstream
+git checkout release
+git merge upstream/release
+
+<span class="cm"># Rebase your custom work on top of the updated release</span>
+git checkout custom/shading-models
+git rebase release</pre>
+
+  <!-- ===================== S8 ===================== -->
+  <h2 id="s8"><span lang="en">Next Steps</span><span lang="zh">后续步骤</span></h2>
+  <h3><span lang="en">For MSM_Toon</span><span lang="zh">关于 MSM_Toon</span></h3>
+  <ul>
+    <li lang="en">The current <code>ToonBxDF_Legacy</code> is a minimal 3-step ramp. Consider adding: a texture-based ramp (<code>CustomData.x</code> as ramp UV), rim lighting, shadow attenuation tweaks.</li>
+    <li lang="zh">当前的 <code>ToonBxDF_Legacy</code> 是最简单的 3 级渐变。考虑添加：基于纹理的渐变（<code>CustomData.x</code> 作为渐变 UV）、边缘光、阴影衰减调整。</li>
+    <li lang="en">To expose a ramp texture or outline width as a material input pin, modify <code>MaterialAttributeDefinitionMap.cpp</code> to add custom data pins (requires a C++ rebuild).</li>
+    <li lang="zh">要将渐变纹理或轮廓线宽度作为材质输入引脚公开，需要修改 <code>MaterialAttributeDefinitionMap.cpp</code> 以添加自定义数据引脚（需要 C++ 重新构建）。</li>
+    <li lang="en">A screen-space outline pass can be added as a separate post-process step via a custom <code>ISceneViewExtension</code> without modifying the shading model at all.</li>
+    <li lang="zh">屏幕空间轮廓线通道可以通过自定义 <code>ISceneViewExtension</code> 作为独立的后处理步骤添加，完全无需修改着色模型。</li>
+  </ul>
+  <h3><span lang="en">For MSM_MyCustom1</span><span lang="zh">关于 MSM_MyCustom1</span></h3>
+  <ul>
+    <li lang="en">Replace the <code>DefaultLitBxDF</code> placeholder in <code>ShadingModels.ush</code> with a custom BxDF when the use case is decided. This only requires editing <code>ShadingModels.ush</code> and running <code>recompileshaders changed</code> — no C++ rebuild needed.</li>
+    <li lang="zh">当确定使用场景后，将 <code>ShadingModels.ush</code> 中的 <code>DefaultLitBxDF</code> 占位符替换为自定义 BxDF。这只需要编辑 <code>ShadingModels.ush</code> 并运行 <code>recompileshaders changed</code>——无需 C++ 重新构建。</li>
+    <li lang="en">To rename it, do a find-and-replace of <code>MSM_MyCustom1</code> / <code>SHADINGMODELID_MYCUSTOM1</code> / <code>MATERIAL_SHADINGMODEL_MYCUSTOM1</code> across all 8 modified files, followed by a C++ rebuild.</li>
+    <li lang="zh">要重命名，在全部 8 个修改的文件中对 <code>MSM_MyCustom1</code> / <code>SHADINGMODELID_MYCUSTOM1</code> / <code>MATERIAL_SHADINGMODEL_MYCUSTOM1</code> 进行查找替换，然后进行 C++ 重新构建。</li>
+  </ul>
+
+  <footer>Unreal Engine 5.6.1 &middot; Engine source modification practice &middot; custom/shading-models branch</footer>
+
+  <div class="page-nav">
+    <a href="custom-shading-model.html" class="prev"><span class="pn-label">&larr; Prev</span><span class="pn-title"><span lang="en">Custom Shading Model</span><span lang="zh">自定义着色模型</span></span></a>
+    <a href="niagara-gpu-compute.html" class="next"><span class="pn-label">Next &rarr;</span><span class="pn-title"><span lang="en">Niagara GPU Compute</span><span lang="zh">Niagara GPU 计算</span></span></a>
+  </div>
+</main>
+</div>
+<script>
+function toggleLang(){var h=document.documentElement;if(h.classList.contains('lang-zh')){h.classList.remove('lang-zh');h.lang='en';document.title='Practice: Adding Toon & MyCustom1 Shading Models';localStorage.setItem('ue-doc-lang','en');}else{h.classList.add('lang-zh');h.lang='zh-CN';document.title='实践：添加 Toon 与 MyCustom1 着色模型';localStorage.setItem('ue-doc-lang','zh');}}
+if(document.documentElement.classList.contains('lang-zh'))document.title='实践：添加 Toon 与 MyCustom1 着色模型';
+</script>
+</body>
+</html>

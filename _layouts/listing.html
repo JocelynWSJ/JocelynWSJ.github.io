@@ -32,6 +32,18 @@ layout: default
   </div>
 
   <div class="works" id="works-grid">
+    <a class="work" href="{{ site.baseurl }}/tarot/" style="--swatch: #17120a;">
+      <div class="thumb thumb--has-img" data-label="INTERACTIVE EXPERIENCE" style="background-image: url('{{ site.baseurl }}/tarot/assets/cards/back.jpg');"></div>
+      <div class="work-meta">
+        <span class="ttl">Aura Tarot</span>
+        <span class="arrow">&rarr;</span>
+      </div>
+      <div class="submeta">
+        <span>Interactive Tarot</span>
+        <span class="sep">/</span>
+        <span>2026</span>
+      </div>
+    </a>
     {% assign swatches = 'clay,sage,mauve' | split: ',' %}
     {% for page_i in (1..num_pages) %}
       {% assign offset = page_i | minus: 1 | times: 6 %}

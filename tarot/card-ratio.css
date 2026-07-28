@@ -1,0 +1,2 @@
+/* Rider-Waite scans are 350 x 600. Keep the card frame at that exact ratio. */
+.flip-card{width:142px;height:244px;aspect-ratio:7 / 12}.flip-front img{object-fit:contain;width:100%;height:100%;display:block}.card-image{width:142px;height:244px;object-fit:contain}@media(max-width:560px){.flip-card{width:116px;height:199px}.card-image{width:116px;height:199px}}

@@ -1,0 +1,165 @@
+html[lang="en"] body.tarot,
+html[lang="en"] .tarot-brand,
+html[lang="en"] .hero h1,
+html[lang="en"] .hero p,
+html[lang="en"] .library-head h1,
+html[lang="en"] .library-head p,
+html[lang="en"] .spread-title h2,
+html[lang="en"] .spread-title p,
+html[lang="en"] .draw-card h3,
+html[lang="en"] .card-detail,
+html[lang="en"] .meaning-card h2,
+html[lang="en"] .dialog-grid h2,
+html[lang="en"] .dialog-grid h3,
+html[lang="en"] .dialog-grid p,
+html[lang="en"] .meaning-section h3,
+html[lang="en"] .meaning-section p,
+html[lang="en"] .meaning-contexts h3,
+html[lang="en"] .meaning-contexts p,
+html[lang="en"] .reading-tip h3,
+html[lang="en"] .reading-tip p {
+  font-family: Montserrat, "Helvetica Neue", Arial, sans-serif;
+}
+
+html[lang="en"] .hero h1,
+html[lang="en"] .library-head h1,
+html[lang="en"] .meaning-section h3,
+html[lang="en"] .meaning-contexts h3,
+html[lang="en"] .reading-tip h3 {
+  font-family: Baskerville, "Times New Roman", serif;
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+html[lang="en"] .spread-title h2,
+html[lang="en"] .meaning-card h2,
+html[lang="en"] .dialog-grid h2 {
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+html[lang="en"] .hero p,
+html[lang="en"] .library-head p,
+html[lang="en"] .spread-title p,
+html[lang="en"] .card-detail,
+html[lang="en"] .dialog-grid p,
+html[lang="en"] .meaning-section p,
+html[lang="en"] .meaning-contexts p,
+html[lang="en"] .reading-tip p {
+  font-weight: 400;
+}
+
+html[lang="en"] .tarot-links a,
+html[lang="en"] .eyebrow,
+html[lang="en"] .spread-picker button,
+html[lang="en"] .draw-button,
+html[lang="en"] .position,
+html[lang="en"] .meaning-card small,
+html[lang="en"] .library-tools input,
+html[lang="en"] .language-button,
+html[lang="en"] .card-tags span,
+html[lang="en"] .tag-row span,
+html[lang="en"] .related-row button {
+  font-family: Montserrat, "Helvetica Neue", Arial, sans-serif !important;
+}
+
+html[lang="en"] .tarot-links a,
+html[lang="en"] .eyebrow,
+html[lang="en"] .meaning-card small,
+html[lang="en"] .position {
+  font-weight: 500;
+}
+
+html[lang="en"] .tarot-brand {
+  font-weight: 500;
+}
+
+html[lang="en"] .hero p,
+html[lang="en"] .library-head p {
+  font-size: 17px;
+  line-height: 28px;
+}
+
+html[lang="en"] .hero p,
+html[lang="en"] .spread-title p,
+html[lang="en"] .card-detail,
+html[lang="en"] .library-head p,
+html[lang="en"] .dialog-grid p,
+html[lang="en"] .meaning-section p,
+html[lang="en"] .meaning-contexts p,
+html[lang="en"] .reading-tip p,
+html[lang="en"] .reading-summary p,
+html[lang="en"] .daily-copy p,
+html[lang="en"] .daily-copy small,
+html[lang="en"] .tarot-disclaimer {
+  font-family: Palatino, "Palatino Linotype", "Book Antiqua", Georgia, serif;
+}
+
+html[lang="zh-CN"] body.tarot,
+html[lang="zh-CN"] .tarot-brand,
+html[lang="zh-CN"] .hero h1,
+html[lang="zh-CN"] .hero p,
+html[lang="zh-CN"] .library-head h1,
+html[lang="zh-CN"] .library-head p,
+html[lang="zh-CN"] .spread-title h2,
+html[lang="zh-CN"] .spread-title p,
+html[lang="zh-CN"] .draw-card h3,
+html[lang="zh-CN"] .card-detail,
+html[lang="zh-CN"] .meaning-card h2,
+html[lang="zh-CN"] .dialog-grid h2,
+html[lang="zh-CN"] .dialog-grid h3,
+html[lang="zh-CN"] .dialog-grid p,
+html[lang="zh-CN"] .meaning-section h3,
+html[lang="zh-CN"] .meaning-section p,
+html[lang="zh-CN"] .meaning-contexts h3,
+html[lang="zh-CN"] .meaning-contexts p,
+html[lang="zh-CN"] .reading-tip h3,
+html[lang="zh-CN"] .reading-tip p {
+  font-family: "PingFang SC", "HarmonyOS Sans SC", "Microsoft YaHei UI", "Microsoft YaHei", "Noto Sans CJK SC", "Source Han Sans SC", Arial, sans-serif;
+}
+
+html[lang="zh-CN"] .hero h1,
+html[lang="zh-CN"] .library-head h1 {
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+html[lang="zh-CN"] .spread-title h2,
+html[lang="zh-CN"] .meaning-card h2,
+html[lang="zh-CN"] .dialog-grid h2 {
+  font-weight: 650;
+  letter-spacing: 0;
+}
+
+html[lang="zh-CN"] .hero p,
+html[lang="zh-CN"] .library-head p,
+html[lang="zh-CN"] .spread-title p,
+html[lang="zh-CN"] .card-detail,
+html[lang="zh-CN"] .dialog-grid p,
+html[lang="zh-CN"] .meaning-section p,
+html[lang="zh-CN"] .meaning-contexts p,
+html[lang="zh-CN"] .reading-tip p {
+  font-weight: 400;
+}
+
+html[lang="zh-CN"] .tarot-links a,
+html[lang="zh-CN"] .eyebrow,
+html[lang="zh-CN"] .spread-picker button,
+html[lang="zh-CN"] .draw-button,
+html[lang="zh-CN"] .position,
+html[lang="zh-CN"] .meaning-card small,
+html[lang="zh-CN"] .library-tools input,
+html[lang="zh-CN"] .language-button,
+html[lang="zh-CN"] .card-tags span,
+html[lang="zh-CN"] .tag-row span,
+html[lang="zh-CN"] .related-row button {
+  font-family: "PingFang SC", "HarmonyOS Sans SC", "Microsoft YaHei UI", "Microsoft YaHei", "Noto Sans CJK SC", "Source Han Sans SC", Arial, sans-serif !important;
+}
+
+html[lang="zh-CN"] .tarot-links a,
+html[lang="zh-CN"] .eyebrow,
+html[lang="zh-CN"] .meaning-card small,
+html[lang="zh-CN"] .position {
+  font-weight: 700;
+}

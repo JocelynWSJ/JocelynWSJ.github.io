@@ -28,7 +28,7 @@ html[lang="en"] .meaning-contexts h3,
 html[lang="en"] .reading-tip h3 {
   font-family: Baskerville, "Times New Roman", serif;
   font-style: italic;
-  font-weight: 400;
+  font-weight: 700;
   letter-spacing: 0;
 }
 
@@ -64,6 +64,15 @@ html[lang="en"] .related-row button {
   font-family: Montserrat, "Helvetica Neue", Arial, sans-serif !important;
 }
 
+html[lang="en"] .spread-picker button,
+html[lang="en"] .draw-button,
+html[lang="en"] .language-button,
+html[lang="en"] .card-tags span,
+html[lang="en"] .tag-row span,
+html[lang="en"] .related-row button {
+  font-family: Bookman, "Bookman Old Style", "Bookman Old Style Std", Georgia, serif !important;
+}
+
 html[lang="en"] .tarot-links a,
 html[lang="en"] .eyebrow,
 html[lang="en"] .meaning-card small,
@@ -71,8 +80,10 @@ html[lang="en"] .position {
   font-weight: 500;
 }
 
-html[lang="en"] .tarot-brand {
-  font-weight: 500;
+.tarot-brand {
+  font-family: "Old English Text MT", "Engravers Old English", "Cloister Black", "Blackletter", fantasy;
+  font-weight: 400;
+  letter-spacing: .01em;
 }
 
 html[lang="en"] .hero p,

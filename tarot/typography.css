@@ -174,3 +174,10 @@ html[lang="zh-CN"] .meaning-card small,
 html[lang="zh-CN"] .position {
   font-weight: 700;
 }
+
+.tarot-brand,
+.tarot-brand i {
+  font-family: Palatino, "Palatino Linotype", "Book Antiqua", Georgia, serif !important;
+  font-weight: 400 !important;
+  letter-spacing: .01em;
+}

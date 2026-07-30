@@ -1,16 +1,231 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Card meanings | Aura Tarot</title><link rel="stylesheet" href="tarot.css"><link rel="stylesheet" href="language.css"><link rel="stylesheet" href="black-gold.css"><link rel="stylesheet" href="card-ratio.css"></head>
-<body class="tarot"><main class="tarot-shell">
-  <nav class="tarot-nav"><a class="tarot-brand" href="index.html"><i>*</i> Aura Tarot</a><div class="tarot-links"><a href="index.html" id="drawLink">Draw cards</a><button class="language-button" id="langToggle" type="button">&#20013;&#25991;</button></div></nav>
-  <header class="library-head"><span class="eyebrow" id="deckLabel">The complete 78-card deck</span><h1 id="pageTitle">Card meanings</h1><p id="pageIntro">Explore traditional Rider-Waite-Smith symbolism in either orientation.</p></header>
-  <div class="library-tools"><input id="search" type="search" placeholder="Search cards or arcana" aria-label="Search card meanings"></div><section class="library" id="library"></section>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Card meanings | Aura Tarot</title>
+  <link rel="stylesheet" href="tarot.css">
+  <link rel="stylesheet" href="language.css">
+  <link rel="stylesheet" href="black-gold.css">
+  <link rel="stylesheet" href="card-ratio.css">
+  <link rel="stylesheet" href="meanings-library.css">
+</head>
+<body class="tarot">
+<main class="tarot-shell">
+  <nav class="tarot-nav">
+    <a class="tarot-brand" href="index.html"><i>*</i> Aura Tarot</a>
+    <div class="tarot-links">
+      <a href="index.html" id="drawLink">Draw cards</a>
+      <button class="language-button" id="langToggle" type="button">&#20013;&#25991;</button>
+    </div>
+  </nav>
+
+  <header class="library-head">
+    <span class="eyebrow" id="deckLabel">The complete 78-card deck</span>
+    <h1 id="pageTitle">Card meanings</h1>
+    <p id="pageIntro">Explore symbolism, contexts, and reading prompts for each Rider-Waite-Smith card.</p>
+  </header>
+
+  <div class="library-tools">
+    <input id="search" type="search" placeholder="Search cards, symbols, keywords, or contexts" aria-label="Search card meanings">
+  </div>
+  <section class="library" id="library"></section>
 </main>
-<dialog class="meaning-dialog" id="dialog"><button class="close-dialog" type="button" aria-label="Close">x</button><div class="dialog-grid"><img id="dialogImage" alt=""><div><span class="eyebrow" id="dialogArcana"></span><h2 id="dialogName"></h2><h3 id="uprightLabel">Upright</h3><p id="dialogUpright"></p><h3 id="reversedLabel">Reversed</h3><p id="dialogReversed"></p></div></div></dialog>
-<script src="cards.js"></script><script>
-const library=document.getElementById('library'),dialog=document.getElementById('dialog');let language=localStorage.getItem('tarot-language')||'en';
-const copy={en:{draw:'Draw cards',deck:'The complete 78-card deck',title:'Card meanings',intro:'Explore traditional Rider-Waite-Smith symbolism in either orientation.',search:'Search cards or arcana',up:'Upright',rev:'Reversed'},zh:{draw:'\u62bd\u724c',deck:'\u5b8c\u6574\u7684 78 \u5f20\u724c',title:'\u724c\u4e49\u5927\u5168',intro:'\u63a2\u7d22\u83b1\u5fb7-\u4f1f\u7279-\u53f2\u5bc6\u65af\u5854\u7f57\u7684\u6b63\u4f4d\u4e0e\u9006\u4f4d\u542b\u4e49\u3002',search:'\u641c\u7d22\u724c\u540d\u6216\u724c\u7ec4',up:'\u6b63\u4f4d',rev:'\u9006\u4f4d'}};
-function cName(c){return language==='zh'?c.zhName:c.name}function cMeaning(c,key){return language==='zh'?c[key+'Zh']:c[key]}
-function show(list){library.innerHTML='';list.forEach(c=>{const el=document.createElement('article');el.className='meaning-card';el.innerHTML=`<img src="${c.image}" alt="${cName(c)} Rider-Waite card" loading="lazy"><small>${c.arcana}</small><h2>${cName(c)}</h2>`;el.addEventListener('click',()=>{dialogImage.src=c.image;dialogImage.alt=cName(c)+' Rider-Waite card';dialogArcana.textContent=c.arcana;dialogName.textContent=cName(c);dialogUpright.textContent=cMeaning(c,'upright');dialogReversed.textContent=cMeaning(c,'reversed');uprightLabel.textContent=copy[language].up;reversedLabel.textContent=copy[language].rev;dialog.showModal()});library.append(el)})}
-function applyLanguage(){const x=copy[language];document.documentElement.lang=language==='zh'?'zh-CN':'en';drawLink.textContent=x.draw;deckLabel.textContent=x.deck;pageTitle.textContent=x.title;pageIntro.textContent=x.intro;search.placeholder=x.search;langToggle.textContent=language==='zh'?'EN':'\u4e2d\u6587';uprightLabel.textContent=x.up;reversedLabel.textContent=x.rev;show(TAROT_CARDS)}
-search.addEventListener('input',e=>{const q=e.target.value.toLowerCase();show(TAROT_CARDS.filter(c=>(c.name+c.zhName+c.arcana+c.upright+c.reversed).toLowerCase().includes(q)))});langToggle.addEventListener('click',()=>{language=language==='zh'?'en':'zh';localStorage.setItem('tarot-language',language);applyLanguage()});document.querySelector('.close-dialog').addEventListener('click',()=>dialog.close());dialog.addEventListener('click',e=>{if(e.target===dialog)dialog.close()});applyLanguage();
-</script></body></html>
+
+<dialog class="meaning-dialog expanded-dialog" id="dialog">
+  <button class="close-dialog" type="button" aria-label="Close">x</button>
+  <div class="dialog-grid expanded-grid">
+    <img id="dialogImage" alt="">
+    <div class="meaning-body">
+      <span class="eyebrow" id="dialogArcana"></span>
+      <h2 id="dialogName"></h2>
+      <div class="tag-row" id="dialogKeywords"></div>
+
+      <div class="meaning-section">
+        <h3 id="uprightLabel">Upright</h3>
+        <p id="dialogUpright"></p>
+      </div>
+      <div class="meaning-section">
+        <h3 id="reversedLabel">Reversed</h3>
+        <p id="dialogReversed"></p>
+      </div>
+
+      <div class="meaning-section">
+        <h3 id="symbolsLabel">Symbols</h3>
+        <div class="tag-row muted-tags" id="dialogSymbols"></div>
+      </div>
+
+      <div class="meaning-contexts" id="dialogContexts"></div>
+
+      <div class="meaning-section">
+        <h3 id="relatedLabel">Related cards</h3>
+        <div class="related-row" id="dialogRelated"></div>
+      </div>
+
+      <div class="reading-tip">
+        <h3 id="tipLabel">How to read this card</h3>
+        <p id="dialogTip"></p>
+      </div>
+    </div>
+  </div>
+</dialog>
+
+<script src="cards.js"></script>
+<script>
+const library = document.getElementById('library');
+const dialog = document.getElementById('dialog');
+let language = localStorage.getItem('tarot-language') || 'en';
+
+const copy = {
+  en: {
+    draw: 'Draw cards',
+    deck: 'The complete 78-card deck',
+    title: 'Card meanings',
+    intro: 'Explore symbolism, contexts, and reading prompts for each Rider-Waite-Smith card.',
+    search: 'Search cards, symbols, keywords, or contexts',
+    up: 'Upright',
+    rev: 'Reversed',
+    symbols: 'Symbols',
+    love: 'Love',
+    career: 'Career',
+    growth: 'Personal growth',
+    related: 'Related cards',
+    tip: 'How to read this card',
+    none: 'No matching cards yet.'
+  },
+  zh: {
+    draw: '\u62bd\u724c',
+    deck: '\u5b8c\u6574\u7684 78 \u5f20\u724c',
+    title: '\u724c\u4e49\u5927\u5168',
+    intro: '\u63a2\u7d22\u6bcf\u5f20\u83b1\u5fb7-\u4f1f\u7279-\u53f2\u5bc6\u65af\u724c\u7684\u8c61\u5f81\u3001\u8bed\u5883\u4e0e\u9605\u8bfb\u63d0\u793a\u3002',
+    search: '\u641c\u7d22\u724c\u540d\u3001\u8c61\u5f81\u3001\u5173\u952e\u8bcd\u6216\u8bed\u5883',
+    up: '\u6b63\u4f4d',
+    rev: '\u9006\u4f4d',
+    symbols: '\u724c\u9762\u8c61\u5f81',
+    love: '\u611f\u60c5',
+    career: '\u4e8b\u4e1a',
+    growth: '\u4e2a\u4eba\u6210\u957f',
+    related: '\u76f8\u5173\u724c',
+    tip: '\u5982\u4f55\u9605\u8bfb\u8fd9\u5f20\u724c',
+    none: '\u6682\u65e0\u5339\u914d\u7684\u724c\u3002'
+  }
+};
+
+function cName(card) {
+  return language === 'zh' ? card.zhName : card.name;
+}
+
+function cMeaning(card, key) {
+  return language === 'zh' ? card[key + 'Zh'] : card[key];
+}
+
+function cList(card, key) {
+  return language === 'zh' ? card[key + 'Zh'] : card[key];
+}
+
+function cContexts(card) {
+  return language === 'zh' ? card.contextsZh : card.contexts;
+}
+
+function tagHtml(items) {
+  return (items || []).map(item => `<span>${item}</span>`).join('');
+}
+
+function relatedName(name) {
+  const card = TAROT_CARDS.find(item => item.name === name);
+  return card ? cName(card) : name;
+}
+
+function openCard(card) {
+  const text = copy[language];
+  const contexts = cContexts(card);
+  dialogImage.src = card.image;
+  dialogImage.alt = `${cName(card)} Rider-Waite card`;
+  dialogArcana.textContent = card.arcana;
+  dialogName.textContent = cName(card);
+  dialogKeywords.innerHTML = tagHtml(cList(card, 'keywords'));
+  dialogUpright.textContent = cMeaning(card, 'upright');
+  dialogReversed.textContent = cMeaning(card, 'reversed');
+  dialogSymbols.innerHTML = tagHtml(cList(card, 'symbols'));
+  dialogContexts.innerHTML = [
+    ['love', text.love],
+    ['career', text.career],
+    ['growth', text.growth]
+  ].map(([key, label]) => `<section><h3>${label}</h3><p>${contexts[key]}</p></section>`).join('');
+  dialogRelated.innerHTML = (card.related || []).map(name => `<button type="button" data-card="${name}">${relatedName(name)}</button>`).join('');
+  dialogTip.textContent = language === 'zh' ? card.readingTipZh : card.readingTip;
+  uprightLabel.textContent = text.up;
+  reversedLabel.textContent = text.rev;
+  symbolsLabel.textContent = text.symbols;
+  relatedLabel.textContent = text.related;
+  tipLabel.textContent = text.tip;
+  dialog.showModal();
+}
+
+function show(list) {
+  library.innerHTML = '';
+  if (!list.length) {
+    library.innerHTML = `<p class="empty-result">${copy[language].none}</p>`;
+    return;
+  }
+  list.forEach(card => {
+    const element = document.createElement('article');
+    element.className = 'meaning-card';
+    element.innerHTML = `
+      <img src="${card.image}" alt="${cName(card)} Rider-Waite card" loading="lazy">
+      <small>${card.arcana}</small>
+      <h2>${cName(card)}</h2>
+      <div class="card-tags">${tagHtml(cList(card, 'keywords').slice(0, 3))}</div>
+    `;
+    element.addEventListener('click', () => openCard(card));
+    library.append(element);
+  });
+}
+
+function searchableText(card) {
+  return [
+    card.name, card.zhName, card.arcana, card.upright, card.reversed, card.uprightZh, card.reversedZh,
+    ...(card.keywords || []), ...(card.keywordsZh || []), ...(card.symbols || []), ...(card.symbolsZh || []),
+    ...(card.related || []), card.readingTip, card.readingTipZh,
+    ...Object.values(card.contexts || {}), ...Object.values(card.contextsZh || {})
+  ].join(' ').toLowerCase();
+}
+
+function filterCards() {
+  const query = search.value.trim().toLowerCase();
+  show(query ? TAROT_CARDS.filter(card => searchableText(card).includes(query)) : TAROT_CARDS);
+}
+
+function applyLanguage() {
+  const text = copy[language];
+  document.documentElement.lang = language === 'zh' ? 'zh-CN' : 'en';
+  drawLink.textContent = text.draw;
+  deckLabel.textContent = text.deck;
+  pageTitle.textContent = text.title;
+  pageIntro.textContent = text.intro;
+  search.placeholder = text.search;
+  langToggle.textContent = language === 'zh' ? 'EN' : '\u4e2d\u6587';
+  filterCards();
+}
+
+search.addEventListener('input', filterCards);
+langToggle.addEventListener('click', () => {
+  language = language === 'zh' ? 'en' : 'zh';
+  localStorage.setItem('tarot-language', language);
+  applyLanguage();
+});
+document.querySelector('.close-dialog').addEventListener('click', () => dialog.close());
+dialog.addEventListener('click', event => {
+  if (event.target === dialog) dialog.close();
+});
+dialogRelated.addEventListener('click', event => {
+  const button = event.target.closest('button[data-card]');
+  if (!button) return;
+  const card = TAROT_CARDS.find(item => item.name === button.dataset.card);
+  if (card) openCard(card);
+});
+
+applyLanguage();
+</script>
+</body>
+</html>

@@ -1,18 +1,394 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Aura Tarot | Rider-Waite Tarot</title><link rel="stylesheet" href="tarot.css"><link rel="stylesheet" href="language.css"><link rel="stylesheet" href="flip.css"><link rel="stylesheet" href="black-gold.css"><link rel="stylesheet" href="card-ratio.css"><link rel="stylesheet" href="spread-layout.css"><link rel="stylesheet" href="draw-actions.css"><link rel="stylesheet" href="mobile-spread.css"><link rel="stylesheet" href="typography.css"></head>
-<body class="tarot"><main class="tarot-shell">
-  <nav class="tarot-nav"><a class="tarot-brand" href="index.html"><i>*</i> Aura Tarot</a><div class="tarot-links"><a href="meanings.html" data-t="library">Card meanings</a><button class="language-button" id="langToggle" type="button" aria-label="Switch language">&#20013;&#25991;</button></div></nav>
-  <section class="hero"><span class="eyebrow" data-t="deck">Rider-Waite-Smith tarot</span><h1 data-t-html="headline">Draw what seeks<br>your attention.</h1><p data-t="subhead">Choose a classic spread, set an intention, and let the cards speak.</p></section>
-  <div class="spread-picker" id="spreadPicker"></div><div class="spread-title"><h2 id="spreadName"></h2><p id="spreadDescription"></p></div><section class="deck-stage" id="deckStage" aria-label="Tarot card deck"><button class="mystic-card" id="mysticCard" type="button" aria-label="Draw a Tarot card"><span class="card-back"><b>*</b></span><span class="card-front"><b>+</b></span></button></section><section class="reading-table" id="readingTable" aria-live="polite"></section><div class="card-detail" id="cardDetail"></div><p class="draw-actions"><button class="draw-button" id="drawOneButton" type="button"></button><button class="draw-button draw-all-button" id="drawAllButton" type="button"></button></p>
-</main><script src="cards.js"></script><script>
-const ui={en:{library:'Card meanings',deck:'Rider-Waite-Smith tarot',headline:'Draw what seeks<br>your attention.',subhead:'Choose a classic spread, set an intention, and let the cards speak.',ready:'Set your intention, then draw the cards.',draw:'Draw the cards',again:'Draw again',reveal:'Click a revealed card to view its interpretation.',up:'Upright',rev:'Reversed'},zh:{library:'\u724c\u4e49\u5927\u5168',deck:'\u83b1\u5fb7-\u4f1f\u7279-\u53f2\u5bc6\u65af\u5854\u7f57',headline:'\u62bd\u51fa\u6b64\u523b<br>\u6700\u9700\u8981\u6ce8\u610f\u7684\u4fe1\u606f\u3002',subhead:'\u9009\u62e9\u4e00\u79cd\u7ecf\u5178\u724c\u9635\uff0c\u9ed8\u5ff5\u95ee\u9898\uff0c\u7136\u540e\u8ba9\u724c\u9762\u56de\u5e94\u4f60\u3002',ready:'\u5148\u9759\u5fc3\u4e13\u6ce8\uff0c\u518d\u62bd\u51fa\u724c\u9762\u3002',draw:'\u5f00\u59cb\u62bd\u724c',again:'\u91cd\u65b0\u62bd\u724c',reveal:'\u70b9\u51fb\u5df2\u7ffb\u5f00\u7684\u724c\u67e5\u770b\u5b83\u7684\u89e3\u8bfb\u3002',up:'\u6b63\u4f4d',rev:'\u9006\u4f4d'}};
-const spreads=[{name:'Single card',zhName:'\u5355\u5f20\u724c',description:'A clear message for the present moment.',zhDescription:'\u4e3a\u5f53\u4e0b\u5448\u73b0\u4e00\u6761\u6e05\u6670\u7684\u4fe1\u606f\u3002',positions:['Present focus'],zhPositions:['\u5f53\u4e0b\u91cd\u70b9']},{name:'Past / Present / Future',zhName:'\u8fc7\u53bb / \u73b0\u5728 / \u672a\u6765',description:'Trace the movement of your current story.',zhDescription:'\u770b\u770b\u4f60\u7684\u6545\u4e8b\u6b63\u5982\u4f55\u5c55\u5f00\u3002',positions:['Past','Present','Future'],zhPositions:['\u8fc7\u53bb','\u73b0\u5728','\u672a\u6765']},{name:'Situation / Action / Outcome',zhName:'\u60c5\u5883 / \u884c\u52a8 / \u7ed3\u679c',description:'Find your footing and the direction ahead.',zhDescription:'\u627e\u5230\u5f53\u4e0b\u7684\u7acb\u8db3\u70b9\u4e0e\u524d\u884c\u65b9\u5411\u3002',positions:['Situation','Helpful action','Potential outcome'],zhPositions:['\u60c5\u5883','\u6709\u76ca\u884c\u52a8','\u6f5c\u5728\u7ed3\u679c']},{name:'Five-card cross',zhName:'\u4e94\u5f20\u5341\u5b57\u724c\u9635',description:'A concise look at the forces shaping your question.',zhDescription:'\u7b80\u6d01\u4e86\u89e3\u6b63\u5728\u5f71\u54cd\u95ee\u9898\u7684\u529b\u91cf\u3002',positions:['The heart of it','What crosses you','Foundation','What is possible','Near future'],zhPositions:['\u6838\u5fc3','\u963b\u788d','\u57fa\u7840','\u53ef\u80fd\u6027','\u8fd1\u671f\u672a\u6765']},{name:'Celtic cross',zhName:'\u51ef\u5c14\u7279\u5341\u5b57',description:'A ten-card map for deeper exploration.',zhDescription:'\u7528\u5341\u5f20\u724c\u6df1\u5165\u63a2\u7d22\u95ee\u9898\u3002',positions:['Present','Challenge','Foundation','Recent past','Possible outcome','Near future','Your stance','Environment','Hopes & fears','Outcome'],zhPositions:['\u73b0\u51b5','\u6311\u6218','\u57fa\u7840','\u8fd1\u671f\u8fc7\u53bb','\u53ef\u80fd\u7ed3\u679c','\u8fd1\u671f\u672a\u6765','\u4f60\u7684\u72b6\u6001','\u73af\u5883','\u5e0c\u671b\u4e0e\u6050\u60e7','\u7ed3\u679c']}];
-let current=0,language=localStorage.getItem('tarot-language')||'en',isDrawing=false,reading=[],focusedCard=null,revealedCount=0;const picker=document.getElementById('spreadPicker'),table=document.getElementById('readingTable'),detail=document.getElementById('cardDetail'),deckStage=document.getElementById('deckStage'),mysticCard=document.getElementById('mysticCard'),drawOneButton=document.getElementById('drawOneButton'),drawAllButton=document.getElementById('drawAllButton');
-function t(k){return ui[language][k]}function cardName(c){return language==='zh'?c.zhName:c.name}function cardMeaning(c,key){return language==='zh'?c[key+'Zh']:c[key]}function renderPicker(){picker.querySelectorAll('button').forEach((b,i)=>b.textContent=language==='zh'?spreads[i].zhName:spreads[i].name)}function showDetail(item){detail.innerHTML=`<strong>${cardName(item.c)} | ${item.reversed?t('rev'):t('up')}</strong><br>${cardMeaning(item.c,item.reversed?'reversed':'upright')}`}function oneLabel(total){if(current===0)return language==='zh'?'\u62bd\u51fa\u8fd9\u5f20\u724c':'Draw your card';if(revealedCount===total)return language==='zh'?'\u5f00\u59cb\u65b0\u7684\u9605\u8bfb':'Start a new reading';return language==='zh'?`\u62bd\u7b2c ${revealedCount+1} / ${total} \u5f20`:`Draw card ${revealedCount+1} of ${total}`}function refreshButtons(){const total=spreads[current].positions.length;drawOneButton.textContent=oneLabel(total);drawAllButton.hidden=current===0;if(current!==0){if(revealedCount===0)drawAllButton.textContent=language==='zh'?'\u4e00\u6b21\u62bd\u5b8c':'Draw all cards';else if(revealedCount===total)drawAllButton.textContent=language==='zh'?'\u91cd\u65b0\u62bd\u5b8c':'Draw all again';else drawAllButton.textContent=language==='zh'?'\u62bd\u5b8c\u5269\u4e0b\u7684\u724c':'Reveal remaining cards'}}function updateReadingLanguage(){const s=spreads[current];[...table.querySelectorAll('.card-slot')].forEach((el,i)=>{const item=reading[i],pos=language==='zh'?s.zhPositions[i]:s.positions[i];el.querySelector('.position').textContent=`${i+1}. ${pos}`;if(!item)return;el.querySelector('.card-label').textContent=cardName(item.c);el.querySelector('.orientation').textContent=item.reversed?t('rev'):t('up');const img=el.querySelector('.flip-front img');if(img)img.alt=cardName(item.c)+' Rider-Waite card'});if(focusedCard!==null)showDetail(reading[focusedCard]);else detail.textContent=revealedCount?t('reveal'):t('ready');refreshButtons()}function applyLanguage(){document.documentElement.lang=language==='zh'?'zh-CN':'en';document.querySelectorAll('[data-t]').forEach(e=>e.textContent=t(e.dataset.t));document.querySelectorAll('[data-t-html]').forEach(e=>e.innerHTML=t(e.dataset.tHtml));document.getElementById('langToggle').textContent=language==='zh'?'EN':'\u4e2d\u6587';renderPicker();if(reading.length||revealedCount)updateReadingLanguage();else choose(current)}
-function setSpreadLayout(){table.classList.remove('layout-five','layout-celtic');if(current===3)table.classList.add('layout-five');if(current===4)table.classList.add('layout-celtic')}
-function buildBacks(){reading=[];focusedCard=null;revealedCount=0;const s=spreads[current];table.innerHTML='';s.positions.forEach((position,i)=>{const pos=language==='zh'?s.zhPositions[i]:position;const el=document.createElement('article');el.className='draw-card card-slot';el.style.setProperty('--i',i);el.innerHTML=`<button class="flip-card" type="button" aria-label="${i+1}. ${pos}"><span class="flip-side flip-back"><img class="back-image" src="assets/cards/back.jpg" alt=""></span><span class="flip-side flip-front"></span></button><p class="position">${i+1}. ${pos}</p><h3 class="card-label"></h3><p class="orientation"></p>`;el.querySelector('.flip-card').addEventListener('click',()=>{if(el.classList.contains('revealed')&&reading[i]){focusedCard=i;showDetail(reading[i])}});table.append(el)})}
-function choose(i){current=i;picker.querySelectorAll('button').forEach((b,n)=>b.classList.toggle('active',n===i));const s=spreads[i];document.getElementById('spreadName').textContent=language==='zh'?s.zhName:s.name;document.getElementById('spreadDescription').textContent=language==='zh'?s.zhDescription:s.description;deckStage.hidden=true;deckStage.classList.remove('flipping');setSpreadLayout();buildBacks();detail.textContent=t('ready');refreshButtons()}
-spreads.forEach((s,i)=>{const b=document.createElement('button');b.addEventListener('click',()=>choose(i));picker.append(b)});
-function randomInt(max){if(window.crypto&&crypto.getRandomValues){const array=new Uint32Array(1),limit=Math.floor(4294967296/max)*max;let value;do{crypto.getRandomValues(array);value=array[0]}while(value>=limit);return value%max}return Math.floor(Math.random()*max)}function shuffleDeck(cards){const deck=[...cards];for(let i=deck.length-1;i>0;i--){const j=randomInt(i+1);[deck[i],deck[j]]=[deck[j],deck[i]]}return deck}function startReading(){if(reading.length)return;const pool=shuffleDeck(TAROT_CARDS);reading=[...table.querySelectorAll('.card-slot')].map((el,i)=>({c:pool[i],reversed:randomInt(2)===0}))}function revealCard(i,delay){const el=table.children[i],item=reading[i],c=item.c,flip=el.querySelector('.flip-card'),front=el.querySelector('.flip-front');front.innerHTML=`<img src="${c.image}" alt="${cardName(c)} Rider-Waite card">`;el.querySelector('.card-label').textContent=cardName(c);el.querySelector('.orientation').textContent=item.reversed?t('rev'):t('up');if(item.reversed)el.classList.add('reversed');setTimeout(()=>{flip.classList.add('is-flipped');el.classList.add('revealed')},delay)}function drawOne(){if(isDrawing)return;const total=spreads[current].positions.length;if(revealedCount===total){buildBacks();detail.textContent=t('ready');refreshButtons();return}isDrawing=true;startReading();revealCard(revealedCount,0);revealedCount++;detail.textContent=t('reveal');refreshButtons();setTimeout(()=>isDrawing=false,780)}function drawAll(){if(isDrawing)return;const total=spreads[current].positions.length;if(revealedCount===total){buildBacks();requestAnimationFrame(drawAll);return}isDrawing=true;startReading();const start=revealedCount;for(let i=start;i<total;i++)revealCard(i,(i-start)*130);revealedCount=total;detail.textContent=t('reveal');refreshButtons();setTimeout(()=>isDrawing=false,Math.max(780,(total-start)*130+520))}
-drawOneButton.addEventListener('click',drawOne);drawAllButton.addEventListener('click',drawAll);mysticCard.addEventListener('click',drawOne);document.getElementById('langToggle').addEventListener('click',()=>{language=language==='zh'?'en':'zh';localStorage.setItem('tarot-language',language);applyLanguage()});applyLanguage();
-</script></body></html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Aura Tarot | Rider-Waite Tarot</title>
+  <link rel="stylesheet" href="tarot.css">
+  <link rel="stylesheet" href="language.css">
+  <link rel="stylesheet" href="flip.css">
+  <link rel="stylesheet" href="black-gold.css">
+  <link rel="stylesheet" href="card-ratio.css">
+  <link rel="stylesheet" href="spread-layout.css">
+  <link rel="stylesheet" href="draw-actions.css">
+  <link rel="stylesheet" href="mobile-spread.css">
+  <link rel="stylesheet" href="typography.css">
+  <link rel="stylesheet" href="theme-toggle.css">
+</head>
+<body class="tarot">
+<main class="tarot-shell">
+  <nav class="tarot-nav">
+    <a class="tarot-brand" href="index.html"><i>*</i> Aura Tarot</a>
+    <div class="tarot-links">
+      <a href="meanings.html" data-t="library">Card meanings</a>
+      <button class="language-button" id="langToggle" type="button" aria-label="Switch language">&#20013;&#25991;</button>
+      <button class="theme-button" id="themeToggle" type="button" aria-label="Switch theme">Light</button>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <span class="eyebrow" data-t="deck">Rider-Waite-Smith tarot</span>
+    <h1 data-t-html="headline">Draw what seeks<br>your attention.</h1>
+    <p data-t="subhead">Choose a classic spread, set an intention, and let the cards speak.</p>
+  </section>
+
+  <section class="question-panel">
+    <label id="questionLabel" for="questionInput">What would you like to ask?</label>
+    <textarea id="questionInput" rows="2"></textarea>
+  </section>
+
+  <div class="spread-picker" id="spreadPicker"></div>
+  <div class="spread-title">
+    <h2 id="spreadName"></h2>
+    <p id="spreadDescription"></p>
+  </div>
+  <section class="deck-stage" id="deckStage" aria-label="Tarot card deck">
+    <button class="mystic-card" id="mysticCard" type="button" aria-label="Draw a Tarot card">
+      <span class="card-back"><b>*</b></span>
+      <span class="card-front"><b>+</b></span>
+    </button>
+  </section>
+  <section class="reading-table" id="readingTable" aria-live="polite"></section>
+  <div class="card-detail" id="cardDetail"></div>
+  <p class="draw-actions">
+    <button class="draw-button" id="drawOneButton" type="button"></button>
+    <button class="draw-button draw-all-button" id="drawAllButton" type="button"></button>
+    <button class="draw-button copy-prompt-button" id="copyPromptButton" type="button" hidden></button>
+  </p>
+</main>
+
+<script src="cards.js"></script>
+<script>
+const ui = {
+  en: {
+    library: 'Card meanings',
+    deck: 'Rider-Waite-Smith tarot',
+    headline: 'Draw what seeks<br>your attention.',
+    subhead: 'Choose a classic spread, set an intention, and let the cards speak.',
+    questionLabel: 'What would you like to ask?',
+    questionPlaceholder: 'Write your question or intention here. It will be included in the AI prompt.',
+    questionFallback: '[Write your question or intention here]',
+    ready: 'Set your intention, then draw the cards.',
+    reveal: 'Click a revealed card to view its interpretation.',
+    up: 'Upright',
+    rev: 'Reversed',
+    copyPrompt: 'Copy AI Prompt',
+    promptCopied: 'Prompt copied',
+    copyFailed: 'Copy failed'
+  },
+  zh: {
+    library: '牌义大全',
+    deck: '莱德-伟特-史密斯塔罗',
+    headline: '抽出此刻<br>最需要注意的信息。',
+    subhead: '选择一种经典牌阵，默念问题，然后让牌面回应你。',
+    questionLabel: '你想询问什么？',
+    questionPlaceholder: '写下你的问题或意图。它会自动带入 AI Prompt。',
+    questionFallback: '【请在这里填写你的问题或意图】',
+    ready: '先静心专注，再抽出牌面。',
+    reveal: '点击已翻开的牌查看它的解读。',
+    up: '正位',
+    rev: '逆位',
+    copyPrompt: '复制 AI Prompt',
+    promptCopied: '已复制 Prompt',
+    copyFailed: '复制失败'
+  }
+};
+
+const spreads = [
+  { name: 'Single card', zhName: '单张牌', description: 'A clear message for the present moment.', zhDescription: '为当下呈现一条清晰的信息。', positions: ['Present focus'], zhPositions: ['当下重点'] },
+  { name: 'Past / Present / Future', zhName: '过去 / 现在 / 未来', description: 'Trace the movement of your current story.', zhDescription: '看看你的故事正如何展开。', positions: ['Past', 'Present', 'Future'], zhPositions: ['过去', '现在', '未来'] },
+  { name: 'Situation / Action / Outcome', zhName: '情境 / 行动 / 结果', description: 'Find your footing and the direction ahead.', zhDescription: '找到当下的立足点与前行方向。', positions: ['Situation', 'Helpful action', 'Potential outcome'], zhPositions: ['情境', '有益行动', '潜在结果'] },
+  { name: 'Five-card cross', zhName: '五张十字牌阵', description: 'A concise look at the forces shaping your question.', zhDescription: '简洁了解正在影响问题的力量。', positions: ['The heart of it', 'What crosses you', 'Foundation', 'What is possible', 'Near future'], zhPositions: ['核心', '阻碍', '基础', '可能性', '近期未来'] },
+  { name: 'Celtic cross', zhName: '凯尔特十字', description: 'A ten-card map for deeper exploration.', zhDescription: '用十张牌深入探索问题。', positions: ['Present', 'Challenge', 'Foundation', 'Recent past', 'Possible outcome', 'Near future', 'Your stance', 'Environment', 'Hopes & fears', 'Outcome'], zhPositions: ['现况', '挑战', '基础', '近期过去', '可能结果', '近期未来', '你的状态', '环境', '希望与恐惧', '结果'] }
+];
+
+let current = 0;
+let language = localStorage.getItem('tarot-language') || 'en';
+let pageTheme = localStorage.getItem('tarot-theme') || 'dark';
+let isDrawing = false;
+let reading = [];
+let focusedCard = null;
+let revealedCount = 0;
+
+const picker = document.getElementById('spreadPicker');
+const table = document.getElementById('readingTable');
+const detail = document.getElementById('cardDetail');
+const deckStage = document.getElementById('deckStage');
+const mysticCard = document.getElementById('mysticCard');
+const drawOneButton = document.getElementById('drawOneButton');
+const drawAllButton = document.getElementById('drawAllButton');
+const copyPromptButton = document.getElementById('copyPromptButton');
+const themeToggle = document.getElementById('themeToggle');
+const questionInput = document.getElementById('questionInput');
+const questionLabel = document.getElementById('questionLabel');
+
+function t(key) {
+  return ui[language][key];
+}
+
+function cardName(card) {
+  return language === 'zh' ? card.zhName : card.name;
+}
+
+function cardMeaning(card, key) {
+  return language === 'zh' ? card[key + 'Zh'] : card[key];
+}
+
+function renderPicker() {
+  picker.querySelectorAll('button').forEach((button, index) => {
+    button.textContent = language === 'zh' ? spreads[index].zhName : spreads[index].name;
+  });
+}
+
+function showDetail(item) {
+  detail.innerHTML = `<strong>${cardName(item.c)} | ${item.reversed ? t('rev') : t('up')}</strong><br>${cardMeaning(item.c, item.reversed ? 'reversed' : 'upright')}`;
+}
+
+function oneLabel(total) {
+  if (current === 0) return language === 'zh' ? '抽出这张牌' : 'Draw your card';
+  if (revealedCount === total) return language === 'zh' ? '开始新的阅读' : 'Start a new reading';
+  return language === 'zh' ? `抽第 ${revealedCount + 1} / ${total} 张` : `Draw card ${revealedCount + 1} of ${total}`;
+}
+
+function refreshButtons() {
+  const total = spreads[current].positions.length;
+  const complete = revealedCount === total && revealedCount > 0;
+  drawOneButton.textContent = oneLabel(total);
+  copyPromptButton.hidden = !complete;
+  if (complete) copyPromptButton.textContent = t('copyPrompt');
+  drawAllButton.hidden = current === 0;
+  if (current !== 0) {
+    if (revealedCount === 0) drawAllButton.textContent = language === 'zh' ? '一次抽完' : 'Draw all cards';
+    else if (complete) drawAllButton.textContent = language === 'zh' ? '重新抽完' : 'Draw all again';
+    else drawAllButton.textContent = language === 'zh' ? '抽完剩下的牌' : 'Reveal remaining cards';
+  }
+}
+
+function updateReadingLanguage() {
+  const spread = spreads[current];
+  [...table.querySelectorAll('.card-slot')].forEach((element, index) => {
+    const item = reading[index];
+    const position = language === 'zh' ? spread.zhPositions[index] : spread.positions[index];
+    element.querySelector('.position').textContent = `${index + 1}. ${position}`;
+    if (!item) return;
+    element.querySelector('.card-label').textContent = cardName(item.c);
+    element.querySelector('.orientation').textContent = item.reversed ? t('rev') : t('up');
+    const img = element.querySelector('.flip-front img');
+    if (img) img.alt = `${cardName(item.c)} Rider-Waite card`;
+  });
+  if (focusedCard !== null) showDetail(reading[focusedCard]);
+  else detail.textContent = revealedCount ? t('reveal') : t('ready');
+  refreshButtons();
+}
+
+function applyPageTheme() {
+  document.body.dataset.theme = pageTheme;
+  const isLight = pageTheme === 'light';
+  themeToggle.textContent = language === 'zh'
+    ? (isLight ? '\u6df1\u8272' : '\u6d45\u8272')
+    : (isLight ? 'Dark' : 'Light');
+  themeToggle.setAttribute('aria-label', isLight ? 'Switch to dark theme' : 'Switch to light theme');
+}
+
+function applyLanguage() {
+  document.documentElement.lang = language === 'zh' ? 'zh-CN' : 'en';
+  document.querySelectorAll('[data-t]').forEach(element => element.textContent = t(element.dataset.t));
+  document.querySelectorAll('[data-t-html]').forEach(element => element.innerHTML = t(element.dataset.tHtml));
+  document.getElementById('langToggle').textContent = language === 'zh' ? 'EN' : '中文';
+  applyPageTheme();
+  questionLabel.textContent = t('questionLabel');
+  questionInput.placeholder = t('questionPlaceholder');
+  renderPicker();
+  if (reading.length || revealedCount) updateReadingLanguage();
+  else choose(current);
+}
+
+function setSpreadLayout() {
+  table.classList.remove('layout-five', 'layout-celtic');
+  if (current === 3) table.classList.add('layout-five');
+  if (current === 4) table.classList.add('layout-celtic');
+}
+
+function buildBacks() {
+  reading = [];
+  focusedCard = null;
+  revealedCount = 0;
+  const spread = spreads[current];
+  table.innerHTML = '';
+  spread.positions.forEach((position, index) => {
+    const localizedPosition = language === 'zh' ? spread.zhPositions[index] : position;
+    const element = document.createElement('article');
+    element.className = 'draw-card card-slot';
+    element.style.setProperty('--i', index);
+    element.innerHTML = `<button class="flip-card" type="button" aria-label="${index + 1}. ${localizedPosition}"><span class="flip-side flip-back"><img class="back-image" src="assets/cards/back.jpg" alt=""></span><span class="flip-side flip-front"></span></button><p class="position">${index + 1}. ${localizedPosition}</p><h3 class="card-label"></h3><p class="orientation"></p>`;
+    element.querySelector('.flip-card').addEventListener('click', () => {
+      if (element.classList.contains('revealed') && reading[index]) {
+        focusedCard = index;
+        showDetail(reading[index]);
+      }
+    });
+    table.append(element);
+  });
+}
+
+function choose(index) {
+  current = index;
+  picker.querySelectorAll('button').forEach((button, buttonIndex) => button.classList.toggle('active', buttonIndex === index));
+  const spread = spreads[index];
+  document.getElementById('spreadName').textContent = language === 'zh' ? spread.zhName : spread.name;
+  document.getElementById('spreadDescription').textContent = language === 'zh' ? spread.zhDescription : spread.description;
+  deckStage.hidden = true;
+  deckStage.classList.remove('flipping');
+  setSpreadLayout();
+  buildBacks();
+  detail.textContent = t('ready');
+  refreshButtons();
+}
+
+spreads.forEach((spread, index) => {
+  const button = document.createElement('button');
+  button.addEventListener('click', () => choose(index));
+  picker.append(button);
+});
+
+function randomInt(max) {
+  if (window.crypto && crypto.getRandomValues) {
+    const array = new Uint32Array(1);
+    const limit = Math.floor(4294967296 / max) * max;
+    let value;
+    do {
+      crypto.getRandomValues(array);
+      value = array[0];
+    } while (value >= limit);
+    return value % max;
+  }
+  return Math.floor(Math.random() * max);
+}
+
+function shuffleDeck(cards) {
+  const deck = [...cards];
+  for (let index = deck.length - 1; index > 0; index--) {
+    const randomIndex = randomInt(index + 1);
+    [deck[index], deck[randomIndex]] = [deck[randomIndex], deck[index]];
+  }
+  return deck;
+}
+
+function startReading() {
+  if (reading.length) return;
+  const pool = shuffleDeck(TAROT_CARDS);
+  reading = [...table.querySelectorAll('.card-slot')].map((element, index) => ({ c: pool[index], reversed: randomInt(2) === 0 }));
+}
+
+function revealCard(index, delay) {
+  const element = table.children[index];
+  const item = reading[index];
+  const card = item.c;
+  const flip = element.querySelector('.flip-card');
+  const front = element.querySelector('.flip-front');
+  front.innerHTML = `<img src="${card.image}" alt="${cardName(card)} Rider-Waite card">`;
+  element.querySelector('.card-label').textContent = cardName(card);
+  element.querySelector('.orientation').textContent = item.reversed ? t('rev') : t('up');
+  if (item.reversed) element.classList.add('reversed');
+  setTimeout(() => {
+    flip.classList.add('is-flipped');
+    element.classList.add('revealed');
+  }, delay);
+}
+
+function drawOne() {
+  if (isDrawing) return;
+  const total = spreads[current].positions.length;
+  if (revealedCount === total) {
+    buildBacks();
+    detail.textContent = t('ready');
+    refreshButtons();
+    return;
+  }
+  isDrawing = true;
+  startReading();
+  revealCard(revealedCount, 0);
+  revealedCount++;
+  detail.textContent = t('reveal');
+  refreshButtons();
+  setTimeout(() => isDrawing = false, 780);
+}
+
+function drawAll() {
+  if (isDrawing) return;
+  const total = spreads[current].positions.length;
+  if (revealedCount === total) {
+    buildBacks();
+    requestAnimationFrame(drawAll);
+    return;
+  }
+  isDrawing = true;
+  startReading();
+  const start = revealedCount;
+  for (let index = start; index < total; index++) revealCard(index, (index - start) * 130);
+  revealedCount = total;
+  detail.textContent = t('reveal');
+  refreshButtons();
+  setTimeout(() => isDrawing = false, Math.max(780, (total - start) * 130 + 520));
+}
+
+function makeTarotPrompt() {
+  const spread = spreads[current];
+  const spreadName = language === 'zh' ? spread.zhName : spread.name;
+  const question = questionInput.value.trim() || t('questionFallback');
+  const heading = language === 'zh'
+    ? '请你以有经验的塔罗解读师角度，解读下面的 Rider-Waite 牌阵。请结合我的问题、每张牌的牌位、正逆位以及牌与牌之间的关系，给出清晰、完整的分析。'
+    : 'Please interpret this Rider-Waite Tarot reading as an experienced Tarot reader. Use my question, each card position, orientation, and the relationships between cards to give a clear, complete interpretation.';
+  const cards = reading.map((item, index) => {
+    const position = language === 'zh' ? spread.zhPositions[index] : spread.positions[index];
+    const orientation = item.reversed ? (language === 'zh' ? '逆位' : 'Reversed') : (language === 'zh' ? '正位' : 'Upright');
+    return language === 'zh'
+      ? `${index + 1}. 牌位：${position}；牌：${item.c.zhName}（${orientation}）`
+      : `${index + 1}. Position: ${position}; Card: ${item.c.name} (${orientation})`;
+  }).join('\n');
+  return language === 'zh'
+    ? `${heading}\n\n我的问题/意图：${question}\n牌阵：${spreadName}\n抽到的牌：\n${cards}`
+    : `${heading}\n\nMy question / intention: ${question}\nSpread: ${spreadName}\nCards drawn:\n${cards}`;
+}
+
+async function copyTarotPrompt() {
+  const prompt = makeTarotPrompt();
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(prompt);
+    } else {
+      const field = document.createElement('textarea');
+      field.value = prompt;
+      field.style.position = 'fixed';
+      field.style.opacity = '0';
+      document.body.append(field);
+      field.select();
+      document.execCommand('copy');
+      field.remove();
+    }
+    copyPromptButton.textContent = t('promptCopied');
+    setTimeout(() => refreshButtons(), 1500);
+  } catch (error) {
+    copyPromptButton.textContent = t('copyFailed');
+  }
+}
+
+drawOneButton.addEventListener('click', drawOne);
+drawAllButton.addEventListener('click', drawAll);
+copyPromptButton.addEventListener('click', copyTarotPrompt);
+mysticCard.addEventListener('click', drawOne);
+themeToggle.addEventListener('click', () => {
+  pageTheme = pageTheme === 'light' ? 'dark' : 'light';
+  localStorage.setItem('tarot-theme', pageTheme);
+  applyPageTheme();
+});
+document.getElementById('langToggle').addEventListener('click', () => {
+  language = language === 'zh' ? 'en' : 'zh';
+  localStorage.setItem('tarot-language', language);
+  applyLanguage();
+});
+
+applyLanguage();
+</script>
+</body>
+</html>

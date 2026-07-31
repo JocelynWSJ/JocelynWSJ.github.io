@@ -1,0 +1,219 @@
+.theme-button {
+  color: var(--gold);
+  border: 1px solid rgba(210, 173, 88, .62);
+  background: transparent;
+  border-radius: 999px;
+  padding: 7px 10px;
+  cursor: pointer;
+  text-transform: uppercase;
+}
+
+.theme-button:hover {
+  background: rgba(210, 173, 88, .13);
+}
+
+html[lang="en"] .theme-button {
+  font-family: Bookman, "Bookman Old Style", "URW Bookman L", Georgia, serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .04em;
+}
+
+html[lang="zh-CN"] .theme-button {
+  font-family: "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", "HarmonyOS Sans SC", Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .02em;
+}
+
+body.tarot[data-theme="light"] {
+  --night: #f7e9df;
+  --ink: #342421;
+  --muted: #7d645e;
+  --gold: #a77a38;
+  --violet: #e6b9c4;
+  --paper: #fff8ef;
+  background-color: #f7e9df;
+  background-image: radial-gradient(circle at 50% -12%, rgba(247, 196, 211, .9) 0, rgba(250, 232, 221, .9) 42%, rgba(247, 233, 223, 0) 100%);
+  color: var(--ink);
+}
+
+body.tarot[data-theme="light"]::before {
+  opacity: .2;
+  background-image: radial-gradient(#b78391 1px, transparent 1.5px), radial-gradient(#c49b60 1px, transparent 1.5px);
+}
+
+body.tarot[data-theme="light"] .tarot-nav {
+  border-bottom-color: rgba(151, 99, 84, .24);
+}
+
+body.tarot[data-theme="light"] .tarot-brand,
+body.tarot[data-theme="light"] .close-dialog {
+  color: var(--ink);
+}
+
+body.tarot[data-theme="light"] .tarot-links a,
+body.tarot[data-theme="light"] .hero p,
+body.tarot[data-theme="light"] .spread-title p,
+body.tarot[data-theme="light"] .orientation,
+body.tarot[data-theme="light"] .card-detail,
+body.tarot[data-theme="light"] .library-head p,
+body.tarot[data-theme="light"] .meaning-card small,
+body.tarot[data-theme="light"] .meaning-section p,
+body.tarot[data-theme="light"] .meaning-contexts p,
+body.tarot[data-theme="light"] .reading-tip p,
+body.tarot[data-theme="light"] .empty-result {
+  color: var(--muted);
+}
+
+body.tarot[data-theme="light"] .tarot-links a:hover,
+body.tarot[data-theme="light"] .eyebrow,
+body.tarot[data-theme="light"] .position,
+body.tarot[data-theme="light"] .card-detail strong,
+body.tarot[data-theme="light"] .meaning-section h3,
+body.tarot[data-theme="light"] .meaning-contexts h3,
+body.tarot[data-theme="light"] .reading-tip h3 {
+  color: var(--gold);
+}
+
+body.tarot[data-theme="light"] .language-button,
+body.tarot[data-theme="light"] .theme-button {
+  color: #8f5c50;
+  border-color: rgba(143, 92, 80, .36);
+  background: rgba(255, 248, 242, .66);
+}
+
+body.tarot[data-theme="light"] .language-button:hover,
+body.tarot[data-theme="light"] .theme-button:hover {
+  background: rgba(247, 205, 215, .38);
+}
+
+body.tarot[data-theme="light"] .spread-picker button,
+body.tarot[data-theme="light"] .draw-button,
+body.tarot[data-theme="light"] .library-filters button,
+body.tarot[data-theme="light"] .related-row button {
+  color: var(--ink);
+  border-color: rgba(167, 122, 56, .36);
+  background: rgba(255, 248, 242, .72);
+}
+
+body.tarot[data-theme="light"] .spread-picker button.active,
+body.tarot[data-theme="light"] .draw-button,
+body.tarot[data-theme="light"] .library-filters button.active {
+  background: rgba(239, 190, 202, .46);
+  border-color: var(--gold);
+}
+
+body.tarot[data-theme="light"] .draw-all-button {
+  background: rgba(255, 248, 242, .5) !important;
+  border-color: rgba(167, 122, 56, .44) !important;
+}
+
+body.tarot[data-theme="light"] .draw-all-button:hover {
+  background: rgba(239, 190, 202, .3) !important;
+}
+
+body.tarot[data-theme="light"] .copy-prompt-button {
+  background: linear-gradient(135deg, #f1b8c8, #d7a368) !important;
+  border-color: #b98142 !important;
+  color: #33201c !important;
+  box-shadow: 0 10px 24px rgba(190, 125, 84, .18);
+}
+
+body.tarot[data-theme="light"] .copy-prompt-button:hover {
+  background: linear-gradient(135deg, #f6c9d6, #e0b27a) !important;
+  color: #2a1916 !important;
+}
+
+body.tarot[data-theme="light"] .question-panel textarea,
+body.tarot[data-theme="light"] .library-tools input {
+  color: var(--ink);
+  border-color: rgba(167, 122, 56, .34);
+  background: rgba(255, 250, 246, .78);
+}
+
+body.tarot[data-theme="light"] .question-panel textarea:focus,
+body.tarot[data-theme="light"] .library-tools input:focus {
+  outline-color: var(--gold);
+}
+
+body.tarot[data-theme="light"] .question-panel textarea::placeholder,
+body.tarot[data-theme="light"] .library-tools input::placeholder {
+  color: rgba(125, 100, 94, .72);
+}
+
+body.tarot[data-theme="light"] .card-image,
+body.tarot[data-theme="light"] .card-front,
+body.tarot[data-theme="light"] .meaning-card img,
+body.tarot[data-theme="light"] .dialog-grid img,
+body.tarot[data-theme="light"] .expanded-grid img {
+  background: #fff6ec;
+}
+
+body.tarot[data-theme="light"] .card-image,
+body.tarot[data-theme="light"] .flip-side,
+body.tarot[data-theme="light"] .card-back,
+body.tarot[data-theme="light"] .card-front,
+body.tarot[data-theme="light"] .meaning-card img,
+body.tarot[data-theme="light"] .dialog-grid img {
+  border-color: rgba(167, 122, 56, .58);
+}
+
+body.tarot[data-theme="light"] .card-back {
+  background: radial-gradient(circle at 50% 50%, rgba(167, 122, 56, .16) 0 26%, transparent 27%), linear-gradient(135deg, #f1c4cf, #f8eadf);
+  outline-color: rgba(167, 122, 56, .44);
+}
+
+body.tarot[data-theme="light"] .card-back::before {
+  border-color: rgba(167, 122, 56, .58);
+}
+
+body.tarot[data-theme="light"] .card-back b,
+body.tarot[data-theme="light"] .card-front b {
+  color: var(--gold);
+  text-shadow: none;
+}
+
+body.tarot[data-theme="light"] .meaning-card {
+  background: linear-gradient(155deg, rgba(255, 248, 242, .88), rgba(247, 218, 225, .74));
+  border-color: rgba(167, 122, 56, .26);
+  box-shadow: 0 14px 26px rgba(130, 86, 76, .1);
+}
+
+body.tarot[data-theme="light"] .meaning-card:hover {
+  border-color: var(--gold);
+  box-shadow: 0 18px 30px rgba(130, 86, 76, .16);
+}
+
+body.tarot[data-theme="light"] .card-tags span,
+body.tarot[data-theme="light"] .tag-row span,
+body.tarot[data-theme="light"] .related-row button,
+body.tarot[data-theme="light"] .library-filters button {
+  color: #795f58;
+  border-color: rgba(167, 122, 56, .28);
+  background: rgba(255, 248, 242, .68);
+}
+
+body.tarot[data-theme="light"] .expanded-dialog,
+body.tarot[data-theme="light"] .meaning-dialog {
+  color: var(--ink);
+  background: linear-gradient(155deg, #fff8ef, #f4dfe5);
+  border-color: rgba(167, 122, 56, .62);
+}
+
+body.tarot[data-theme="light"] .meaning-dialog::backdrop {
+  background: rgba(75, 48, 45, .42);
+}
+
+body.tarot[data-theme="light"] .meaning-contexts section,
+body.tarot[data-theme="light"] .reading-tip {
+  border-color: rgba(167, 122, 56, .22);
+  background: rgba(255, 248, 242, .58);
+}
+
+@media (max-width: 560px) {
+  .tarot-links {
+    justify-content: flex-end;
+    flex-wrap: wrap;
+  }
+}

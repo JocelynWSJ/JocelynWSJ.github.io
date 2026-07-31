@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="card-ratio.css">
   <link rel="stylesheet" href="meanings-library.css">
   <link rel="stylesheet" href="typography.css">
+  <link rel="stylesheet" href="theme-toggle.css">
 </head>
 <body class="tarot">
 <main class="tarot-shell">
@@ -18,6 +19,7 @@
     <div class="tarot-links">
       <a href="index.html" id="drawLink">Draw cards</a>
       <button class="language-button" id="langToggle" type="button">&#20013;&#25991;</button>
+      <button class="theme-button" id="themeToggle" type="button" aria-label="Switch theme">Light</button>
     </div>
   </nav>
 
@@ -29,6 +31,8 @@
 
   <div class="library-tools">
     <input id="search" type="search" placeholder="Search cards, symbols, keywords, or contexts" aria-label="Search card meanings">
+    <div class="library-filters" id="arcanaFilters"></div>
+    <div class="library-filters" id="contextFilters"></div>
   </div>
   <section class="library" id="library"></section>
 </main>
@@ -75,7 +79,13 @@
 <script>
 const library = document.getElementById('library');
 const dialog = document.getElementById('dialog');
+const arcanaFilters = document.getElementById('arcanaFilters');
+const contextFilters = document.getElementById('contextFilters');
+const themeToggle = document.getElementById('themeToggle');
 let language = localStorage.getItem('tarot-language') || 'en';
+let pageTheme = localStorage.getItem('tarot-theme') || 'dark';
+let activeArcana = 'all';
+let activeContext = 'all';
 
 const copy = {
   en: {
@@ -93,6 +103,16 @@ const copy = {
     related: 'Related cards',
     tip: 'How to read this card',
     none: 'No matching cards yet.'
+    ,
+    allCards: 'All cards',
+    major: 'Major Arcana',
+    wands: 'Wands',
+    cups: 'Cups',
+    swords: 'Swords',
+    pentacles: 'Pentacles',
+    allContexts: 'All contexts',
+    upright: 'Upright keywords',
+    reversed: 'Reversed keywords'
   },
   zh: {
     draw: '\u62bd\u724c',
@@ -108,9 +128,36 @@ const copy = {
     growth: '\u4e2a\u4eba\u6210\u957f',
     related: '\u76f8\u5173\u724c',
     tip: '\u5982\u4f55\u9605\u8bfb\u8fd9\u5f20\u724c',
-    none: '\u6682\u65e0\u5339\u914d\u7684\u724c\u3002'
+    none: '\u6682\u65e0\u5339\u914d\u7684\u724c\u3002',
+    allCards: '\u5168\u90e8\u724c',
+    major: '\u5927\u963f\u5361\u90a3',
+    wands: '\u6743\u6756',
+    cups: '\u5723\u676f',
+    swords: '\u5b9d\u5251',
+    pentacles: '\u661f\u5e01',
+    allContexts: '\u5168\u90e8\u8bed\u5883',
+    upright: '\u6b63\u4f4d\u5173\u952e\u8bcd',
+    reversed: '\u9006\u4f4d\u5173\u952e\u8bcd'
   }
 };
+
+const arcanaOptions = [
+  ['all', 'allCards'],
+  ['Major Arcana', 'major'],
+  ['Wands', 'wands'],
+  ['Cups', 'cups'],
+  ['Swords', 'swords'],
+  ['Pentacles', 'pentacles']
+];
+
+const contextOptions = [
+  ['all', 'allContexts'],
+  ['love', 'love'],
+  ['career', 'career'],
+  ['growth', 'growth'],
+  ['upright', 'upright'],
+  ['reversed', 'reversed']
+];
 
 function cName(card) {
   return language === 'zh' ? card.zhName : card.name;
@@ -192,9 +239,56 @@ function searchableText(card) {
   ].join(' ').toLowerCase();
 }
 
+function contextText(card, context) {
+  if (context === 'all') return searchableText(card);
+  if (context === 'upright') return [card.upright, card.uprightZh, ...(card.keywords || []), ...(card.keywordsZh || [])].join(' ').toLowerCase();
+  if (context === 'reversed') return [card.reversed, card.reversedZh].join(' ').toLowerCase();
+  return [card.contexts?.[context], card.contextsZh?.[context]].join(' ').toLowerCase();
+}
+
+function renderFilterGroup(container, options, activeValue, onChange) {
+  container.innerHTML = '';
+  const text = copy[language];
+  options.forEach(([value, labelKey]) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = value === activeValue ? 'active' : '';
+    button.textContent = text[labelKey];
+    button.addEventListener('click', () => onChange(value));
+    container.append(button);
+  });
+}
+
+function renderFilters() {
+  renderFilterGroup(arcanaFilters, arcanaOptions, activeArcana, value => {
+    activeArcana = value;
+    renderFilters();
+    filterCards();
+  });
+  renderFilterGroup(contextFilters, contextOptions, activeContext, value => {
+    activeContext = value;
+    renderFilters();
+    filterCards();
+  });
+}
+
 function filterCards() {
   const query = search.value.trim().toLowerCase();
-  show(query ? TAROT_CARDS.filter(card => searchableText(card).includes(query)) : TAROT_CARDS);
+  show(TAROT_CARDS.filter(card => {
+    const arcanaMatch = activeArcana === 'all' || card.arcana === activeArcana;
+    const contextMatch = activeContext === 'all' || contextText(card, activeContext).trim();
+    const queryMatch = !query || contextText(card, activeContext).includes(query) || searchableText(card).includes(query);
+    return arcanaMatch && contextMatch && queryMatch;
+  }));
+}
+
+function applyPageTheme() {
+  document.body.dataset.theme = pageTheme;
+  const isLight = pageTheme === 'light';
+  themeToggle.textContent = language === 'zh'
+    ? (isLight ? '\u6df1\u8272' : '\u6d45\u8272')
+    : (isLight ? 'Dark' : 'Light');
+  themeToggle.setAttribute('aria-label', isLight ? 'Switch to dark theme' : 'Switch to light theme');
 }
 
 function applyLanguage() {
@@ -206,10 +300,17 @@ function applyLanguage() {
   pageIntro.textContent = text.intro;
   search.placeholder = text.search;
   langToggle.textContent = language === 'zh' ? 'EN' : '\u4e2d\u6587';
+  applyPageTheme();
+  renderFilters();
   filterCards();
 }
 
 search.addEventListener('input', filterCards);
+themeToggle.addEventListener('click', () => {
+  pageTheme = pageTheme === 'light' ? 'dark' : 'light';
+  localStorage.setItem('tarot-theme', pageTheme);
+  applyPageTheme();
+});
 langToggle.addEventListener('click', () => {
   language = language === 'zh' ? 'en' : 'zh';
   localStorage.setItem('tarot-language', language);

@@ -9,10 +9,22 @@
 
 .card-tags,
 .tag-row,
-.related-row {
+.related-row,
+.library-filters {
   display: flex;
   flex-wrap: wrap;
   gap: 7px;
+}
+
+.library-tools {
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.library-filters {
+  justify-content: center;
+  max-width: 760px;
 }
 
 .card-tags {
@@ -21,7 +33,8 @@
 
 .card-tags span,
 .tag-row span,
-.related-row button {
+.related-row button,
+.library-filters button {
   border: 1px solid rgba(210, 173, 88, .28);
   background: rgba(210, 173, 88, .08);
   color: var(--muted);
@@ -29,6 +42,16 @@
   border-radius: 999px;
   font: 12px Arial, "Helvetica Neue", sans-serif;
   line-height: 1.2;
+}
+
+.library-filters button {
+  cursor: pointer;
+}
+
+.library-filters button.active {
+  border-color: var(--gold);
+  color: var(--ink);
+  background: rgba(210, 173, 88, .2);
 }
 
 .expanded-dialog {

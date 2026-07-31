@@ -22,7 +22,13 @@ html[lang="en"] .reading-tip p {
 }
 
 html[lang="en"] .hero h1,
-html[lang="en"] .library-head h1,
+html[lang="en"] .library-head h1 {
+  font-family: Baskerville, "Times New Roman", serif;
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
 html[lang="en"] .meaning-section h3,
 html[lang="en"] .meaning-contexts h3,
 html[lang="en"] .reading-tip h3 {
@@ -132,6 +138,15 @@ html[lang="zh-CN"] .reading-tip p {
 
 html[lang="zh-CN"] .hero h1,
 html[lang="zh-CN"] .library-head h1 {
+  font-family: "Kaiti SC", "STKaiti", "KaiTi", "楷体", serif;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+html[lang="zh-CN"] .meaning-section h3,
+html[lang="zh-CN"] .meaning-contexts h3,
+html[lang="zh-CN"] .reading-tip h3 {
+  font-family: "Kaiti SC", "STKaiti", "KaiTi", "楷体", serif;
   font-weight: 700;
   letter-spacing: 0;
 }
@@ -151,6 +166,7 @@ html[lang="zh-CN"] .dialog-grid p,
 html[lang="zh-CN"] .meaning-section p,
 html[lang="zh-CN"] .meaning-contexts p,
 html[lang="zh-CN"] .reading-tip p {
+  font-family: "Kaiti SC", "STKaiti", "KaiTi", "楷体", serif;
   font-weight: 400;
 }
 
@@ -166,6 +182,16 @@ html[lang="zh-CN"] .card-tags span,
 html[lang="zh-CN"] .tag-row span,
 html[lang="zh-CN"] .related-row button {
   font-family: "PingFang SC", "HarmonyOS Sans SC", "Microsoft YaHei UI", "Microsoft YaHei", "Noto Sans CJK SC", "Source Han Sans SC", Arial, sans-serif !important;
+}
+
+html[lang="zh-CN"] .spread-picker button,
+html[lang="zh-CN"] .draw-button,
+html[lang="zh-CN"] .language-button,
+html[lang="zh-CN"] .card-tags span,
+html[lang="zh-CN"] .tag-row span,
+html[lang="zh-CN"] .related-row button {
+  font-family: "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", "HarmonyOS Sans SC", Arial, sans-serif !important;
+  font-weight: 400;
 }
 
 html[lang="zh-CN"] .tarot-links a,

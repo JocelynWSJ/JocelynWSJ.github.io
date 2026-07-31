@@ -1,0 +1,160 @@
+.deck-stage {
+  position: relative;
+  min-height: 210px;
+}
+
+.deck-stage .mystic-card {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.shuffle-pack {
+  position: relative;
+  width: min(420px, 100%);
+  height: 160px;
+  margin: 0 auto;
+}
+
+.shuffle-pack span {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 78px;
+  height: 121px;
+  border: 1px solid rgba(210, 173, 88, .72);
+  border-radius: 5px;
+  background: url("assets/cards/back.jpg") center / cover no-repeat;
+  box-shadow: 0 18px 34px rgba(0, 0, 0, .34);
+  transform: translate(-50%, -50%) rotate(calc(var(--n) * .9deg));
+  transition: transform .72s cubic-bezier(.2, .72, .16, 1), box-shadow .72s ease, opacity .4s ease;
+}
+
+.deck-stage.is-shuffling .shuffle-pack span {
+  animation: shuffle-cut 1.45s cubic-bezier(.24, .72, .18, 1) both;
+  animation-delay: calc((var(--n) + 4) * 34ms);
+}
+
+.deck-stage.is-ready .shuffle-pack span {
+  transform: translate(calc(-50% + (var(--n) * 19px)), -50%) rotate(calc(var(--n) * 7deg));
+}
+
+.deck-stage.is-ready .shuffle-pack span:nth-child(odd) {
+  transform: translate(calc(-50% + (var(--n) * 19px)), calc(-50% + 7px)) rotate(calc(var(--n) * 7deg));
+}
+
+@keyframes shuffle-cut {
+  0% {
+    transform: translate(-50%, -50%) rotate(calc(var(--n) * .8deg));
+  }
+  24% {
+    transform: translate(calc(-50% - 74px), calc(-50% - 6px)) rotate(calc(var(--n) * -3deg));
+  }
+  48% {
+    transform: translate(calc(-50% + 72px), calc(-50% + 7px)) rotate(calc(var(--n) * 4deg));
+  }
+  72% {
+    transform: translate(calc(-50% - 32px), calc(-50% + 3px)) rotate(calc(var(--n) * -2deg));
+  }
+  100% {
+    transform: translate(calc(-50% + (var(--n) * 19px)), -50%) rotate(calc(var(--n) * 7deg));
+  }
+}
+
+.shuffle-button {
+  min-width: 170px;
+}
+
+.shuffle-button:disabled {
+  cursor: wait;
+  opacity: .72;
+  transform: none;
+}
+
+.reading-table.awaiting-shuffle .draw-card {
+  pointer-events: none;
+  opacity: 1;
+  transform: none;
+}
+
+.reading-table.awaiting-shuffle .flip-card {
+  opacity: 1;
+  visibility: visible;
+  cursor: default;
+}
+
+.reading-table.awaiting-shuffle .flip-side {
+  border-style: dashed;
+  background: rgba(210, 173, 88, .045);
+  box-shadow: inset 0 0 0 1px rgba(210, 173, 88, .08);
+}
+
+.reading-table.awaiting-shuffle .back-image,
+.reading-table.awaiting-shuffle .flip-back::before {
+  opacity: 0;
+}
+
+.reading-table.cards-dealt .draw-card {
+  animation: deal-from-deck .62s cubic-bezier(.2, .72, .16, 1) both;
+  animation-delay: calc(var(--i) * 90ms);
+}
+
+@keyframes deal-from-deck {
+  from {
+    opacity: 0;
+    transform: translateY(-92px) scale(.72) rotate(-4deg);
+  }
+  68% {
+    opacity: 1;
+    transform: translateY(8px) scale(1.02) rotate(1deg);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+body.tarot[data-theme="light"] .shuffle-pack span {
+  border-color: rgba(167, 122, 56, .58);
+  box-shadow: 0 18px 34px rgba(130, 86, 76, .15);
+}
+
+body.tarot[data-theme="light"] .reading-table.awaiting-shuffle .flip-side {
+  background: rgba(255, 248, 242, .44);
+  box-shadow: inset 0 0 0 1px rgba(167, 122, 56, .08);
+}
+
+@media (max-width: 560px) {
+  .deck-stage {
+    min-height: 180px;
+  }
+
+  .shuffle-pack {
+    height: 140px;
+  }
+
+  .shuffle-pack span {
+    width: 62px;
+    height: 96px;
+  }
+
+  .deck-stage.is-ready .shuffle-pack span,
+  .deck-stage.is-ready .shuffle-pack span:nth-child(odd) {
+    transform: translate(calc(-50% + (var(--n) * 14px)), -50%) rotate(calc(var(--n) * 7deg));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .deck-stage.is-shuffling .shuffle-pack span,
+  .reading-table.cards-dealt .draw-card {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+
+  .shuffle-pack span,
+  .flip-card {
+    transition-duration: .01ms !important;
+  }
+}

@@ -15,6 +15,7 @@
   <link rel="stylesheet" href="typography.css">
   <link rel="stylesheet" href="theme-toggle.css">
   <link rel="stylesheet" href="motion.css">
+  <link rel="stylesheet" href="shuffle.css">
 </head>
 <body class="tarot">
 <main class="tarot-shell">
@@ -48,10 +49,22 @@
       <span class="card-back"><b>*</b></span>
       <span class="card-front"><b>+</b></span>
     </button>
+    <div class="shuffle-pack" aria-hidden="true">
+      <span style="--n:-4"></span>
+      <span style="--n:-3"></span>
+      <span style="--n:-2"></span>
+      <span style="--n:-1"></span>
+      <span style="--n:0"></span>
+      <span style="--n:1"></span>
+      <span style="--n:2"></span>
+      <span style="--n:3"></span>
+      <span style="--n:4"></span>
+    </div>
   </section>
   <section class="reading-table" id="readingTable" aria-live="polite"></section>
   <div class="card-detail" id="cardDetail"></div>
   <p class="draw-actions">
+    <button class="draw-button shuffle-button" id="shuffleButton" type="button"></button>
     <button class="draw-button" id="drawOneButton" type="button"></button>
     <button class="draw-button draw-all-button" id="drawAllButton" type="button"></button>
     <button class="draw-button copy-prompt-button" id="copyPromptButton" type="button" hidden></button>
@@ -72,7 +85,11 @@ const ui = {
     questionLabel: 'What would you like to ask?',
     questionPlaceholder: 'Write your question or intention here. It will be included in the AI prompt.',
     questionFallback: '[Write your question or intention here]',
-    ready: 'Set your intention, then draw the cards.',
+    ready: 'Set your intention, then shuffle the deck.',
+    shuffle: 'Shuffle deck',
+    shuffleAgain: 'Shuffle again',
+    shuffling: 'Shuffling the deck...',
+    shuffled: 'The cards are ready. Draw what calls to you.',
     reveal: 'Click a revealed card to view its interpretation.',
     up: 'Upright',
     rev: 'Reversed',
@@ -89,7 +106,11 @@ const ui = {
     questionLabel: '你想询问什么？',
     questionPlaceholder: '写下你的问题或意图。它会自动带入 AI Prompt。',
     questionFallback: '【请在这里填写你的问题或意图】',
-    ready: '先静心专注，再抽出牌面。',
+    ready: '先静心专注，然后洗牌。',
+    shuffle: '洗牌',
+    shuffleAgain: '重新洗牌',
+    shuffling: '正在洗牌……',
+    shuffled: '牌已经准备好。抽出吸引你的牌。',
     reveal: '点击已翻开的牌查看它的解读。',
     up: '正位',
     rev: '逆位',
@@ -112,6 +133,8 @@ let current = 0;
 let language = localStorage.getItem('tarot-language') || 'en';
 let pageTheme = localStorage.getItem('tarot-theme') || 'dark';
 let isDrawing = false;
+let isShuffling = false;
+let hasShuffled = false;
 let reading = [];
 let focusedCard = null;
 let revealedCount = 0;
@@ -121,6 +144,7 @@ const table = document.getElementById('readingTable');
 const detail = document.getElementById('cardDetail');
 const deckStage = document.getElementById('deckStage');
 const mysticCard = document.getElementById('mysticCard');
+const shuffleButton = document.getElementById('shuffleButton');
 const drawOneButton = document.getElementById('drawOneButton');
 const drawAllButton = document.getElementById('drawAllButton');
 const copyPromptButton = document.getElementById('copyPromptButton');
@@ -159,10 +183,13 @@ function oneLabel(total) {
 function refreshButtons() {
   const total = spreads[current].positions.length;
   const complete = revealedCount === total && revealedCount > 0;
+  shuffleButton.textContent = hasShuffled ? t('shuffleAgain') : t('shuffle');
+  shuffleButton.disabled = isShuffling || isDrawing;
+  drawOneButton.hidden = !hasShuffled || isShuffling;
   drawOneButton.textContent = oneLabel(total);
   copyPromptButton.hidden = !complete;
   if (complete) copyPromptButton.textContent = t('copyPrompt');
-  drawAllButton.hidden = current === 0;
+  drawAllButton.hidden = !hasShuffled || isShuffling || current === 0;
   if (current !== 0) {
     if (revealedCount === 0) drawAllButton.textContent = language === 'zh' ? '一次抽完' : 'Draw all cards';
     else if (complete) drawAllButton.textContent = language === 'zh' ? '重新抽完' : 'Draw all again';
@@ -183,7 +210,9 @@ function updateReadingLanguage() {
     if (img) img.alt = `${cardName(item.c)} Rider-Waite card`;
   });
   if (focusedCard !== null) showDetail(reading[focusedCard]);
-  else detail.textContent = revealedCount ? t('reveal') : t('ready');
+  else if (isShuffling) detail.textContent = t('shuffling');
+  else if (hasShuffled) detail.textContent = revealedCount ? t('reveal') : t('shuffled');
+  else detail.textContent = t('ready');
   refreshButtons();
 }
 
@@ -205,7 +234,7 @@ function applyLanguage() {
   questionLabel.textContent = t('questionLabel');
   questionInput.placeholder = t('questionPlaceholder');
   renderPicker();
-  if (reading.length || revealedCount) updateReadingLanguage();
+  if (isShuffling || reading.length || revealedCount || hasShuffled) updateReadingLanguage();
   else choose(current);
 }
 
@@ -243,8 +272,12 @@ function choose(index) {
   const spread = spreads[index];
   document.getElementById('spreadName').textContent = language === 'zh' ? spread.zhName : spread.name;
   document.getElementById('spreadDescription').textContent = language === 'zh' ? spread.zhDescription : spread.description;
-  deckStage.hidden = true;
-  deckStage.classList.remove('flipping');
+  hasShuffled = false;
+  isShuffling = false;
+  deckStage.hidden = false;
+  deckStage.classList.remove('flipping', 'is-shuffling', 'is-ready');
+  table.classList.remove('cards-dealt');
+  table.classList.add('awaiting-shuffle');
   setSpreadLayout();
   buildBacks();
   detail.textContent = t('ready');
@@ -280,8 +313,8 @@ function shuffleDeck(cards) {
   return deck;
 }
 
-function startReading() {
-  if (reading.length) return;
+function startReading(force = false) {
+  if (reading.length && !force) return;
   const pool = shuffleDeck(TAROT_CARDS);
   reading = [...table.querySelectorAll('.card-slot')].map((element, index) => ({ c: pool[index], reversed: randomInt(2) === 0 }));
 }
@@ -302,13 +335,53 @@ function revealCard(index, delay) {
   }, delay);
 }
 
+function resetForShuffle(messageKey = 'ready') {
+  hasShuffled = false;
+  isShuffling = false;
+  deckStage.hidden = false;
+  deckStage.classList.remove('is-shuffling', 'is-ready');
+  table.classList.remove('cards-dealt');
+  table.classList.add('awaiting-shuffle');
+  buildBacks();
+  detail.textContent = t(messageKey);
+  refreshButtons();
+}
+
+function shuffleForReading() {
+  if (isShuffling || isDrawing) return;
+  isShuffling = true;
+  hasShuffled = false;
+  focusedCard = null;
+  buildBacks();
+  table.classList.remove('cards-dealt');
+  table.classList.add('awaiting-shuffle');
+  deckStage.hidden = false;
+  deckStage.classList.remove('is-ready');
+  deckStage.classList.add('is-shuffling');
+  detail.textContent = t('shuffling');
+  refreshButtons();
+  window.setTimeout(() => {
+    startReading(true);
+    isShuffling = false;
+    hasShuffled = true;
+    deckStage.classList.remove('is-shuffling');
+    deckStage.classList.add('is-ready');
+    table.classList.remove('awaiting-shuffle');
+    table.classList.add('cards-dealt');
+    detail.textContent = t('shuffled');
+    refreshButtons();
+  }, 1550);
+}
+
 function drawOne() {
   if (isDrawing) return;
+  if (!hasShuffled) {
+    shuffleForReading();
+    return;
+  }
   const total = spreads[current].positions.length;
   if (revealedCount === total) {
-    buildBacks();
-    detail.textContent = t('ready');
-    refreshButtons();
+    resetForShuffle();
     return;
   }
   isDrawing = true;
@@ -322,10 +395,13 @@ function drawOne() {
 
 function drawAll() {
   if (isDrawing) return;
+  if (!hasShuffled) {
+    shuffleForReading();
+    return;
+  }
   const total = spreads[current].positions.length;
   if (revealedCount === total) {
-    buildBacks();
-    requestAnimationFrame(drawAll);
+    resetForShuffle();
     return;
   }
   isDrawing = true;
@@ -382,7 +458,8 @@ async function copyTarotPrompt() {
 drawOneButton.addEventListener('click', drawOne);
 drawAllButton.addEventListener('click', drawAll);
 copyPromptButton.addEventListener('click', copyTarotPrompt);
-mysticCard.addEventListener('click', drawOne);
+shuffleButton.addEventListener('click', shuffleForReading);
+mysticCard.addEventListener('click', shuffleForReading);
 themeToggle.addEventListener('click', () => {
   pageTheme = pageTheme === 'light' ? 'dark' : 'light';
   localStorage.setItem('tarot-theme', pageTheme);

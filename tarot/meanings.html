@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="meanings-library.css">
   <link rel="stylesheet" href="typography.css">
   <link rel="stylesheet" href="theme-toggle.css">
+  <link rel="stylesheet" href="motion.css">
 </head>
 <body class="tarot">
 <main class="tarot-shell">
@@ -35,6 +36,9 @@
     <div class="library-filters" id="contextFilters"></div>
   </div>
   <section class="library" id="library"></section>
+  <footer class="tarot-footer">
+    <p id="disclaimerText">Tarot readings are for insight and guidance, not professional medical, legal, or financial advice.</p>
+  </footer>
 </main>
 
 <dialog class="meaning-dialog expanded-dialog" id="dialog">
@@ -53,6 +57,11 @@
       <div class="meaning-section">
         <h3 id="reversedLabel">Reversed</h3>
         <p id="dialogReversed"></p>
+      </div>
+
+      <div class="meaning-section yes-no-section">
+        <h3 id="yesNoLabel">Yes or no</h3>
+        <p id="dialogYesNo"></p>
       </div>
 
       <div class="meaning-section">
@@ -82,6 +91,8 @@ const dialog = document.getElementById('dialog');
 const arcanaFilters = document.getElementById('arcanaFilters');
 const contextFilters = document.getElementById('contextFilters');
 const themeToggle = document.getElementById('themeToggle');
+const yesNoLabel = document.getElementById('yesNoLabel');
+const dialogYesNo = document.getElementById('dialogYesNo');
 let language = localStorage.getItem('tarot-language') || 'en';
 let pageTheme = localStorage.getItem('tarot-theme') || 'dark';
 let activeArcana = 'all';
@@ -96,6 +107,8 @@ const copy = {
     search: 'Search cards, symbols, keywords, or contexts',
     up: 'Upright',
     rev: 'Reversed',
+    yesNo: 'Yes or no',
+    yesNoPrefix: 'Generally',
     symbols: 'Symbols',
     love: 'Love',
     career: 'Career',
@@ -112,7 +125,8 @@ const copy = {
     pentacles: 'Pentacles',
     allContexts: 'All contexts',
     upright: 'Upright keywords',
-    reversed: 'Reversed keywords'
+    reversed: 'Reversed keywords',
+    disclaimer: 'Tarot readings are for insight and guidance, not professional medical, legal, or financial advice.'
   },
   zh: {
     draw: '\u62bd\u724c',
@@ -122,6 +136,8 @@ const copy = {
     search: '\u641c\u7d22\u724c\u540d\u3001\u8c61\u5f81\u3001\u5173\u952e\u8bcd\u6216\u8bed\u5883',
     up: '\u6b63\u4f4d',
     rev: '\u9006\u4f4d',
+    yesNo: '\u662f\u6216\u5426',
+    yesNoPrefix: '\u4e00\u822c\u503e\u5411',
     symbols: '\u724c\u9762\u8c61\u5f81',
     love: '\u611f\u60c5',
     career: '\u4e8b\u4e1a',
@@ -137,7 +153,8 @@ const copy = {
     pentacles: '\u661f\u5e01',
     allContexts: '\u5168\u90e8\u8bed\u5883',
     upright: '\u6b63\u4f4d\u5173\u952e\u8bcd',
-    reversed: '\u9006\u4f4d\u5173\u952e\u8bcd'
+    reversed: '\u9006\u4f4d\u5173\u952e\u8bcd',
+    disclaimer: '\u5854\u7f57\u9605\u8bfb\u7528\u4e8e\u83b7\u5f97\u7075\u611f\u4e0e\u6307\u5f15\uff0c\u4e0d\u66ff\u4ee3\u533b\u7597\u3001\u6cd5\u5f8b\u6216\u8d22\u52a1\u7b49\u4e13\u4e1a\u5efa\u8bae\u3002'
   }
 };
 
@@ -194,6 +211,7 @@ function openCard(card) {
   dialogKeywords.innerHTML = tagHtml(cList(card, 'keywords'));
   dialogUpright.textContent = cMeaning(card, 'upright');
   dialogReversed.textContent = cMeaning(card, 'reversed');
+  dialogYesNo.textContent = `${text.yesNoPrefix}: ${language === 'zh' ? card.yesNoZh : card.yesNo}`;
   dialogSymbols.innerHTML = tagHtml(cList(card, 'symbols'));
   dialogContexts.innerHTML = [
     ['love', text.love],
@@ -204,6 +222,7 @@ function openCard(card) {
   dialogTip.textContent = language === 'zh' ? card.readingTipZh : card.readingTip;
   uprightLabel.textContent = text.up;
   reversedLabel.textContent = text.rev;
+  yesNoLabel.textContent = text.yesNo;
   symbolsLabel.textContent = text.symbols;
   relatedLabel.textContent = text.related;
   tipLabel.textContent = text.tip;
@@ -216,9 +235,10 @@ function show(list) {
     library.innerHTML = `<p class="empty-result">${copy[language].none}</p>`;
     return;
   }
-  list.forEach(card => {
+  list.forEach((card, index) => {
     const element = document.createElement('article');
     element.className = 'meaning-card';
+    element.style.setProperty('--i', Math.min(index, 12));
     element.innerHTML = `
       <img src="${card.image}" alt="${cName(card)} Rider-Waite card" loading="lazy">
       <small>${card.arcana}</small>
@@ -233,6 +253,7 @@ function show(list) {
 function searchableText(card) {
   return [
     card.name, card.zhName, card.arcana, card.upright, card.reversed, card.uprightZh, card.reversedZh,
+    card.yesNo, card.yesNoZh,
     ...(card.keywords || []), ...(card.keywordsZh || []), ...(card.symbols || []), ...(card.symbolsZh || []),
     ...(card.related || []), card.readingTip, card.readingTipZh,
     ...Object.values(card.contexts || {}), ...Object.values(card.contextsZh || {})
@@ -299,6 +320,7 @@ function applyLanguage() {
   pageTitle.textContent = text.title;
   pageIntro.textContent = text.intro;
   search.placeholder = text.search;
+  disclaimerText.textContent = text.disclaimer;
   langToggle.textContent = language === 'zh' ? 'EN' : '\u4e2d\u6587';
   applyPageTheme();
   renderFilters();

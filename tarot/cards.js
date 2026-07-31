@@ -59,4 +59,12 @@ function splitKeywords(text){return text.split(',').map(item=>item.trim()).filte
 function zhKeywords(card){return (card.uprightZh||'').split(/[；。]/)[0].split(/[、，]/).map(item=>item.trim()).filter(Boolean).slice(0,4)}
 function relatedCards(card,index){if(index<22)return [cards[(index+21)%22],cards[(index+1)%22],cards[(index+11)%22]].map(item=>item.name);const suitCards=cards.filter(item=>item.arcana===card.arcana),suitIndex=suitCards.findIndex(item=>item.name===card.name),rank=card.name.split(' ')[0],sameRank=cards.find(item=>item.arcana!==card.arcana&&item.name.startsWith(rank+' '));return [suitCards[(suitIndex+suitCards.length-1)%suitCards.length],suitCards[(suitIndex+1)%suitCards.length],sameRank].filter(Boolean).map(item=>item.name)}
 cards.forEach((card,index)=>{const rank=card.name.split(' ')[0],isMajor=index<22,contexts=isMajor?majorContexts[index]:suitContexts[card.arcana],contextsZh=isMajor?majorContextsZh[index]:suitContextsZh[card.arcana];card.keywords=splitKeywords(card.upright);card.keywordsZh=zhKeywords(card);card.symbols=isMajor?majorSymbols[index]:[...(rankSymbols[rank]||[]),...(suitSymbols[card.arcana]||[])].slice(0,5);card.symbolsZh=isMajor?majorSymbolsZh[index]:[...(rankSymbolsZh[rank]||[]),...(suitSymbolsZh[card.arcana]||[])].slice(0,5);card.contexts={love:contexts[0],career:contexts[1],growth:contexts[2]};card.contextsZh={love:contextsZh[0],career:contextsZh[1],growth:contextsZh[2]};card.related=relatedCards(card,index);card.readingTip=isMajor?majorTips[index]:`${rankTips[rank]} In ${card.arcana}, connect that lesson to ${card.upright}.`;card.readingTipZh=isMajor?majorTipsZh[index]:`${rankTipsZh[rank]} 在${cleanSuitZh[card.arcana]}中，把这个功课和“${card.uprightZh}”连起来看。`});
+const yesNoTendencies=[
+ 'Yes','Yes','Yes','Yes','Yes','Yes','Yes','Yes','Yes','No','Yes','Yes','No','No','Yes','No','No','Yes','No','Yes','Yes','Yes',
+ 'Yes','Yes','Yes','Yes','No','Yes','Yes','Yes','Yes','No','Yes','Yes','Yes','Yes',
+ 'Yes','Yes','Yes','No','No','Yes','No','No','Yes','Yes','Yes','Yes','Yes','Yes',
+ 'Yes','No','No','No','No','Yes','No','No','No','No','Yes','Yes','Yes','Yes',
+ 'Yes','Yes','Yes','Yes','No','Yes','Yes','Yes','Yes','Yes','Yes','Yes','Yes','Yes'
+];
+cards.forEach((card,index)=>{card.yesNo=yesNoTendencies[index]||'Yes';card.yesNoZh=card.yesNo==='Yes'?'是':'否'});
 window.TAROT_CARDS = cards;

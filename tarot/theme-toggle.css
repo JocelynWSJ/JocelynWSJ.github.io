@@ -187,6 +187,7 @@ body.tarot[data-theme="light"] .meaning-card:hover {
 
 body.tarot[data-theme="light"] .card-tags span,
 body.tarot[data-theme="light"] .tag-row span,
+body.tarot[data-theme="light"] .yes-no-section p,
 body.tarot[data-theme="light"] .related-row button,
 body.tarot[data-theme="light"] .library-filters button {
   color: #795f58;

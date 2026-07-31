@@ -100,6 +100,15 @@
   margin: 0;
 }
 
+.yes-no-section p {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgba(210, 173, 88, .26);
+  background: rgba(210, 173, 88, .08);
+  border-radius: 999px;
+  padding: 6px 10px;
+}
+
 .muted-tags {
   margin-top: 8px;
 }

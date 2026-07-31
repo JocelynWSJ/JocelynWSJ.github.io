@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="mobile-spread.css">
   <link rel="stylesheet" href="typography.css">
   <link rel="stylesheet" href="theme-toggle.css">
+  <link rel="stylesheet" href="motion.css">
 </head>
 <body class="tarot">
 <main class="tarot-shell">
@@ -55,6 +56,9 @@
     <button class="draw-button draw-all-button" id="drawAllButton" type="button"></button>
     <button class="draw-button copy-prompt-button" id="copyPromptButton" type="button" hidden></button>
   </p>
+  <footer class="tarot-footer">
+    <p data-t="disclaimer">Tarot readings are for insight and guidance, not professional medical, legal, or financial advice.</p>
+  </footer>
 </main>
 
 <script src="cards.js"></script>
@@ -74,7 +78,8 @@ const ui = {
     rev: 'Reversed',
     copyPrompt: 'Copy AI Prompt',
     promptCopied: 'Prompt copied',
-    copyFailed: 'Copy failed'
+    copyFailed: 'Copy failed',
+    disclaimer: 'Tarot readings are for insight and guidance, not professional medical, legal, or financial advice.'
   },
   zh: {
     library: '牌义大全',
@@ -90,7 +95,8 @@ const ui = {
     rev: '逆位',
     copyPrompt: '复制 AI Prompt',
     promptCopied: '已复制 Prompt',
-    copyFailed: '复制失败'
+    copyFailed: '复制失败',
+    disclaimer: '塔罗阅读用于获得灵感与指引，不替代医疗、法律或财务等专业建议。'
   }
 };
 
